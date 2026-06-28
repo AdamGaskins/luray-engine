@@ -172,6 +172,9 @@ implemented_types :: []string {
     "Vector4",
     "Matrix",
     "Rectangle",
+    "Camera",
+    "Camera2D",
+    "Camera3D",
     // "Image",
     "Texture",
     "Texture2D",
@@ -182,6 +185,7 @@ skip_functions :: []string {
     "ExportDataAsCode",
     "LoadFileText",
     "UnloadFileText",
+    "UnloadFileData",
     "SaveFileText",
     "LoadImageRaw",
     "LoadImageFromMemory",
@@ -192,6 +196,7 @@ skip_functions :: []string {
     "LoadWaveFromMemory",
     "LoadMusicStreamFromMemory",
     "GetGestureDetected",
+    "ComputeCRC32",
     "ColorIsEqual", // deprecated
 }
 write_functions :: proc(
@@ -219,6 +224,7 @@ write_functions :: proc(
         skip := false
         if unimp {
             errors = fmt.tprintf("%v\nSkipping %v: marked unimplemented", errors, name)
+            skip = true
         }
         _, impReturn := slice.linear_search(implemented_types, returnType)
         if !impReturn {
@@ -316,11 +322,10 @@ write_functions :: proc(
         fmt.wprintfln(w_docs, "")
     }
     fmt.println()
-    for type, count in unimpGuys {
-        fmt.printfln("%v: %v", type, count)
-    }
-    // print map!!!!!!!!!
-    // fmt.println(errors)
+    // for type, count in unimpGuys {
+    //     fmt.printfln("%v: %v", type, count)
+    // }
+    fmt.println(errors)
     fmt.println()
 }
 
@@ -383,6 +388,7 @@ param_type_overrides :: []ParamOverride {
 
     // structs
     {"Texture.format", "cast", "PixelFormat"},
+    {"Camera3D.projection", "cast", "CameraProjection"},
 }
 
 generate_fromlua :: proc {
@@ -465,7 +471,7 @@ get_param_lua_type :: proc(type: string, source: string = "") -> string {
         return "string"
     } else if type == "int" || type == "unsigned int" {
         return "integer"
-    } else if type == "float" {
+    } else if type == "float" || type == "double" {
         return "number"
     } else if type == "bool" {
         return "boolean"
@@ -481,6 +487,8 @@ supported_structs :: []string {
     "Vector2",
     "Vector3",
     "Vector4",
+    "Camera3D",
+    "Camera2D",
     "Matrix",
     "Rectangle",
     // "Image",

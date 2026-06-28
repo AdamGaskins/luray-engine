@@ -8,32 +8,32 @@
 ---@field RAYLIB_VERSION_PATCH integer 0
 ---@field RAYLIB_VERSION string 5.5
 ---@field PI number 3.141592653589793
----@field LIGHTGRAY Raylib.Color 
----@field GRAY Raylib.Color 
----@field DARKGRAY Raylib.Color 
----@field YELLOW Raylib.Color 
----@field GOLD Raylib.Color 
----@field ORANGE Raylib.Color 
----@field PINK Raylib.Color 
----@field RED Raylib.Color 
----@field MAROON Raylib.Color 
----@field GREEN Raylib.Color 
----@field LIME Raylib.Color 
----@field DARKGREEN Raylib.Color 
----@field SKYBLUE Raylib.Color 
----@field BLUE Raylib.Color 
----@field DARKBLUE Raylib.Color 
----@field PURPLE Raylib.Color 
----@field VIOLET Raylib.Color 
----@field DARKPURPLE Raylib.Color 
----@field BEIGE Raylib.Color 
----@field BROWN Raylib.Color 
----@field DARKBROWN Raylib.Color 
----@field WHITE Raylib.Color 
----@field BLACK Raylib.Color 
----@field BLANK Raylib.Color 
----@field MAGENTA Raylib.Color 
----@field RAYWHITE Raylib.Color 
+---@field LIGHTGRAY Raylib.Color
+---@field GRAY Raylib.Color
+---@field DARKGRAY Raylib.Color
+---@field YELLOW Raylib.Color
+---@field GOLD Raylib.Color
+---@field ORANGE Raylib.Color
+---@field PINK Raylib.Color
+---@field RED Raylib.Color
+---@field MAROON Raylib.Color
+---@field GREEN Raylib.Color
+---@field LIME Raylib.Color
+---@field DARKGREEN Raylib.Color
+---@field SKYBLUE Raylib.Color
+---@field BLUE Raylib.Color
+---@field DARKBLUE Raylib.Color
+---@field PURPLE Raylib.Color
+---@field VIOLET Raylib.Color
+---@field DARKPURPLE Raylib.Color
+---@field BEIGE Raylib.Color
+---@field BROWN Raylib.Color
+---@field DARKBROWN Raylib.Color
+---@field WHITE Raylib.Color
+---@field BLACK Raylib.Color
+---@field BLANK Raylib.Color
+---@field MAGENTA Raylib.Color
+---@field RAYWHITE Raylib.Color
 ---@field FLAG_VSYNC_HINT integer 64
 ---@field FLAG_FULLSCREEN_MODE integer 2
 ---@field FLAG_WINDOW_RESIZABLE integer 4
@@ -388,11 +388,26 @@ function _update() end
 ---@field mipmaps integer Mipmap levels, 1 by default
 ---@field format integer Data format (PixelFormat type)
 
+---@class Raylib.Camera3D
+---@field position Raylib.Vector3 Camera position
+---@field target Raylib.Vector3 Camera target it looks-at
+---@field up Raylib.Vector3 Camera up vector (rotation over its axis)
+---@field fovy number Camera field-of-view aperture in Y (degrees) in perspective, used as near plane width in orthographic
+---@field projection integer Camera projection: CAMERA_PERSPECTIVE or CAMERA_ORTHOGRAPHIC
+
+---@class Raylib.Camera2D
+---@field offset Raylib.Vector2 Camera offset (displacement from target)
+---@field target Raylib.Vector2 Camera target (rotation and zoom origin)
+---@field rotation number Camera rotation in degrees
+---@field zoom number Camera zoom (scaling), should be 1.0f by default
+
 ---@alias Raylib.Quaternion Raylib.Vector4
 
 ---@alias Raylib.Texture2D Raylib.Texture
 
 ---@alias Raylib.TextureCubemap Raylib.Texture
+
+---@alias Raylib.Camera Raylib.Camera3D
 
 ---Initialize window and OpenGL context
 ---@param width integer
@@ -609,8 +624,16 @@ function ray.BeginDrawing() end
 ---End canvas drawing and swap buffers (double buffering)
 function ray.EndDrawing() end
 
+---Begin 2D mode with custom camera (2D)
+---@param camera Raylib.Camera2D
+function ray.BeginMode2D(camera) end
+
 ---Ends 2D mode with custom camera
 function ray.EndMode2D() end
+
+---Begin 3D mode with custom camera (3D)
+---@param camera Raylib.Camera3D
+function ray.BeginMode3D(camera) end
 
 ---Ends 3D mode and returns to default 2D orthographic mode
 function ray.EndMode3D() end
@@ -641,6 +664,42 @@ function ray.EndScissorMode() end
 ---End stereo rendering (requires VR simulator)
 function ray.EndVrStereoMode() end
 
+---Get the screen space position for a 3d world space position
+---@param position Raylib.Vector3
+---@param camera Raylib.Camera
+---@return Raylib.Vector2
+function ray.GetWorldToScreen(position, camera) end
+
+---Get size position for a 3d world space position
+---@param position Raylib.Vector3
+---@param camera Raylib.Camera
+---@param width integer
+---@param height integer
+---@return Raylib.Vector2
+function ray.GetWorldToScreenEx(position, camera, width, height) end
+
+---Get the screen space position for a 2d camera world space position
+---@param position Raylib.Vector2
+---@param camera Raylib.Camera2D
+---@return Raylib.Vector2
+function ray.GetWorldToScreen2D(position, camera) end
+
+---Get the world space position for a 2d camera screen space position
+---@param position Raylib.Vector2
+---@param camera Raylib.Camera2D
+---@return Raylib.Vector2
+function ray.GetScreenToWorld2D(position, camera) end
+
+---Get camera transform matrix (view matrix)
+---@param camera Raylib.Camera
+---@return Raylib.Matrix
+function ray.GetCameraMatrix(camera) end
+
+---Get camera 2d transform matrix
+---@param camera Raylib.Camera2D
+---@return Raylib.Matrix
+function ray.GetCameraMatrix2D(camera) end
+
 ---Set target FPS (maximum)
 ---@param fps integer
 function ray.SetTargetFPS(fps) end
@@ -650,7 +709,7 @@ function ray.SetTargetFPS(fps) end
 function ray.GetFrameTime() end
 
 ---Get elapsed time in seconds since InitWindow()
----@return Raylib.double
+---@return number
 function ray.GetTime() end
 
 ---Get current FPS
@@ -664,7 +723,7 @@ function ray.SwapScreenBuffer() end
 function ray.PollInputEvents() end
 
 ---Wait for some time (halt program execution)
----@param seconds Raylib.double
+---@param seconds number
 function ray.WaitTime(seconds) end
 
 ---Set the seed for the random number generator
@@ -692,32 +751,6 @@ function ray.OpenURL(url) end
 ---Set the current threshold (minimum) log level
 ---@param logLevel integer
 function ray.SetTraceLogLevel(logLevel) end
-
----Unload file data allocated by LoadFileData()
----@param data string
-function ray.UnloadFileData(data) end
-
----Export data to code (.h), returns true on success
----@param data string
----@param dataSize integer
----@param fileName string
----@return boolean
-function ray.ExportDataAsCode(data, dataSize, fileName) end
-
----Load text data from file (read), returns a '\0' terminated string
----@param fileName string
----@return string
-function ray.LoadFileText(fileName) end
-
----Unload file text data allocated by LoadFileText()
----@param text string
-function ray.UnloadFileText(text) end
-
----Save text data to file (write), string must be '\0' terminated, returns true on success
----@param fileName string
----@param text string
----@return boolean
-function ray.SaveFileText(fileName, text) end
 
 ---Check if file exists
 ---@param fileName string
@@ -796,12 +829,6 @@ function ray.IsFileNameValid(fileName) end
 ---Check if a file has been dropped into window
 ---@return boolean
 function ray.IsFileDropped() end
-
----Compute CRC32 hash code
----@param data string
----@param dataSize integer
----@return integer
-function ray.ComputeCRC32(data, dataSize) end
 
 ---Set automation event internal base frame to start recording
 ---@param frame integer
@@ -1004,10 +1031,6 @@ function ray.SetGesturesEnabled(flags) end
 ---@param gesture integer
 ---@return boolean
 function ray.IsGestureDetected(gesture) end
-
----Get latest detected gesture
----@return integer
-function ray.GetGestureDetected() end
 
 ---Get gesture hold time in seconds
 ---@return number
@@ -1505,12 +1528,6 @@ function ray.DrawTextureRec(texture, source, position, tint) end
 ---@param tint Raylib.Color
 function ray.DrawTexturePro(texture, source, dest, origin, rotation, tint) end
 
----Check if two colors are equal
----@param col1 Raylib.Color
----@param col2 Raylib.Color
----@return boolean
-function ray.ColorIsEqual(col1, col2) end
-
 ---Get color with alpha applied, alpha goes from 0.0f to 1.0f
 ---@param color Raylib.Color
 ---@param alpha number
@@ -1617,20 +1634,10 @@ function ray.SetTextLineSpacing(spacing) end
 ---@return integer
 function ray.MeasureText(text, fontSize) end
 
----Unload UTF-8 text encoded from codepoints array
----@param text string
-function ray.UnloadUTF8(text) end
-
 ---Get total number of codepoints in a UTF-8 encoded string
 ---@param text string
 ---@return integer
 function ray.GetCodepointCount(text) end
-
----Copy one string to another, returns bytes copied
----@param dst string
----@param src string
----@return integer
-function ray.TextCopy(dst, src) end
 
 ---Check if two text string are equal
 ---@param text1 string
@@ -1649,20 +1656,6 @@ function ray.TextLength(text) end
 ---@param length integer
 ---@return string
 function ray.TextSubtext(text, position, length) end
-
----Replace text string (WARNING: memory must be freed!)
----@param text string
----@param replace string
----@param by string
----@return string
-function ray.TextReplace(text, replace, by) end
-
----Insert text in a position (WARNING: memory must be freed!)
----@param text string
----@param insert string
----@param position integer
----@return string
-function ray.TextInsert(text, insert, position) end
 
 ---Find first text occurrence within a string
 ---@param text string
@@ -1846,6 +1839,35 @@ function ray.DrawPlane(centerPos, size, color) end
 ---@param spacing number
 function ray.DrawGrid(slices, spacing) end
 
+---Draw a billboard texture
+---@param camera Raylib.Camera
+---@param texture Raylib.Texture2D
+---@param position Raylib.Vector3
+---@param scale number
+---@param tint Raylib.Color
+function ray.DrawBillboard(camera, texture, position, scale, tint) end
+
+---Draw a billboard texture defined by source
+---@param camera Raylib.Camera
+---@param texture Raylib.Texture2D
+---@param source Raylib.Rectangle
+---@param position Raylib.Vector3
+---@param size Raylib.Vector2
+---@param tint Raylib.Color
+function ray.DrawBillboardRec(camera, texture, source, position, size, tint) end
+
+---Draw a billboard texture defined by source and rotation
+---@param camera Raylib.Camera
+---@param texture Raylib.Texture2D
+---@param source Raylib.Rectangle
+---@param position Raylib.Vector3
+---@param up Raylib.Vector3
+---@param size Raylib.Vector2
+---@param origin Raylib.Vector2
+---@param rotation number
+---@param tint Raylib.Color
+function ray.DrawBillboardPro(camera, texture, source, position, up, size, origin, rotation, tint) end
+
 ---Check collision between two spheres
 ---@param center1 Raylib.Vector3
 ---@param radius1 number
@@ -1875,4 +1897,3 @@ function ray.GetMasterVolume() end
 ---Default size for new audio streams
 ---@param size integer
 function ray.SetAudioStreamBufferSizeDefault(size) end
-
