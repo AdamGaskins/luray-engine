@@ -1054,6 +1054,9 @@ bind_raylib :: proc(L: ^lua.State) {
     lua.pushcfunction(L, lua_RestoreWindow)
     lua.setfield(L, -2, "RestoreWindow")
 
+    lua.pushcfunction(L, lua_SetWindowIcon)
+    lua.setfield(L, -2, "SetWindowIcon")
+
     lua.pushcfunction(L, lua_SetWindowTitle)
     lua.setfield(L, -2, "SetWindowTitle")
 
@@ -1128,6 +1131,9 @@ bind_raylib :: proc(L: ^lua.State) {
 
     lua.pushcfunction(L, lua_GetClipboardText)
     lua.setfield(L, -2, "GetClipboardText")
+
+    lua.pushcfunction(L, lua_GetClipboardImage)
+    lua.setfield(L, -2, "GetClipboardImage")
 
     lua.pushcfunction(L, lua_EnableEventWaiting)
     lua.setfield(L, -2, "EnableEventWaiting")
@@ -1612,8 +1618,209 @@ bind_raylib :: proc(L: ^lua.State) {
     lua.pushcfunction(L, lua_GetCollisionRec)
     lua.setfield(L, -2, "GetCollisionRec")
 
+    lua.pushcfunction(L, lua_LoadImage)
+    lua.setfield(L, -2, "LoadImage")
+
+    lua.pushcfunction(L, lua_LoadImageFromTexture)
+    lua.setfield(L, -2, "LoadImageFromTexture")
+
+    lua.pushcfunction(L, lua_LoadImageFromScreen)
+    lua.setfield(L, -2, "LoadImageFromScreen")
+
+    lua.pushcfunction(L, lua_IsImageValid)
+    lua.setfield(L, -2, "IsImageValid")
+
+    lua.pushcfunction(L, lua_UnloadImage)
+    lua.setfield(L, -2, "UnloadImage")
+
+    lua.pushcfunction(L, lua_ExportImage)
+    lua.setfield(L, -2, "ExportImage")
+
+    lua.pushcfunction(L, lua_ExportImageAsCode)
+    lua.setfield(L, -2, "ExportImageAsCode")
+
+    lua.pushcfunction(L, lua_GenImageColor)
+    lua.setfield(L, -2, "GenImageColor")
+
+    lua.pushcfunction(L, lua_GenImageGradientLinear)
+    lua.setfield(L, -2, "GenImageGradientLinear")
+
+    lua.pushcfunction(L, lua_GenImageGradientRadial)
+    lua.setfield(L, -2, "GenImageGradientRadial")
+
+    lua.pushcfunction(L, lua_GenImageGradientSquare)
+    lua.setfield(L, -2, "GenImageGradientSquare")
+
+    lua.pushcfunction(L, lua_GenImageChecked)
+    lua.setfield(L, -2, "GenImageChecked")
+
+    lua.pushcfunction(L, lua_GenImageWhiteNoise)
+    lua.setfield(L, -2, "GenImageWhiteNoise")
+
+    lua.pushcfunction(L, lua_GenImagePerlinNoise)
+    lua.setfield(L, -2, "GenImagePerlinNoise")
+
+    lua.pushcfunction(L, lua_GenImageCellular)
+    lua.setfield(L, -2, "GenImageCellular")
+
+    lua.pushcfunction(L, lua_GenImageText)
+    lua.setfield(L, -2, "GenImageText")
+
+    lua.pushcfunction(L, lua_ImageCopy)
+    lua.setfield(L, -2, "ImageCopy")
+
+    lua.pushcfunction(L, lua_ImageFromImage)
+    lua.setfield(L, -2, "ImageFromImage")
+
+    lua.pushcfunction(L, lua_ImageFromChannel)
+    lua.setfield(L, -2, "ImageFromChannel")
+
+    lua.pushcfunction(L, lua_ImageText)
+    lua.setfield(L, -2, "ImageText")
+
+    lua.pushcfunction(L, lua_ImageFormat)
+    lua.setfield(L, -2, "ImageFormat")
+
+    lua.pushcfunction(L, lua_ImageToPOT)
+    lua.setfield(L, -2, "ImageToPOT")
+
+    lua.pushcfunction(L, lua_ImageCrop)
+    lua.setfield(L, -2, "ImageCrop")
+
+    lua.pushcfunction(L, lua_ImageAlphaCrop)
+    lua.setfield(L, -2, "ImageAlphaCrop")
+
+    lua.pushcfunction(L, lua_ImageAlphaClear)
+    lua.setfield(L, -2, "ImageAlphaClear")
+
+    lua.pushcfunction(L, lua_ImageAlphaMask)
+    lua.setfield(L, -2, "ImageAlphaMask")
+
+    lua.pushcfunction(L, lua_ImageAlphaPremultiply)
+    lua.setfield(L, -2, "ImageAlphaPremultiply")
+
+    lua.pushcfunction(L, lua_ImageBlurGaussian)
+    lua.setfield(L, -2, "ImageBlurGaussian")
+
+    lua.pushcfunction(L, lua_ImageResize)
+    lua.setfield(L, -2, "ImageResize")
+
+    lua.pushcfunction(L, lua_ImageResizeNN)
+    lua.setfield(L, -2, "ImageResizeNN")
+
+    lua.pushcfunction(L, lua_ImageResizeCanvas)
+    lua.setfield(L, -2, "ImageResizeCanvas")
+
+    lua.pushcfunction(L, lua_ImageMipmaps)
+    lua.setfield(L, -2, "ImageMipmaps")
+
+    lua.pushcfunction(L, lua_ImageDither)
+    lua.setfield(L, -2, "ImageDither")
+
+    lua.pushcfunction(L, lua_ImageFlipVertical)
+    lua.setfield(L, -2, "ImageFlipVertical")
+
+    lua.pushcfunction(L, lua_ImageFlipHorizontal)
+    lua.setfield(L, -2, "ImageFlipHorizontal")
+
+    lua.pushcfunction(L, lua_ImageRotate)
+    lua.setfield(L, -2, "ImageRotate")
+
+    lua.pushcfunction(L, lua_ImageRotateCW)
+    lua.setfield(L, -2, "ImageRotateCW")
+
+    lua.pushcfunction(L, lua_ImageRotateCCW)
+    lua.setfield(L, -2, "ImageRotateCCW")
+
+    lua.pushcfunction(L, lua_ImageColorTint)
+    lua.setfield(L, -2, "ImageColorTint")
+
+    lua.pushcfunction(L, lua_ImageColorInvert)
+    lua.setfield(L, -2, "ImageColorInvert")
+
+    lua.pushcfunction(L, lua_ImageColorGrayscale)
+    lua.setfield(L, -2, "ImageColorGrayscale")
+
+    lua.pushcfunction(L, lua_ImageColorContrast)
+    lua.setfield(L, -2, "ImageColorContrast")
+
+    lua.pushcfunction(L, lua_ImageColorBrightness)
+    lua.setfield(L, -2, "ImageColorBrightness")
+
+    lua.pushcfunction(L, lua_ImageColorReplace)
+    lua.setfield(L, -2, "ImageColorReplace")
+
+    lua.pushcfunction(L, lua_GetImageAlphaBorder)
+    lua.setfield(L, -2, "GetImageAlphaBorder")
+
+    lua.pushcfunction(L, lua_GetImageColor)
+    lua.setfield(L, -2, "GetImageColor")
+
+    lua.pushcfunction(L, lua_ImageClearBackground)
+    lua.setfield(L, -2, "ImageClearBackground")
+
+    lua.pushcfunction(L, lua_ImageDrawPixel)
+    lua.setfield(L, -2, "ImageDrawPixel")
+
+    lua.pushcfunction(L, lua_ImageDrawPixelV)
+    lua.setfield(L, -2, "ImageDrawPixelV")
+
+    lua.pushcfunction(L, lua_ImageDrawLine)
+    lua.setfield(L, -2, "ImageDrawLine")
+
+    lua.pushcfunction(L, lua_ImageDrawLineV)
+    lua.setfield(L, -2, "ImageDrawLineV")
+
+    lua.pushcfunction(L, lua_ImageDrawLineEx)
+    lua.setfield(L, -2, "ImageDrawLineEx")
+
+    lua.pushcfunction(L, lua_ImageDrawCircle)
+    lua.setfield(L, -2, "ImageDrawCircle")
+
+    lua.pushcfunction(L, lua_ImageDrawCircleV)
+    lua.setfield(L, -2, "ImageDrawCircleV")
+
+    lua.pushcfunction(L, lua_ImageDrawCircleLines)
+    lua.setfield(L, -2, "ImageDrawCircleLines")
+
+    lua.pushcfunction(L, lua_ImageDrawCircleLinesV)
+    lua.setfield(L, -2, "ImageDrawCircleLinesV")
+
+    lua.pushcfunction(L, lua_ImageDrawRectangle)
+    lua.setfield(L, -2, "ImageDrawRectangle")
+
+    lua.pushcfunction(L, lua_ImageDrawRectangleV)
+    lua.setfield(L, -2, "ImageDrawRectangleV")
+
+    lua.pushcfunction(L, lua_ImageDrawRectangleRec)
+    lua.setfield(L, -2, "ImageDrawRectangleRec")
+
+    lua.pushcfunction(L, lua_ImageDrawRectangleLines)
+    lua.setfield(L, -2, "ImageDrawRectangleLines")
+
+    lua.pushcfunction(L, lua_ImageDrawTriangle)
+    lua.setfield(L, -2, "ImageDrawTriangle")
+
+    lua.pushcfunction(L, lua_ImageDrawTriangleEx)
+    lua.setfield(L, -2, "ImageDrawTriangleEx")
+
+    lua.pushcfunction(L, lua_ImageDrawTriangleLines)
+    lua.setfield(L, -2, "ImageDrawTriangleLines")
+
+    lua.pushcfunction(L, lua_ImageDraw)
+    lua.setfield(L, -2, "ImageDraw")
+
+    lua.pushcfunction(L, lua_ImageDrawText)
+    lua.setfield(L, -2, "ImageDrawText")
+
     lua.pushcfunction(L, lua_LoadTexture)
     lua.setfield(L, -2, "LoadTexture")
+
+    lua.pushcfunction(L, lua_LoadTextureFromImage)
+    lua.setfield(L, -2, "LoadTextureFromImage")
+
+    lua.pushcfunction(L, lua_LoadTextureCubemap)
+    lua.setfield(L, -2, "LoadTextureCubemap")
 
     lua.pushcfunction(L, lua_IsTextureValid)
     lua.setfield(L, -2, "IsTextureValid")
@@ -1823,12 +2030,16 @@ bind_raylib :: proc(L: ^lua.State) {
     lua.setglobal(L, "ray")
 }
 
-tolua_Vector2 :: proc "c" (L: ^lua.State, s: rl.Vector2) {
-    lua.newtable(L)
+tolua_Vector2 :: proc "c" (L: ^lua.State, s: rl.Vector2, idx: c.int = -99) {
+    idx := idx
+    if idx == -99 {
+        lua.newtable(L)
+        idx = -2
+    }
     lua.pushnumber(L, lua.Number(s.x))
-    lua.setfield(L, -2, "x")
+    lua.setfield(L, idx, "x")
     lua.pushnumber(L, lua.Number(s.y))
-    lua.setfield(L, -2, "y")
+    lua.setfield(L, idx, "y")
 }
 
 fromlua_Vector2 :: proc "c" (L: ^lua.State, idx: c.int) -> rl.Vector2 {
@@ -1841,14 +2052,18 @@ fromlua_Vector2 :: proc "c" (L: ^lua.State, idx: c.int) -> rl.Vector2 {
     return rl.Vector2{x, y}
 }
 
-tolua_Vector3 :: proc "c" (L: ^lua.State, s: rl.Vector3) {
-    lua.newtable(L)
+tolua_Vector3 :: proc "c" (L: ^lua.State, s: rl.Vector3, idx: c.int = -99) {
+    idx := idx
+    if idx == -99 {
+        lua.newtable(L)
+        idx = -2
+    }
     lua.pushnumber(L, lua.Number(s.x))
-    lua.setfield(L, -2, "x")
+    lua.setfield(L, idx, "x")
     lua.pushnumber(L, lua.Number(s.y))
-    lua.setfield(L, -2, "y")
+    lua.setfield(L, idx, "y")
     lua.pushnumber(L, lua.Number(s.z))
-    lua.setfield(L, -2, "z")
+    lua.setfield(L, idx, "z")
 }
 
 fromlua_Vector3 :: proc "c" (L: ^lua.State, idx: c.int) -> rl.Vector3 {
@@ -1864,16 +2079,20 @@ fromlua_Vector3 :: proc "c" (L: ^lua.State, idx: c.int) -> rl.Vector3 {
     return rl.Vector3{x, y, z}
 }
 
-tolua_Vector4 :: proc "c" (L: ^lua.State, s: rl.Vector4) {
-    lua.newtable(L)
+tolua_Vector4 :: proc "c" (L: ^lua.State, s: rl.Vector4, idx: c.int = -99) {
+    idx := idx
+    if idx == -99 {
+        lua.newtable(L)
+        idx = -2
+    }
     lua.pushnumber(L, lua.Number(s.x))
-    lua.setfield(L, -2, "x")
+    lua.setfield(L, idx, "x")
     lua.pushnumber(L, lua.Number(s.y))
-    lua.setfield(L, -2, "y")
+    lua.setfield(L, idx, "y")
     lua.pushnumber(L, lua.Number(s.z))
-    lua.setfield(L, -2, "z")
+    lua.setfield(L, idx, "z")
     lua.pushnumber(L, lua.Number(s.w))
-    lua.setfield(L, -2, "w")
+    lua.setfield(L, idx, "w")
 }
 
 fromlua_Vector4 :: proc "c" (L: ^lua.State, idx: c.int) -> rl.Vector4 {
@@ -1892,40 +2111,44 @@ fromlua_Vector4 :: proc "c" (L: ^lua.State, idx: c.int) -> rl.Vector4 {
     return rl.Vector4{x, y, z, w}
 }
 
-tolua_Matrix :: proc "c" (L: ^lua.State, s: rl.Matrix) {
-    lua.newtable(L)
+tolua_Matrix :: proc "c" (L: ^lua.State, s: rl.Matrix, idx: c.int = -99) {
+    idx := idx
+    if idx == -99 {
+        lua.newtable(L)
+        idx = -2
+    }
     lua.pushnumber(L, lua.Number(s[0][0]))
-    lua.setfield(L, -2, "m0")
+    lua.setfield(L, idx, "m0")
     lua.pushnumber(L, lua.Number(s[1][0]))
-    lua.setfield(L, -2, "m4")
+    lua.setfield(L, idx, "m4")
     lua.pushnumber(L, lua.Number(s[2][0]))
-    lua.setfield(L, -2, "m8")
+    lua.setfield(L, idx, "m8")
     lua.pushnumber(L, lua.Number(s[3][0]))
-    lua.setfield(L, -2, "m12")
+    lua.setfield(L, idx, "m12")
     lua.pushnumber(L, lua.Number(s[0][1]))
-    lua.setfield(L, -2, "m1")
+    lua.setfield(L, idx, "m1")
     lua.pushnumber(L, lua.Number(s[1][1]))
-    lua.setfield(L, -2, "m5")
+    lua.setfield(L, idx, "m5")
     lua.pushnumber(L, lua.Number(s[2][1]))
-    lua.setfield(L, -2, "m9")
+    lua.setfield(L, idx, "m9")
     lua.pushnumber(L, lua.Number(s[3][1]))
-    lua.setfield(L, -2, "m13")
+    lua.setfield(L, idx, "m13")
     lua.pushnumber(L, lua.Number(s[0][2]))
-    lua.setfield(L, -2, "m2")
+    lua.setfield(L, idx, "m2")
     lua.pushnumber(L, lua.Number(s[1][2]))
-    lua.setfield(L, -2, "m6")
+    lua.setfield(L, idx, "m6")
     lua.pushnumber(L, lua.Number(s[2][2]))
-    lua.setfield(L, -2, "m10")
+    lua.setfield(L, idx, "m10")
     lua.pushnumber(L, lua.Number(s[3][2]))
-    lua.setfield(L, -2, "m14")
+    lua.setfield(L, idx, "m14")
     lua.pushnumber(L, lua.Number(s[0][3]))
-    lua.setfield(L, -2, "m3")
+    lua.setfield(L, idx, "m3")
     lua.pushnumber(L, lua.Number(s[1][3]))
-    lua.setfield(L, -2, "m7")
+    lua.setfield(L, idx, "m7")
     lua.pushnumber(L, lua.Number(s[2][3]))
-    lua.setfield(L, -2, "m11")
+    lua.setfield(L, idx, "m11")
     lua.pushnumber(L, lua.Number(s[3][3]))
-    lua.setfield(L, -2, "m15")
+    lua.setfield(L, idx, "m15")
 }
 
 fromlua_Matrix :: proc "c" (L: ^lua.State, idx: c.int) -> rl.Matrix {
@@ -1980,16 +2203,20 @@ fromlua_Matrix :: proc "c" (L: ^lua.State, idx: c.int) -> rl.Matrix {
     return rl.Matrix{m0, m4, m8, m12, m1, m5, m9, m13, m2, m6, m10, m14, m3, m7, m11, m15}
 }
 
-tolua_Rectangle :: proc "c" (L: ^lua.State, s: rl.Rectangle) {
-    lua.newtable(L)
+tolua_Rectangle :: proc "c" (L: ^lua.State, s: rl.Rectangle, idx: c.int = -99) {
+    idx := idx
+    if idx == -99 {
+        lua.newtable(L)
+        idx = -2
+    }
     lua.pushnumber(L, lua.Number(s.x))
-    lua.setfield(L, -2, "x")
+    lua.setfield(L, idx, "x")
     lua.pushnumber(L, lua.Number(s.y))
-    lua.setfield(L, -2, "y")
+    lua.setfield(L, idx, "y")
     lua.pushnumber(L, lua.Number(s.width))
-    lua.setfield(L, -2, "width")
+    lua.setfield(L, idx, "width")
     lua.pushnumber(L, lua.Number(s.height))
-    lua.setfield(L, -2, "height")
+    lua.setfield(L, idx, "height")
 }
 
 fromlua_Rectangle :: proc "c" (L: ^lua.State, idx: c.int) -> rl.Rectangle {
@@ -2008,18 +2235,65 @@ fromlua_Rectangle :: proc "c" (L: ^lua.State, idx: c.int) -> rl.Rectangle {
     return rl.Rectangle{x = x, y = y, width = width, height = height}
 }
 
-tolua_Texture :: proc "c" (L: ^lua.State, s: rl.Texture) {
-    lua.newtable(L)
-    lua.pushinteger(L, lua.Integer(s.id))
-    lua.setfield(L, -2, "id")
+tolua_Image :: proc "c" (L: ^lua.State, s: rl.Image, idx: c.int = -99) {
+    idx := idx
+    if idx == -99 {
+        lua.newtable(L)
+        idx = -2
+    }
+    lua.pushlightuserdata(L, s.data)
+    lua.setfield(L, idx, "data")
     lua.pushinteger(L, lua.Integer(s.width))
-    lua.setfield(L, -2, "width")
+    lua.setfield(L, idx, "width")
     lua.pushinteger(L, lua.Integer(s.height))
-    lua.setfield(L, -2, "height")
+    lua.setfield(L, idx, "height")
     lua.pushinteger(L, lua.Integer(s.mipmaps))
-    lua.setfield(L, -2, "mipmaps")
+    lua.setfield(L, idx, "mipmaps")
     lua.pushinteger(L, lua.Integer(s.format))
-    lua.setfield(L, -2, "format")
+    lua.setfield(L, idx, "format")
+}
+
+fromlua_Image :: proc "c" (L: ^lua.State, idx: c.int) -> rl.Image {
+    lua.getfield(L, idx, "data")
+    data := lua.touserdata(L, -1)
+    lua.pop(L, 1)
+    lua.getfield(L, idx, "width")
+    width := c.int(lua.tonumber(L, -1))
+    lua.pop(L, 1)
+    lua.getfield(L, idx, "height")
+    height := c.int(lua.tonumber(L, -1))
+    lua.pop(L, 1)
+    lua.getfield(L, idx, "mipmaps")
+    mipmaps := c.int(lua.tonumber(L, -1))
+    lua.pop(L, 1)
+    lua.getfield(L, idx, "format")
+    format := cast(rl.PixelFormat)c.int(lua.tonumber(L, -1))
+    lua.pop(L, 1)
+    return rl.Image {
+        data = data,
+        width = width,
+        height = height,
+        mipmaps = mipmaps,
+        format = format,
+    }
+}
+
+tolua_Texture :: proc "c" (L: ^lua.State, s: rl.Texture, idx: c.int = -99) {
+    idx := idx
+    if idx == -99 {
+        lua.newtable(L)
+        idx = -2
+    }
+    lua.pushinteger(L, lua.Integer(s.id))
+    lua.setfield(L, idx, "id")
+    lua.pushinteger(L, lua.Integer(s.width))
+    lua.setfield(L, idx, "width")
+    lua.pushinteger(L, lua.Integer(s.height))
+    lua.setfield(L, idx, "height")
+    lua.pushinteger(L, lua.Integer(s.mipmaps))
+    lua.setfield(L, idx, "mipmaps")
+    lua.pushinteger(L, lua.Integer(s.format))
+    lua.setfield(L, idx, "format")
 }
 
 fromlua_Texture :: proc "c" (L: ^lua.State, idx: c.int) -> rl.Texture {
@@ -2041,18 +2315,22 @@ fromlua_Texture :: proc "c" (L: ^lua.State, idx: c.int) -> rl.Texture {
     return rl.Texture{id = id, width = width, height = height, mipmaps = mipmaps, format = format}
 }
 
-tolua_Camera3D :: proc "c" (L: ^lua.State, s: rl.Camera3D) {
-    lua.newtable(L)
+tolua_Camera3D :: proc "c" (L: ^lua.State, s: rl.Camera3D, idx: c.int = -99) {
+    idx := idx
+    if idx == -99 {
+        lua.newtable(L)
+        idx = -2
+    }
     tolua_Vector3(L, s.position)
-    lua.setfield(L, -2, "position")
+    lua.setfield(L, idx, "position")
     tolua_Vector3(L, s.target)
-    lua.setfield(L, -2, "target")
+    lua.setfield(L, idx, "target")
     tolua_Vector3(L, s.up)
-    lua.setfield(L, -2, "up")
+    lua.setfield(L, idx, "up")
     lua.pushnumber(L, lua.Number(s.fovy))
-    lua.setfield(L, -2, "fovy")
+    lua.setfield(L, idx, "fovy")
     lua.pushinteger(L, lua.Integer(s.projection))
-    lua.setfield(L, -2, "projection")
+    lua.setfield(L, idx, "projection")
 }
 
 fromlua_Camera3D :: proc "c" (L: ^lua.State, idx: c.int) -> rl.Camera3D {
@@ -2080,16 +2358,20 @@ fromlua_Camera3D :: proc "c" (L: ^lua.State, idx: c.int) -> rl.Camera3D {
     }
 }
 
-tolua_Camera2D :: proc "c" (L: ^lua.State, s: rl.Camera2D) {
-    lua.newtable(L)
+tolua_Camera2D :: proc "c" (L: ^lua.State, s: rl.Camera2D, idx: c.int = -99) {
+    idx := idx
+    if idx == -99 {
+        lua.newtable(L)
+        idx = -2
+    }
     tolua_Vector2(L, s.offset)
-    lua.setfield(L, -2, "offset")
+    lua.setfield(L, idx, "offset")
     tolua_Vector2(L, s.target)
-    lua.setfield(L, -2, "target")
+    lua.setfield(L, idx, "target")
     lua.pushnumber(L, lua.Number(s.rotation))
-    lua.setfield(L, -2, "rotation")
+    lua.setfield(L, idx, "rotation")
     lua.pushnumber(L, lua.Number(s.zoom))
-    lua.setfield(L, -2, "zoom")
+    lua.setfield(L, idx, "zoom")
 }
 
 fromlua_Camera2D :: proc "c" (L: ^lua.State, idx: c.int) -> rl.Camera2D {
@@ -2281,6 +2563,15 @@ lua_MinimizeWindow :: proc "c" (L: ^lua.State) -> c.int {
 @(private)
 lua_RestoreWindow :: proc "c" (L: ^lua.State) -> c.int {
     rl.RestoreWindow()
+
+    return 0
+}
+
+@(private)
+lua_SetWindowIcon :: proc "c" (L: ^lua.State) -> c.int {
+    p_image := fromlua_Image(L, 1)
+
+    rl.SetWindowIcon(p_image)
 
     return 0
 }
@@ -2507,6 +2798,14 @@ lua_GetClipboardText :: proc "c" (L: ^lua.State) -> c.int {
     result := rl.GetClipboardText()
 
     lua.pushstring(L, result)
+    return 1
+}
+
+@(private)
+lua_GetClipboardImage :: proc "c" (L: ^lua.State) -> c.int {
+    result := rl.GetClipboardImage()
+
+    tolua_Image(L, result)
     return 1
 }
 
@@ -4165,12 +4464,813 @@ lua_GetCollisionRec :: proc "c" (L: ^lua.State) -> c.int {
 }
 
 @(private)
+lua_LoadImage :: proc "c" (L: ^lua.State) -> c.int {
+    p_fileName := lua.tostring(L, 1)
+
+    result := rl.LoadImage(p_fileName)
+
+    tolua_Image(L, result)
+    return 1
+}
+
+@(private)
+lua_LoadImageFromTexture :: proc "c" (L: ^lua.State) -> c.int {
+    p_texture := fromlua_Texture2D(L, 1)
+
+    result := rl.LoadImageFromTexture(p_texture)
+
+    tolua_Image(L, result)
+    return 1
+}
+
+@(private)
+lua_LoadImageFromScreen :: proc "c" (L: ^lua.State) -> c.int {
+    result := rl.LoadImageFromScreen()
+
+    tolua_Image(L, result)
+    return 1
+}
+
+@(private)
+lua_IsImageValid :: proc "c" (L: ^lua.State) -> c.int {
+    p_image := fromlua_Image(L, 1)
+
+    result := rl.IsImageValid(p_image)
+
+    lua.pushboolean(L, b32(result))
+    return 1
+}
+
+@(private)
+lua_UnloadImage :: proc "c" (L: ^lua.State) -> c.int {
+    p_image := fromlua_Image(L, 1)
+
+    rl.UnloadImage(p_image)
+
+    return 0
+}
+
+@(private)
+lua_ExportImage :: proc "c" (L: ^lua.State) -> c.int {
+    p_image := fromlua_Image(L, 1)
+    p_fileName := lua.tostring(L, 2)
+
+    result := rl.ExportImage(p_image, p_fileName)
+
+    lua.pushboolean(L, b32(result))
+    return 1
+}
+
+@(private)
+lua_ExportImageAsCode :: proc "c" (L: ^lua.State) -> c.int {
+    p_image := fromlua_Image(L, 1)
+    p_fileName := lua.tostring(L, 2)
+
+    result := rl.ExportImageAsCode(p_image, p_fileName)
+
+    lua.pushboolean(L, b32(result))
+    return 1
+}
+
+@(private)
+lua_GenImageColor :: proc "c" (L: ^lua.State) -> c.int {
+    p_width := c.int(lua.tonumber(L, 1))
+    p_height := c.int(lua.tonumber(L, 2))
+    p_color := fromlua_Color(L, 3)
+
+    result := rl.GenImageColor(p_width, p_height, p_color)
+
+    tolua_Image(L, result)
+    return 1
+}
+
+@(private)
+lua_GenImageGradientLinear :: proc "c" (L: ^lua.State) -> c.int {
+    p_width := c.int(lua.tonumber(L, 1))
+    p_height := c.int(lua.tonumber(L, 2))
+    p_direction := c.int(lua.tonumber(L, 3))
+    p_start := fromlua_Color(L, 4)
+    p_end := fromlua_Color(L, 5)
+
+    result := rl.GenImageGradientLinear(p_width, p_height, p_direction, p_start, p_end)
+
+    tolua_Image(L, result)
+    return 1
+}
+
+@(private)
+lua_GenImageGradientRadial :: proc "c" (L: ^lua.State) -> c.int {
+    p_width := c.int(lua.tonumber(L, 1))
+    p_height := c.int(lua.tonumber(L, 2))
+    p_density := c.float(lua.tonumber(L, 3))
+    p_inner := fromlua_Color(L, 4)
+    p_outer := fromlua_Color(L, 5)
+
+    result := rl.GenImageGradientRadial(p_width, p_height, p_density, p_inner, p_outer)
+
+    tolua_Image(L, result)
+    return 1
+}
+
+@(private)
+lua_GenImageGradientSquare :: proc "c" (L: ^lua.State) -> c.int {
+    p_width := c.int(lua.tonumber(L, 1))
+    p_height := c.int(lua.tonumber(L, 2))
+    p_density := c.float(lua.tonumber(L, 3))
+    p_inner := fromlua_Color(L, 4)
+    p_outer := fromlua_Color(L, 5)
+
+    result := rl.GenImageGradientSquare(p_width, p_height, p_density, p_inner, p_outer)
+
+    tolua_Image(L, result)
+    return 1
+}
+
+@(private)
+lua_GenImageChecked :: proc "c" (L: ^lua.State) -> c.int {
+    p_width := c.int(lua.tonumber(L, 1))
+    p_height := c.int(lua.tonumber(L, 2))
+    p_checksX := c.int(lua.tonumber(L, 3))
+    p_checksY := c.int(lua.tonumber(L, 4))
+    p_col1 := fromlua_Color(L, 5)
+    p_col2 := fromlua_Color(L, 6)
+
+    result := rl.GenImageChecked(p_width, p_height, p_checksX, p_checksY, p_col1, p_col2)
+
+    tolua_Image(L, result)
+    return 1
+}
+
+@(private)
+lua_GenImageWhiteNoise :: proc "c" (L: ^lua.State) -> c.int {
+    p_width := c.int(lua.tonumber(L, 1))
+    p_height := c.int(lua.tonumber(L, 2))
+    p_factor := c.float(lua.tonumber(L, 3))
+
+    result := rl.GenImageWhiteNoise(p_width, p_height, p_factor)
+
+    tolua_Image(L, result)
+    return 1
+}
+
+@(private)
+lua_GenImagePerlinNoise :: proc "c" (L: ^lua.State) -> c.int {
+    p_width := c.int(lua.tonumber(L, 1))
+    p_height := c.int(lua.tonumber(L, 2))
+    p_offsetX := c.int(lua.tonumber(L, 3))
+    p_offsetY := c.int(lua.tonumber(L, 4))
+    p_scale := c.float(lua.tonumber(L, 5))
+
+    result := rl.GenImagePerlinNoise(p_width, p_height, p_offsetX, p_offsetY, p_scale)
+
+    tolua_Image(L, result)
+    return 1
+}
+
+@(private)
+lua_GenImageCellular :: proc "c" (L: ^lua.State) -> c.int {
+    p_width := c.int(lua.tonumber(L, 1))
+    p_height := c.int(lua.tonumber(L, 2))
+    p_tileSize := c.int(lua.tonumber(L, 3))
+
+    result := rl.GenImageCellular(p_width, p_height, p_tileSize)
+
+    tolua_Image(L, result)
+    return 1
+}
+
+@(private)
+lua_GenImageText :: proc "c" (L: ^lua.State) -> c.int {
+    p_width := c.int(lua.tonumber(L, 1))
+    p_height := c.int(lua.tonumber(L, 2))
+    p_text := lua.tostring(L, 3)
+
+    result := rl.GenImageText(p_width, p_height, p_text)
+
+    tolua_Image(L, result)
+    return 1
+}
+
+@(private)
+lua_ImageCopy :: proc "c" (L: ^lua.State) -> c.int {
+    p_image := fromlua_Image(L, 1)
+
+    result := rl.ImageCopy(p_image)
+
+    tolua_Image(L, result)
+    return 1
+}
+
+@(private)
+lua_ImageFromImage :: proc "c" (L: ^lua.State) -> c.int {
+    p_image := fromlua_Image(L, 1)
+    p_rec := fromlua_Rectangle(L, 2)
+
+    result := rl.ImageFromImage(p_image, p_rec)
+
+    tolua_Image(L, result)
+    return 1
+}
+
+@(private)
+lua_ImageFromChannel :: proc "c" (L: ^lua.State) -> c.int {
+    p_image := fromlua_Image(L, 1)
+    p_selectedChannel := c.int(lua.tonumber(L, 2))
+
+    result := rl.ImageFromChannel(p_image, p_selectedChannel)
+
+    tolua_Image(L, result)
+    return 1
+}
+
+@(private)
+lua_ImageText :: proc "c" (L: ^lua.State) -> c.int {
+    p_text := lua.tostring(L, 1)
+    p_fontSize := c.int(lua.tonumber(L, 2))
+    p_color := fromlua_Color(L, 3)
+
+    result := rl.ImageText(p_text, p_fontSize, p_color)
+
+    tolua_Image(L, result)
+    return 1
+}
+
+@(private)
+lua_ImageFormat :: proc "c" (L: ^lua.State) -> c.int {
+    p_image := fromlua_Image(L, 1)
+    p_newFormat := cast(rl.PixelFormat)c.int(lua.tonumber(L, 2))
+
+    rl.ImageFormat(&p_image, p_newFormat)
+
+    tolua_Image(L, p_image, 1)
+    return 0
+}
+
+@(private)
+lua_ImageToPOT :: proc "c" (L: ^lua.State) -> c.int {
+    p_image := fromlua_Image(L, 1)
+    p_fill := fromlua_Color(L, 2)
+
+    rl.ImageToPOT(&p_image, p_fill)
+
+    tolua_Image(L, p_image, 1)
+    return 0
+}
+
+@(private)
+lua_ImageCrop :: proc "c" (L: ^lua.State) -> c.int {
+    p_image := fromlua_Image(L, 1)
+    p_crop := fromlua_Rectangle(L, 2)
+
+    rl.ImageCrop(&p_image, p_crop)
+
+    tolua_Image(L, p_image, 1)
+    return 0
+}
+
+@(private)
+lua_ImageAlphaCrop :: proc "c" (L: ^lua.State) -> c.int {
+    p_image := fromlua_Image(L, 1)
+    p_threshold := c.float(lua.tonumber(L, 2))
+
+    rl.ImageAlphaCrop(&p_image, p_threshold)
+
+    tolua_Image(L, p_image, 1)
+    return 0
+}
+
+@(private)
+lua_ImageAlphaClear :: proc "c" (L: ^lua.State) -> c.int {
+    p_image := fromlua_Image(L, 1)
+    p_color := fromlua_Color(L, 2)
+    p_threshold := c.float(lua.tonumber(L, 3))
+
+    rl.ImageAlphaClear(&p_image, p_color, p_threshold)
+
+    tolua_Image(L, p_image, 1)
+    return 0
+}
+
+@(private)
+lua_ImageAlphaMask :: proc "c" (L: ^lua.State) -> c.int {
+    p_image := fromlua_Image(L, 1)
+    p_alphaMask := fromlua_Image(L, 2)
+
+    rl.ImageAlphaMask(&p_image, p_alphaMask)
+
+    tolua_Image(L, p_image, 1)
+    return 0
+}
+
+@(private)
+lua_ImageAlphaPremultiply :: proc "c" (L: ^lua.State) -> c.int {
+    p_image := fromlua_Image(L, 1)
+
+    rl.ImageAlphaPremultiply(&p_image)
+
+    tolua_Image(L, p_image, 1)
+    return 0
+}
+
+@(private)
+lua_ImageBlurGaussian :: proc "c" (L: ^lua.State) -> c.int {
+    p_image := fromlua_Image(L, 1)
+    p_blurSize := c.int(lua.tonumber(L, 2))
+
+    rl.ImageBlurGaussian(&p_image, p_blurSize)
+
+    tolua_Image(L, p_image, 1)
+    return 0
+}
+
+@(private)
+lua_ImageResize :: proc "c" (L: ^lua.State) -> c.int {
+    p_image := fromlua_Image(L, 1)
+    p_newWidth := c.int(lua.tonumber(L, 2))
+    p_newHeight := c.int(lua.tonumber(L, 3))
+
+    rl.ImageResize(&p_image, p_newWidth, p_newHeight)
+
+    tolua_Image(L, p_image, 1)
+    return 0
+}
+
+@(private)
+lua_ImageResizeNN :: proc "c" (L: ^lua.State) -> c.int {
+    p_image := fromlua_Image(L, 1)
+    p_newWidth := c.int(lua.tonumber(L, 2))
+    p_newHeight := c.int(lua.tonumber(L, 3))
+
+    rl.ImageResizeNN(&p_image, p_newWidth, p_newHeight)
+
+    tolua_Image(L, p_image, 1)
+    return 0
+}
+
+@(private)
+lua_ImageResizeCanvas :: proc "c" (L: ^lua.State) -> c.int {
+    p_image := fromlua_Image(L, 1)
+    p_newWidth := c.int(lua.tonumber(L, 2))
+    p_newHeight := c.int(lua.tonumber(L, 3))
+    p_offsetX := c.int(lua.tonumber(L, 4))
+    p_offsetY := c.int(lua.tonumber(L, 5))
+    p_fill := fromlua_Color(L, 6)
+
+    rl.ImageResizeCanvas(&p_image, p_newWidth, p_newHeight, p_offsetX, p_offsetY, p_fill)
+
+    tolua_Image(L, p_image, 1)
+    return 0
+}
+
+@(private)
+lua_ImageMipmaps :: proc "c" (L: ^lua.State) -> c.int {
+    p_image := fromlua_Image(L, 1)
+
+    rl.ImageMipmaps(&p_image)
+
+    tolua_Image(L, p_image, 1)
+    return 0
+}
+
+@(private)
+lua_ImageDither :: proc "c" (L: ^lua.State) -> c.int {
+    p_image := fromlua_Image(L, 1)
+    p_rBpp := c.int(lua.tonumber(L, 2))
+    p_gBpp := c.int(lua.tonumber(L, 3))
+    p_bBpp := c.int(lua.tonumber(L, 4))
+    p_aBpp := c.int(lua.tonumber(L, 5))
+
+    rl.ImageDither(&p_image, p_rBpp, p_gBpp, p_bBpp, p_aBpp)
+
+    tolua_Image(L, p_image, 1)
+    return 0
+}
+
+@(private)
+lua_ImageFlipVertical :: proc "c" (L: ^lua.State) -> c.int {
+    p_image := fromlua_Image(L, 1)
+
+    rl.ImageFlipVertical(&p_image)
+
+    tolua_Image(L, p_image, 1)
+    return 0
+}
+
+@(private)
+lua_ImageFlipHorizontal :: proc "c" (L: ^lua.State) -> c.int {
+    p_image := fromlua_Image(L, 1)
+
+    rl.ImageFlipHorizontal(&p_image)
+
+    tolua_Image(L, p_image, 1)
+    return 0
+}
+
+@(private)
+lua_ImageRotate :: proc "c" (L: ^lua.State) -> c.int {
+    p_image := fromlua_Image(L, 1)
+    p_degrees := c.int(lua.tonumber(L, 2))
+
+    rl.ImageRotate(&p_image, p_degrees)
+
+    tolua_Image(L, p_image, 1)
+    return 0
+}
+
+@(private)
+lua_ImageRotateCW :: proc "c" (L: ^lua.State) -> c.int {
+    p_image := fromlua_Image(L, 1)
+
+    rl.ImageRotateCW(&p_image)
+
+    tolua_Image(L, p_image, 1)
+    return 0
+}
+
+@(private)
+lua_ImageRotateCCW :: proc "c" (L: ^lua.State) -> c.int {
+    p_image := fromlua_Image(L, 1)
+
+    rl.ImageRotateCCW(&p_image)
+
+    tolua_Image(L, p_image, 1)
+    return 0
+}
+
+@(private)
+lua_ImageColorTint :: proc "c" (L: ^lua.State) -> c.int {
+    p_image := fromlua_Image(L, 1)
+    p_color := fromlua_Color(L, 2)
+
+    rl.ImageColorTint(&p_image, p_color)
+
+    tolua_Image(L, p_image, 1)
+    return 0
+}
+
+@(private)
+lua_ImageColorInvert :: proc "c" (L: ^lua.State) -> c.int {
+    p_image := fromlua_Image(L, 1)
+
+    rl.ImageColorInvert(&p_image)
+
+    tolua_Image(L, p_image, 1)
+    return 0
+}
+
+@(private)
+lua_ImageColorGrayscale :: proc "c" (L: ^lua.State) -> c.int {
+    p_image := fromlua_Image(L, 1)
+
+    rl.ImageColorGrayscale(&p_image)
+
+    tolua_Image(L, p_image, 1)
+    return 0
+}
+
+@(private)
+lua_ImageColorContrast :: proc "c" (L: ^lua.State) -> c.int {
+    p_image := fromlua_Image(L, 1)
+    p_contrast := c.float(lua.tonumber(L, 2))
+
+    rl.ImageColorContrast(&p_image, p_contrast)
+
+    tolua_Image(L, p_image, 1)
+    return 0
+}
+
+@(private)
+lua_ImageColorBrightness :: proc "c" (L: ^lua.State) -> c.int {
+    p_image := fromlua_Image(L, 1)
+    p_brightness := c.int(lua.tonumber(L, 2))
+
+    rl.ImageColorBrightness(&p_image, p_brightness)
+
+    tolua_Image(L, p_image, 1)
+    return 0
+}
+
+@(private)
+lua_ImageColorReplace :: proc "c" (L: ^lua.State) -> c.int {
+    p_image := fromlua_Image(L, 1)
+    p_color := fromlua_Color(L, 2)
+    p_replace := fromlua_Color(L, 3)
+
+    rl.ImageColorReplace(&p_image, p_color, p_replace)
+
+    tolua_Image(L, p_image, 1)
+    return 0
+}
+
+@(private)
+lua_GetImageAlphaBorder :: proc "c" (L: ^lua.State) -> c.int {
+    p_image := fromlua_Image(L, 1)
+    p_threshold := c.float(lua.tonumber(L, 2))
+
+    result := rl.GetImageAlphaBorder(p_image, p_threshold)
+
+    tolua_Rectangle(L, result)
+    return 1
+}
+
+@(private)
+lua_GetImageColor :: proc "c" (L: ^lua.State) -> c.int {
+    p_image := fromlua_Image(L, 1)
+    p_x := c.int(lua.tonumber(L, 2))
+    p_y := c.int(lua.tonumber(L, 3))
+
+    result := rl.GetImageColor(p_image, p_x, p_y)
+
+    tolua_Color(L, result)
+    return 1
+}
+
+@(private)
+lua_ImageClearBackground :: proc "c" (L: ^lua.State) -> c.int {
+    p_dst := fromlua_Image(L, 1)
+    p_color := fromlua_Color(L, 2)
+
+    rl.ImageClearBackground(&p_dst, p_color)
+
+    tolua_Image(L, p_dst, 1)
+    return 0
+}
+
+@(private)
+lua_ImageDrawPixel :: proc "c" (L: ^lua.State) -> c.int {
+    p_dst := fromlua_Image(L, 1)
+    p_posX := c.int(lua.tonumber(L, 2))
+    p_posY := c.int(lua.tonumber(L, 3))
+    p_color := fromlua_Color(L, 4)
+
+    rl.ImageDrawPixel(&p_dst, p_posX, p_posY, p_color)
+
+    tolua_Image(L, p_dst, 1)
+    return 0
+}
+
+@(private)
+lua_ImageDrawPixelV :: proc "c" (L: ^lua.State) -> c.int {
+    p_dst := fromlua_Image(L, 1)
+    p_position := fromlua_Vector2(L, 2)
+    p_color := fromlua_Color(L, 3)
+
+    rl.ImageDrawPixelV(&p_dst, p_position, p_color)
+
+    tolua_Image(L, p_dst, 1)
+    return 0
+}
+
+@(private)
+lua_ImageDrawLine :: proc "c" (L: ^lua.State) -> c.int {
+    p_dst := fromlua_Image(L, 1)
+    p_startPosX := c.int(lua.tonumber(L, 2))
+    p_startPosY := c.int(lua.tonumber(L, 3))
+    p_endPosX := c.int(lua.tonumber(L, 4))
+    p_endPosY := c.int(lua.tonumber(L, 5))
+    p_color := fromlua_Color(L, 6)
+
+    rl.ImageDrawLine(&p_dst, p_startPosX, p_startPosY, p_endPosX, p_endPosY, p_color)
+
+    tolua_Image(L, p_dst, 1)
+    return 0
+}
+
+@(private)
+lua_ImageDrawLineV :: proc "c" (L: ^lua.State) -> c.int {
+    p_dst := fromlua_Image(L, 1)
+    p_start := fromlua_Vector2(L, 2)
+    p_end := fromlua_Vector2(L, 3)
+    p_color := fromlua_Color(L, 4)
+
+    rl.ImageDrawLineV(&p_dst, p_start, p_end, p_color)
+
+    tolua_Image(L, p_dst, 1)
+    return 0
+}
+
+@(private)
+lua_ImageDrawLineEx :: proc "c" (L: ^lua.State) -> c.int {
+    p_dst := fromlua_Image(L, 1)
+    p_start := fromlua_Vector2(L, 2)
+    p_end := fromlua_Vector2(L, 3)
+    p_thick := c.int(lua.tonumber(L, 4))
+    p_color := fromlua_Color(L, 5)
+
+    rl.ImageDrawLineEx(&p_dst, p_start, p_end, p_thick, p_color)
+
+    tolua_Image(L, p_dst, 1)
+    return 0
+}
+
+@(private)
+lua_ImageDrawCircle :: proc "c" (L: ^lua.State) -> c.int {
+    p_dst := fromlua_Image(L, 1)
+    p_centerX := c.int(lua.tonumber(L, 2))
+    p_centerY := c.int(lua.tonumber(L, 3))
+    p_radius := c.int(lua.tonumber(L, 4))
+    p_color := fromlua_Color(L, 5)
+
+    rl.ImageDrawCircle(&p_dst, p_centerX, p_centerY, p_radius, p_color)
+
+    tolua_Image(L, p_dst, 1)
+    return 0
+}
+
+@(private)
+lua_ImageDrawCircleV :: proc "c" (L: ^lua.State) -> c.int {
+    p_dst := fromlua_Image(L, 1)
+    p_center := fromlua_Vector2(L, 2)
+    p_radius := c.int(lua.tonumber(L, 3))
+    p_color := fromlua_Color(L, 4)
+
+    rl.ImageDrawCircleV(&p_dst, p_center, p_radius, p_color)
+
+    tolua_Image(L, p_dst, 1)
+    return 0
+}
+
+@(private)
+lua_ImageDrawCircleLines :: proc "c" (L: ^lua.State) -> c.int {
+    p_dst := fromlua_Image(L, 1)
+    p_centerX := c.int(lua.tonumber(L, 2))
+    p_centerY := c.int(lua.tonumber(L, 3))
+    p_radius := c.int(lua.tonumber(L, 4))
+    p_color := fromlua_Color(L, 5)
+
+    rl.ImageDrawCircleLines(&p_dst, p_centerX, p_centerY, p_radius, p_color)
+
+    tolua_Image(L, p_dst, 1)
+    return 0
+}
+
+@(private)
+lua_ImageDrawCircleLinesV :: proc "c" (L: ^lua.State) -> c.int {
+    p_dst := fromlua_Image(L, 1)
+    p_center := fromlua_Vector2(L, 2)
+    p_radius := c.int(lua.tonumber(L, 3))
+    p_color := fromlua_Color(L, 4)
+
+    rl.ImageDrawCircleLinesV(&p_dst, p_center, p_radius, p_color)
+
+    tolua_Image(L, p_dst, 1)
+    return 0
+}
+
+@(private)
+lua_ImageDrawRectangle :: proc "c" (L: ^lua.State) -> c.int {
+    p_dst := fromlua_Image(L, 1)
+    p_posX := c.int(lua.tonumber(L, 2))
+    p_posY := c.int(lua.tonumber(L, 3))
+    p_width := c.int(lua.tonumber(L, 4))
+    p_height := c.int(lua.tonumber(L, 5))
+    p_color := fromlua_Color(L, 6)
+
+    rl.ImageDrawRectangle(&p_dst, p_posX, p_posY, p_width, p_height, p_color)
+
+    tolua_Image(L, p_dst, 1)
+    return 0
+}
+
+@(private)
+lua_ImageDrawRectangleV :: proc "c" (L: ^lua.State) -> c.int {
+    p_dst := fromlua_Image(L, 1)
+    p_position := fromlua_Vector2(L, 2)
+    p_size := fromlua_Vector2(L, 3)
+    p_color := fromlua_Color(L, 4)
+
+    rl.ImageDrawRectangleV(&p_dst, p_position, p_size, p_color)
+
+    tolua_Image(L, p_dst, 1)
+    return 0
+}
+
+@(private)
+lua_ImageDrawRectangleRec :: proc "c" (L: ^lua.State) -> c.int {
+    p_dst := fromlua_Image(L, 1)
+    p_rec := fromlua_Rectangle(L, 2)
+    p_color := fromlua_Color(L, 3)
+
+    rl.ImageDrawRectangleRec(&p_dst, p_rec, p_color)
+
+    tolua_Image(L, p_dst, 1)
+    return 0
+}
+
+@(private)
+lua_ImageDrawRectangleLines :: proc "c" (L: ^lua.State) -> c.int {
+    p_dst := fromlua_Image(L, 1)
+    p_rec := fromlua_Rectangle(L, 2)
+    p_thick := c.int(lua.tonumber(L, 3))
+    p_color := fromlua_Color(L, 4)
+
+    rl.ImageDrawRectangleLines(&p_dst, p_rec, p_thick, p_color)
+
+    tolua_Image(L, p_dst, 1)
+    return 0
+}
+
+@(private)
+lua_ImageDrawTriangle :: proc "c" (L: ^lua.State) -> c.int {
+    p_dst := fromlua_Image(L, 1)
+    p_v1 := fromlua_Vector2(L, 2)
+    p_v2 := fromlua_Vector2(L, 3)
+    p_v3 := fromlua_Vector2(L, 4)
+    p_color := fromlua_Color(L, 5)
+
+    rl.ImageDrawTriangle(&p_dst, p_v1, p_v2, p_v3, p_color)
+
+    tolua_Image(L, p_dst, 1)
+    return 0
+}
+
+@(private)
+lua_ImageDrawTriangleEx :: proc "c" (L: ^lua.State) -> c.int {
+    p_dst := fromlua_Image(L, 1)
+    p_v1 := fromlua_Vector2(L, 2)
+    p_v2 := fromlua_Vector2(L, 3)
+    p_v3 := fromlua_Vector2(L, 4)
+    p_c1 := fromlua_Color(L, 5)
+    p_c2 := fromlua_Color(L, 6)
+    p_c3 := fromlua_Color(L, 7)
+
+    rl.ImageDrawTriangleEx(&p_dst, p_v1, p_v2, p_v3, p_c1, p_c2, p_c3)
+
+    tolua_Image(L, p_dst, 1)
+    return 0
+}
+
+@(private)
+lua_ImageDrawTriangleLines :: proc "c" (L: ^lua.State) -> c.int {
+    p_dst := fromlua_Image(L, 1)
+    p_v1 := fromlua_Vector2(L, 2)
+    p_v2 := fromlua_Vector2(L, 3)
+    p_v3 := fromlua_Vector2(L, 4)
+    p_color := fromlua_Color(L, 5)
+
+    rl.ImageDrawTriangleLines(&p_dst, p_v1, p_v2, p_v3, p_color)
+
+    tolua_Image(L, p_dst, 1)
+    return 0
+}
+
+@(private)
+lua_ImageDraw :: proc "c" (L: ^lua.State) -> c.int {
+    p_dst := fromlua_Image(L, 1)
+    p_src := fromlua_Image(L, 2)
+    p_srcRec := fromlua_Rectangle(L, 3)
+    p_dstRec := fromlua_Rectangle(L, 4)
+    p_tint := fromlua_Color(L, 5)
+
+    rl.ImageDraw(&p_dst, p_src, p_srcRec, p_dstRec, p_tint)
+
+    tolua_Image(L, p_dst, 1)
+    return 0
+}
+
+@(private)
+lua_ImageDrawText :: proc "c" (L: ^lua.State) -> c.int {
+    p_dst := fromlua_Image(L, 1)
+    p_text := lua.tostring(L, 2)
+    p_posX := c.int(lua.tonumber(L, 3))
+    p_posY := c.int(lua.tonumber(L, 4))
+    p_fontSize := c.int(lua.tonumber(L, 5))
+    p_color := fromlua_Color(L, 6)
+
+    rl.ImageDrawText(&p_dst, p_text, p_posX, p_posY, p_fontSize, p_color)
+
+    tolua_Image(L, p_dst, 1)
+    return 0
+}
+
+@(private)
 lua_LoadTexture :: proc "c" (L: ^lua.State) -> c.int {
     p_fileName := lua.tostring(L, 1)
 
     result := rl.LoadTexture(p_fileName)
 
     tolua_Texture2D(L, result)
+    return 1
+}
+
+@(private)
+lua_LoadTextureFromImage :: proc "c" (L: ^lua.State) -> c.int {
+    p_image := fromlua_Image(L, 1)
+
+    result := rl.LoadTextureFromImage(p_image)
+
+    tolua_Texture2D(L, result)
+    return 1
+}
+
+@(private)
+lua_LoadTextureCubemap :: proc "c" (L: ^lua.State) -> c.int {
+    p_image := fromlua_Image(L, 1)
+    p_layout := cast(rl.CubemapLayout)c.int(lua.tonumber(L, 2))
+
+    result := rl.LoadTextureCubemap(p_image, p_layout)
+
+    tolua_TextureCubemap(L, result)
     return 1
 }
 
@@ -4945,4 +6045,3 @@ lua_SetAudioStreamBufferSizeDefault :: proc "c" (L: ^lua.State) -> c.int {
 
     return 0
 }
-

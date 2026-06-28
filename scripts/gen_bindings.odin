@@ -166,6 +166,8 @@ implemented_types :: []string {
     "float",
     "double",
     "bool",
+
+    // structs
     "Color",
     "Vector2",
     "Vector3",
@@ -175,11 +177,14 @@ implemented_types :: []string {
     "Camera",
     "Camera2D",
     "Camera3D",
-    // "Image",
+    "Image",
     "Texture",
     "Texture2D",
     "TextureCubemap",
     "Quaternion",
+
+    //
+    "Image *",
 }
 skip_functions :: []string {
     "ExportDataAsCode",
@@ -198,6 +203,9 @@ skip_functions :: []string {
     "GetGestureDetected",
     "ComputeCRC32",
     "ColorIsEqual", // deprecated
+
+    //need to implement
+    "SetWindowIcons",
 }
 write_functions :: proc(
     w: io.Writer,
@@ -270,7 +278,15 @@ write_functions :: proc(
         parameterNamesPrefixed := [dynamic]string{}
         pnames := [dynamic]string{}
         for param, i in params {
-            append(&parameterNamesPrefixed, fmt.tprintf("p_%v", param.name))
+            ptrstr := ""
+
+            _, isptr := slice.linear_search(
+                params_modified_in_place,
+                fmt.tprintf("%v.%v", name, param.name),
+            )
+            if isptr do ptrstr = "&"
+
+            append(&parameterNamesPrefixed, fmt.tprintf("%vp_%v", ptrstr, param.name))
 
             source := fmt.tprintf("%v.%v", name, param.name)
             fmt.wprintfln(
@@ -294,6 +310,23 @@ write_functions :: proc(
         }
 
         fmt.wprintfln(w, "")
+
+        // pushback modified in place values
+        for param, i in params {
+            _, modified_in_place := slice.linear_search(
+                params_modified_in_place,
+                fmt.tprintf("%v.%v", name, param.name),
+            )
+            if !modified_in_place {
+                continue
+            }
+
+            // source := fmt.tprintf("%v.%v", name, param.name)
+            cuttype, _ := strings.substring_to(param.type, len(param.type) - 2)
+            fmt.wprintfln(w, "    tolua_%v(L, p_%v, %v)", cuttype, param.name, i + 1)
+            // fmt.wprintfln(w, "    %v", push_value(param.type, i + 1))
+        }
+
         if returnType == "void" do fmt.wprintfln(w, "    return 0")
         else {
             fmt.wprintfln(w, "    %v", push_value(returnType, "result"))
@@ -351,6 +384,55 @@ parse_function_params :: proc(v: json.Object) -> []Param {
     return ret[:]
 }
 
+params_modified_in_place :: []string {
+    "ImageFormat.image",
+    "ImageToPOT.image",
+    "ImageCrop.image",
+    "ImageAlphaCrop.image",
+    "ImageAlphaClear.image",
+    "ImageAlphaMask.image",
+    "ImageAlphaPremultiply.image",
+    "ImageBlurGaussian.image",
+    "ImageKernelConvolution.image",
+    "ImageResize.image",
+    "ImageResizeNN.image",
+    "ImageResizeCanvas.image",
+    "ImageMipmaps.image",
+    "ImageDither.image",
+    "ImageFlipVertical.image",
+    "ImageFlipHorizontal.image",
+    "ImageRotate.image",
+    "ImageRotateCW.image",
+    "ImageRotateCCW.image",
+    "ImageColorTint.image",
+    "ImageColorInvert.image",
+    "ImageColorGrayscale.image",
+    "ImageColorContrast.image",
+    "ImageColorBrightness.image",
+    "ImageColorReplace.image",
+    "ImageClearBackground.dst",
+    "ImageDrawPixel.dst",
+    "ImageDrawPixelV.dst",
+    "ImageDrawLine.dst",
+    "ImageDrawLineV.dst",
+    "ImageDrawLineEx.dst",
+    "ImageDrawCircle.dst",
+    "ImageDrawCircleV.dst",
+    "ImageDrawCircleLines.dst",
+    "ImageDrawCircleLinesV.dst",
+    "ImageDrawRectangle.dst",
+    "ImageDrawRectangleV.dst",
+    "ImageDrawRectangleRec.dst",
+    "ImageDrawRectangleLines.dst",
+    "ImageDrawTriangle.dst",
+    "ImageDrawTriangleEx.dst",
+    "ImageDrawTriangleLines.dst",
+    "ImageDrawTriangleFan.dst",
+    "ImageDrawTriangleStrip.dst",
+    "ImageDraw.dst",
+    "ImageDrawText.dst",
+    "ImageDrawTextEx.dst",
+}
 ParamOverride :: struct {
     source:    string,
     cast_type: string,
@@ -385,9 +467,12 @@ param_type_overrides :: []ParamOverride {
     {"GetPixelDataSize.format", "cast", "PixelFormat"},
     {"SetTextureFilter.filter", "cast", "TextureFilter"},
     {"SetTextureWrap.wrap", "cast", "TextureWrap"},
+    {"LoadTextureCubemap.layout", "cast", "CubemapLayout"},
+    {"ImageFormat.newFormat", "cast", "PixelFormat"},
 
     // structs
     {"Texture.format", "cast", "PixelFormat"},
+    {"Image.format", "cast", "PixelFormat"},
     {"Camera3D.projection", "cast", "CameraProjection"},
 }
 
@@ -424,6 +509,12 @@ generate_fromlua_idxstr :: proc(type: string, idx: string, source: string = "") 
         value = fmt.tprintf("c.double(lua.tonumber(L, %v))", idx)
     } else if type == "bool" {
         value = fmt.tprintf("c.bool(lua.toboolean(L, %v))", idx)
+    } else if type == "void *" {
+        value = fmt.tprintf("lua.touserdata(L, %v)", idx)
+    } else if strings.ends_with(type, " *") {
+        // pointer to struct
+        cuttype, _ := strings.substring_to(type, len(type) - 2)
+        value = fmt.tprintf("fromlua_%v(L, %v)", cuttype, idx)
     } else {
         value = fmt.tprintf("fromlua_%v(L, %v)", type, idx)
     }
@@ -447,6 +538,12 @@ push_value_string :: proc(type: string, value: string = "result") -> string {
         return fmt.tprintf("lua.pushnumber(L, lua.Number(%v))", value)
     } else if type == "bool" {
         return fmt.tprintf("lua.pushboolean(L, b32(%v))", value)
+    } else if type == "void *" {
+        return fmt.tprintf("lua.pushlightuserdata(L, %v)", value)
+    } else if strings.ends_with(type, " *") {
+        // pointer to struct
+        cuttype, _ := strings.substring_to(type, len(type) - 2)
+        return fmt.tprintf("tolua_%v(L, %v)", cuttype, value)
     } else {
         return fmt.tprintf("tolua_%v(L, %v)", type, value)
     }
@@ -482,21 +579,6 @@ get_param_lua_type :: proc(type: string, source: string = "") -> string {
 }
 
 array_structs :: []string{"Vector2", "Vector3", "Vector4", "Matrix"}
-supported_structs :: []string {
-    "Color",
-    "Vector2",
-    "Vector3",
-    "Vector4",
-    "Camera3D",
-    "Camera2D",
-    "Matrix",
-    "Rectangle",
-    // "Image",
-    "Texture",
-    "Texture2D",
-    "TextureCubemap",
-    "Quaternion",
-}
 write_struct_helpers :: proc(
     w: io.Writer,
     w_binds: io.Writer,
@@ -510,7 +592,7 @@ write_struct_helpers :: proc(
         name := v["name"].(json.String)
         fieldsJson := v["fields"].(json.Array)
 
-        _, found := slice.linear_search(supported_structs, name)
+        _, found := slice.linear_search(implemented_types, name)
         if !found {
             continue
         }
@@ -547,15 +629,25 @@ write_struct_helpers :: proc(
 
 
         // write conversion funcs
-        fmt.wprintfln(w, `tolua_%v :: proc "c" (L: ^lua.State, s: rl.%v) {{`, name, name)
-        fmt.wprintfln(w, "    lua.newtable(L)")
+        fmt.wprintfln(
+            w,
+            `tolua_%v :: proc "c" (L: ^lua.State, s: rl.%v, idx: c.int = -99) {{`,
+            name,
+            name,
+        )
+        // -99 is the default value. if IDX isn't specified, create a new table.
+        fmt.wprintfln(w, "    idx := idx")
+        fmt.wprintfln(w, "    if idx == -99 {{")
+        fmt.wprintfln(w, "        lua.newtable(L)")
+        fmt.wprintfln(w, "        idx = -2")
+        fmt.wprintfln(w, "    }}")
         for field, i in fields {
             v := fmt.tprintf("s.%v", field.name)
             if name == "Matrix" {
                 v = fmt.tprintf("s[%v][%v]", i % 4, math.floor(f32(i) / 4))
             }
             fmt.wprintfln(w, "    %v", push_value(field.type, v))
-            fmt.wprintfln(w, `    lua.setfield(L, -2, "%v")`, field.name)
+            fmt.wprintfln(w, `    lua.setfield(L, idx, "%v")`, field.name)
         }
         fmt.wprintfln(w, "}")
         fmt.wprintfln(w, "")
@@ -603,7 +695,7 @@ write_struct_aliases :: proc(
         name := v["name"].(json.String)
         type := v["type"].(json.String)
 
-        _, found := slice.linear_search(supported_structs, type)
+        _, found := slice.linear_search(implemented_types, type)
         if !found {
             continue
         }
