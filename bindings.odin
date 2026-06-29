@@ -1204,6 +1204,12 @@ bind_raylib :: proc(L: ^lua.State) {
     lua.pushcfunction(L, lua_EndVrStereoMode)
     lua.setfield(L, -2, "EndVrStereoMode")
 
+    lua.pushcfunction(L, lua_GetScreenToWorldRay)
+    lua.setfield(L, -2, "GetScreenToWorldRay")
+
+    lua.pushcfunction(L, lua_GetScreenToWorldRayEx)
+    lua.setfield(L, -2, "GetScreenToWorldRayEx")
+
     lua.pushcfunction(L, lua_GetWorldToScreen)
     lua.setfield(L, -2, "GetWorldToScreen")
 
@@ -1308,6 +1314,9 @@ bind_raylib :: proc(L: ^lua.State) {
 
     lua.pushcfunction(L, lua_IsFileDropped)
     lua.setfield(L, -2, "IsFileDropped")
+
+    lua.pushcfunction(L, lua_GetFileModTime)
+    lua.setfield(L, -2, "GetFileModTime")
 
     lua.pushcfunction(L, lua_SetAutomationEventBaseFrame)
     lua.setfield(L, -2, "SetAutomationEventBaseFrame")
@@ -1861,6 +1870,9 @@ bind_raylib :: proc(L: ^lua.State) {
     lua.pushcfunction(L, lua_DrawTexturePro)
     lua.setfield(L, -2, "DrawTexturePro")
 
+    lua.pushcfunction(L, lua_DrawTextureNPatch)
+    lua.setfield(L, -2, "DrawTextureNPatch")
+
     lua.pushcfunction(L, lua_Fade)
     lua.setfield(L, -2, "Fade")
 
@@ -2005,8 +2017,14 @@ bind_raylib :: proc(L: ^lua.State) {
     lua.pushcfunction(L, lua_DrawPlane)
     lua.setfield(L, -2, "DrawPlane")
 
+    lua.pushcfunction(L, lua_DrawRay)
+    lua.setfield(L, -2, "DrawRay")
+
     lua.pushcfunction(L, lua_DrawGrid)
     lua.setfield(L, -2, "DrawGrid")
+
+    lua.pushcfunction(L, lua_DrawBoundingBox)
+    lua.setfield(L, -2, "DrawBoundingBox")
 
     lua.pushcfunction(L, lua_DrawBillboard)
     lua.setfield(L, -2, "DrawBillboard")
@@ -2019,6 +2037,24 @@ bind_raylib :: proc(L: ^lua.State) {
 
     lua.pushcfunction(L, lua_CheckCollisionSpheres)
     lua.setfield(L, -2, "CheckCollisionSpheres")
+
+    lua.pushcfunction(L, lua_CheckCollisionBoxes)
+    lua.setfield(L, -2, "CheckCollisionBoxes")
+
+    lua.pushcfunction(L, lua_CheckCollisionBoxSphere)
+    lua.setfield(L, -2, "CheckCollisionBoxSphere")
+
+    lua.pushcfunction(L, lua_GetRayCollisionSphere)
+    lua.setfield(L, -2, "GetRayCollisionSphere")
+
+    lua.pushcfunction(L, lua_GetRayCollisionBox)
+    lua.setfield(L, -2, "GetRayCollisionBox")
+
+    lua.pushcfunction(L, lua_GetRayCollisionTriangle)
+    lua.setfield(L, -2, "GetRayCollisionTriangle")
+
+    lua.pushcfunction(L, lua_GetRayCollisionQuad)
+    lua.setfield(L, -2, "GetRayCollisionQuad")
 
     lua.pushcfunction(L, lua_InitAudioDevice)
     lua.setfield(L, -2, "InitAudioDevice")
@@ -2034,6 +2070,24 @@ bind_raylib :: proc(L: ^lua.State) {
 
     lua.pushcfunction(L, lua_GetMasterVolume)
     lua.setfield(L, -2, "GetMasterVolume")
+
+    lua.pushcfunction(L, lua_LoadWave)
+    lua.setfield(L, -2, "LoadWave")
+
+    lua.pushcfunction(L, lua_IsWaveValid)
+    lua.setfield(L, -2, "IsWaveValid")
+
+    lua.pushcfunction(L, lua_UnloadWave)
+    lua.setfield(L, -2, "UnloadWave")
+
+    lua.pushcfunction(L, lua_ExportWave)
+    lua.setfield(L, -2, "ExportWave")
+
+    lua.pushcfunction(L, lua_ExportWaveAsCode)
+    lua.setfield(L, -2, "ExportWaveAsCode")
+
+    lua.pushcfunction(L, lua_WaveCopy)
+    lua.setfield(L, -2, "WaveCopy")
 
     lua.pushcfunction(L, lua_SetAudioStreamBufferSizeDefault)
     lua.setfield(L, -2, "SetAudioStreamBufferSizeDefault")
@@ -2354,6 +2408,98 @@ fromlua_RenderTexture :: proc "c" (L: ^lua.State, idx: c.int) -> rl.RenderTextur
     return rl.RenderTexture{id = id, texture = texture, depth = depth}
 }
 
+tolua_NPatchInfo :: proc "c" (L: ^lua.State, s: rl.NPatchInfo, idx: c.int = -99) {
+    idx := idx
+    if idx == -99 {
+        lua.newtable(L)
+        idx = -2
+    }
+    tolua_Rectangle(L, s.source)
+    lua.setfield(L, idx, "source")
+    lua.pushinteger(L, lua.Integer(s.left))
+    lua.setfield(L, idx, "left")
+    lua.pushinteger(L, lua.Integer(s.top))
+    lua.setfield(L, idx, "top")
+    lua.pushinteger(L, lua.Integer(s.right))
+    lua.setfield(L, idx, "right")
+    lua.pushinteger(L, lua.Integer(s.bottom))
+    lua.setfield(L, idx, "bottom")
+    lua.pushinteger(L, lua.Integer(s.layout))
+    lua.setfield(L, idx, "layout")
+}
+
+fromlua_NPatchInfo :: proc "c" (L: ^lua.State, idx: c.int) -> rl.NPatchInfo {
+    lua.getfield(L, idx, "source")
+    source := fromlua_Rectangle(L, -1)
+    lua.pop(L, 1)
+    lua.getfield(L, idx, "left")
+    left := c.int(lua.tonumber(L, -1))
+    lua.pop(L, 1)
+    lua.getfield(L, idx, "top")
+    top := c.int(lua.tonumber(L, -1))
+    lua.pop(L, 1)
+    lua.getfield(L, idx, "right")
+    right := c.int(lua.tonumber(L, -1))
+    lua.pop(L, 1)
+    lua.getfield(L, idx, "bottom")
+    bottom := c.int(lua.tonumber(L, -1))
+    lua.pop(L, 1)
+    lua.getfield(L, idx, "layout")
+    layout := cast(rl.NPatchLayout)c.int(lua.tonumber(L, -1))
+    lua.pop(L, 1)
+    return rl.NPatchInfo {
+        source = source,
+        left = left,
+        top = top,
+        right = right,
+        bottom = bottom,
+        layout = layout,
+    }
+}
+
+tolua_GlyphInfo :: proc "c" (L: ^lua.State, s: rl.GlyphInfo, idx: c.int = -99) {
+    idx := idx
+    if idx == -99 {
+        lua.newtable(L)
+        idx = -2
+    }
+    lua.pushinteger(L, lua.Integer(s.value))
+    lua.setfield(L, idx, "value")
+    lua.pushinteger(L, lua.Integer(s.offsetX))
+    lua.setfield(L, idx, "offsetX")
+    lua.pushinteger(L, lua.Integer(s.offsetY))
+    lua.setfield(L, idx, "offsetY")
+    lua.pushinteger(L, lua.Integer(s.advanceX))
+    lua.setfield(L, idx, "advanceX")
+    tolua_Image(L, s.image)
+    lua.setfield(L, idx, "image")
+}
+
+fromlua_GlyphInfo :: proc "c" (L: ^lua.State, idx: c.int) -> rl.GlyphInfo {
+    lua.getfield(L, idx, "value")
+    value := cast(rune)c.int(lua.tonumber(L, -1))
+    lua.pop(L, 1)
+    lua.getfield(L, idx, "offsetX")
+    offsetX := c.int(lua.tonumber(L, -1))
+    lua.pop(L, 1)
+    lua.getfield(L, idx, "offsetY")
+    offsetY := c.int(lua.tonumber(L, -1))
+    lua.pop(L, 1)
+    lua.getfield(L, idx, "advanceX")
+    advanceX := c.int(lua.tonumber(L, -1))
+    lua.pop(L, 1)
+    lua.getfield(L, idx, "image")
+    image := fromlua_Image(L, -1)
+    lua.pop(L, 1)
+    return rl.GlyphInfo {
+        value = value,
+        offsetX = offsetX,
+        offsetY = offsetY,
+        advanceX = advanceX,
+        image = image,
+    }
+}
+
 tolua_Camera3D :: proc "c" (L: ^lua.State, s: rl.Camera3D, idx: c.int = -99) {
     idx := idx
     if idx == -99 {
@@ -2427,6 +2573,179 @@ fromlua_Camera2D :: proc "c" (L: ^lua.State, idx: c.int) -> rl.Camera2D {
     zoom := c.float(lua.tonumber(L, -1))
     lua.pop(L, 1)
     return rl.Camera2D{offset = offset, target = target, rotation = rotation, zoom = zoom}
+}
+
+tolua_MaterialMap :: proc "c" (L: ^lua.State, s: rl.MaterialMap, idx: c.int = -99) {
+    idx := idx
+    if idx == -99 {
+        lua.newtable(L)
+        idx = -2
+    }
+    tolua_Texture2D(L, s.texture)
+    lua.setfield(L, idx, "texture")
+    tolua_Color(L, s.color)
+    lua.setfield(L, idx, "color")
+    lua.pushnumber(L, lua.Number(s.value))
+    lua.setfield(L, idx, "value")
+}
+
+fromlua_MaterialMap :: proc "c" (L: ^lua.State, idx: c.int) -> rl.MaterialMap {
+    lua.getfield(L, idx, "texture")
+    texture := fromlua_Texture2D(L, -1)
+    lua.pop(L, 1)
+    lua.getfield(L, idx, "color")
+    color := fromlua_Color(L, -1)
+    lua.pop(L, 1)
+    lua.getfield(L, idx, "value")
+    value := c.float(lua.tonumber(L, -1))
+    lua.pop(L, 1)
+    return rl.MaterialMap{texture = texture, color = color, value = value}
+}
+
+tolua_Transform :: proc "c" (L: ^lua.State, s: rl.Transform, idx: c.int = -99) {
+    idx := idx
+    if idx == -99 {
+        lua.newtable(L)
+        idx = -2
+    }
+    tolua_Vector3(L, s.translation)
+    lua.setfield(L, idx, "translation")
+    tolua_Quaternion(L, s.rotation)
+    lua.setfield(L, idx, "rotation")
+    tolua_Vector3(L, s.scale)
+    lua.setfield(L, idx, "scale")
+}
+
+fromlua_Transform :: proc "c" (L: ^lua.State, idx: c.int) -> rl.Transform {
+    lua.getfield(L, idx, "translation")
+    translation := fromlua_Vector3(L, -1)
+    lua.pop(L, 1)
+    lua.getfield(L, idx, "rotation")
+    rotation := fromlua_Quaternion(L, -1)
+    lua.pop(L, 1)
+    lua.getfield(L, idx, "scale")
+    scale := fromlua_Vector3(L, -1)
+    lua.pop(L, 1)
+    return rl.Transform{translation = translation, rotation = rotation, scale = scale}
+}
+
+tolua_Ray :: proc "c" (L: ^lua.State, s: rl.Ray, idx: c.int = -99) {
+    idx := idx
+    if idx == -99 {
+        lua.newtable(L)
+        idx = -2
+    }
+    tolua_Vector3(L, s.position)
+    lua.setfield(L, idx, "position")
+    tolua_Vector3(L, s.direction)
+    lua.setfield(L, idx, "direction")
+}
+
+fromlua_Ray :: proc "c" (L: ^lua.State, idx: c.int) -> rl.Ray {
+    lua.getfield(L, idx, "position")
+    position := fromlua_Vector3(L, -1)
+    lua.pop(L, 1)
+    lua.getfield(L, idx, "direction")
+    direction := fromlua_Vector3(L, -1)
+    lua.pop(L, 1)
+    return rl.Ray{position = position, direction = direction}
+}
+
+tolua_RayCollision :: proc "c" (L: ^lua.State, s: rl.RayCollision, idx: c.int = -99) {
+    idx := idx
+    if idx == -99 {
+        lua.newtable(L)
+        idx = -2
+    }
+    lua.pushboolean(L, b32(s.hit))
+    lua.setfield(L, idx, "hit")
+    lua.pushnumber(L, lua.Number(s.distance))
+    lua.setfield(L, idx, "distance")
+    tolua_Vector3(L, s.point)
+    lua.setfield(L, idx, "point")
+    tolua_Vector3(L, s.normal)
+    lua.setfield(L, idx, "normal")
+}
+
+fromlua_RayCollision :: proc "c" (L: ^lua.State, idx: c.int) -> rl.RayCollision {
+    lua.getfield(L, idx, "hit")
+    hit := c.bool(lua.toboolean(L, -1))
+    lua.pop(L, 1)
+    lua.getfield(L, idx, "distance")
+    distance := c.float(lua.tonumber(L, -1))
+    lua.pop(L, 1)
+    lua.getfield(L, idx, "point")
+    point := fromlua_Vector3(L, -1)
+    lua.pop(L, 1)
+    lua.getfield(L, idx, "normal")
+    normal := fromlua_Vector3(L, -1)
+    lua.pop(L, 1)
+    return rl.RayCollision{hit = hit, distance = distance, point = point, normal = normal}
+}
+
+tolua_BoundingBox :: proc "c" (L: ^lua.State, s: rl.BoundingBox, idx: c.int = -99) {
+    idx := idx
+    if idx == -99 {
+        lua.newtable(L)
+        idx = -2
+    }
+    tolua_Vector3(L, s.min)
+    lua.setfield(L, idx, "min")
+    tolua_Vector3(L, s.max)
+    lua.setfield(L, idx, "max")
+}
+
+fromlua_BoundingBox :: proc "c" (L: ^lua.State, idx: c.int) -> rl.BoundingBox {
+    lua.getfield(L, idx, "min")
+    min := fromlua_Vector3(L, -1)
+    lua.pop(L, 1)
+    lua.getfield(L, idx, "max")
+    max := fromlua_Vector3(L, -1)
+    lua.pop(L, 1)
+    return rl.BoundingBox{min = min, max = max}
+}
+
+tolua_Wave :: proc "c" (L: ^lua.State, s: rl.Wave, idx: c.int = -99) {
+    idx := idx
+    if idx == -99 {
+        lua.newtable(L)
+        idx = -2
+    }
+    lua.pushinteger(L, lua.Integer(s.frameCount))
+    lua.setfield(L, idx, "frameCount")
+    lua.pushinteger(L, lua.Integer(s.sampleRate))
+    lua.setfield(L, idx, "sampleRate")
+    lua.pushinteger(L, lua.Integer(s.sampleSize))
+    lua.setfield(L, idx, "sampleSize")
+    lua.pushinteger(L, lua.Integer(s.channels))
+    lua.setfield(L, idx, "channels")
+    lua.pushlightuserdata(L, s.data)
+    lua.setfield(L, idx, "data")
+}
+
+fromlua_Wave :: proc "c" (L: ^lua.State, idx: c.int) -> rl.Wave {
+    lua.getfield(L, idx, "frameCount")
+    frameCount := c.uint(lua.tonumber(L, -1))
+    lua.pop(L, 1)
+    lua.getfield(L, idx, "sampleRate")
+    sampleRate := c.uint(lua.tonumber(L, -1))
+    lua.pop(L, 1)
+    lua.getfield(L, idx, "sampleSize")
+    sampleSize := c.uint(lua.tonumber(L, -1))
+    lua.pop(L, 1)
+    lua.getfield(L, idx, "channels")
+    channels := c.uint(lua.tonumber(L, -1))
+    lua.pop(L, 1)
+    lua.getfield(L, idx, "data")
+    data := lua.touserdata(L, -1)
+    lua.pop(L, 1)
+    return rl.Wave {
+        frameCount = frameCount,
+        sampleRate = sampleRate,
+        sampleSize = sampleSize,
+        channels = channels,
+        data = data,
+    }
 }
 
 tolua_Quaternion :: proc "c" (L: ^lua.State, s: rl.Quaternion) {
@@ -3035,6 +3354,30 @@ lua_EndVrStereoMode :: proc "c" (L: ^lua.State) -> c.int {
 }
 
 @(private)
+lua_GetScreenToWorldRay :: proc "c" (L: ^lua.State) -> c.int {
+    p_position := fromlua_Vector2(L, 1)
+    p_camera := fromlua_Camera(L, 2)
+
+    result := rl.GetScreenToWorldRay(p_position, p_camera)
+
+    tolua_Ray(L, result)
+    return 1
+}
+
+@(private)
+lua_GetScreenToWorldRayEx :: proc "c" (L: ^lua.State) -> c.int {
+    p_position := fromlua_Vector2(L, 1)
+    p_camera := fromlua_Camera(L, 2)
+    p_width := c.int(lua.tonumber(L, 3))
+    p_height := c.int(lua.tonumber(L, 4))
+
+    result := rl.GetScreenToWorldRayEx(p_position, p_camera, p_width, p_height)
+
+    tolua_Ray(L, result)
+    return 1
+}
+
+@(private)
 lua_GetWorldToScreen :: proc "c" (L: ^lua.State) -> c.int {
     p_position := fromlua_Vector3(L, 1)
     p_camera := fromlua_Camera(L, 2)
@@ -3364,6 +3707,16 @@ lua_IsFileDropped :: proc "c" (L: ^lua.State) -> c.int {
     result := rl.IsFileDropped()
 
     lua.pushboolean(L, b32(result))
+    return 1
+}
+
+@(private)
+lua_GetFileModTime :: proc "c" (L: ^lua.State) -> c.int {
+    p_fileName := lua.tostring(L, 1)
+
+    result := rl.GetFileModTime(p_fileName)
+
+    lua.pushinteger(L, lua.Integer(result))
     return 1
 }
 
@@ -5462,6 +5815,20 @@ lua_DrawTexturePro :: proc "c" (L: ^lua.State) -> c.int {
 }
 
 @(private)
+lua_DrawTextureNPatch :: proc "c" (L: ^lua.State) -> c.int {
+    p_texture := fromlua_Texture2D(L, 1)
+    p_nPatchInfo := fromlua_NPatchInfo(L, 2)
+    p_dest := fromlua_Rectangle(L, 3)
+    p_origin := fromlua_Vector2(L, 4)
+    p_rotation := c.float(lua.tonumber(L, 5))
+    p_tint := fromlua_Color(L, 6)
+
+    rl.DrawTextureNPatch(p_texture, p_nPatchInfo, p_dest, p_origin, p_rotation, p_tint)
+
+    return 0
+}
+
+@(private)
 lua_Fade :: proc "c" (L: ^lua.State) -> c.int {
     p_color := fromlua_Color(L, 1)
     p_alpha := c.float(lua.tonumber(L, 2))
@@ -6008,11 +6375,31 @@ lua_DrawPlane :: proc "c" (L: ^lua.State) -> c.int {
 }
 
 @(private)
+lua_DrawRay :: proc "c" (L: ^lua.State) -> c.int {
+    p_ray := fromlua_Ray(L, 1)
+    p_color := fromlua_Color(L, 2)
+
+    rl.DrawRay(p_ray, p_color)
+
+    return 0
+}
+
+@(private)
 lua_DrawGrid :: proc "c" (L: ^lua.State) -> c.int {
     p_slices := c.int(lua.tonumber(L, 1))
     p_spacing := c.float(lua.tonumber(L, 2))
 
     rl.DrawGrid(p_slices, p_spacing)
+
+    return 0
+}
+
+@(private)
+lua_DrawBoundingBox :: proc "c" (L: ^lua.State) -> c.int {
+    p_box := fromlua_BoundingBox(L, 1)
+    p_color := fromlua_Color(L, 2)
+
+    rl.DrawBoundingBox(p_box, p_color)
 
     return 0
 }
@@ -6085,6 +6472,79 @@ lua_CheckCollisionSpheres :: proc "c" (L: ^lua.State) -> c.int {
 }
 
 @(private)
+lua_CheckCollisionBoxes :: proc "c" (L: ^lua.State) -> c.int {
+    p_box1 := fromlua_BoundingBox(L, 1)
+    p_box2 := fromlua_BoundingBox(L, 2)
+
+    result := rl.CheckCollisionBoxes(p_box1, p_box2)
+
+    lua.pushboolean(L, b32(result))
+    return 1
+}
+
+@(private)
+lua_CheckCollisionBoxSphere :: proc "c" (L: ^lua.State) -> c.int {
+    p_box := fromlua_BoundingBox(L, 1)
+    p_center := fromlua_Vector3(L, 2)
+    p_radius := c.float(lua.tonumber(L, 3))
+
+    result := rl.CheckCollisionBoxSphere(p_box, p_center, p_radius)
+
+    lua.pushboolean(L, b32(result))
+    return 1
+}
+
+@(private)
+lua_GetRayCollisionSphere :: proc "c" (L: ^lua.State) -> c.int {
+    p_ray := fromlua_Ray(L, 1)
+    p_center := fromlua_Vector3(L, 2)
+    p_radius := c.float(lua.tonumber(L, 3))
+
+    result := rl.GetRayCollisionSphere(p_ray, p_center, p_radius)
+
+    tolua_RayCollision(L, result)
+    return 1
+}
+
+@(private)
+lua_GetRayCollisionBox :: proc "c" (L: ^lua.State) -> c.int {
+    p_ray := fromlua_Ray(L, 1)
+    p_box := fromlua_BoundingBox(L, 2)
+
+    result := rl.GetRayCollisionBox(p_ray, p_box)
+
+    tolua_RayCollision(L, result)
+    return 1
+}
+
+@(private)
+lua_GetRayCollisionTriangle :: proc "c" (L: ^lua.State) -> c.int {
+    p_ray := fromlua_Ray(L, 1)
+    p_p1 := fromlua_Vector3(L, 2)
+    p_p2 := fromlua_Vector3(L, 3)
+    p_p3 := fromlua_Vector3(L, 4)
+
+    result := rl.GetRayCollisionTriangle(p_ray, p_p1, p_p2, p_p3)
+
+    tolua_RayCollision(L, result)
+    return 1
+}
+
+@(private)
+lua_GetRayCollisionQuad :: proc "c" (L: ^lua.State) -> c.int {
+    p_ray := fromlua_Ray(L, 1)
+    p_p1 := fromlua_Vector3(L, 2)
+    p_p2 := fromlua_Vector3(L, 3)
+    p_p3 := fromlua_Vector3(L, 4)
+    p_p4 := fromlua_Vector3(L, 5)
+
+    result := rl.GetRayCollisionQuad(p_ray, p_p1, p_p2, p_p3, p_p4)
+
+    tolua_RayCollision(L, result)
+    return 1
+}
+
+@(private)
 lua_InitAudioDevice :: proc "c" (L: ^lua.State) -> c.int {
     rl.InitAudioDevice()
 
@@ -6120,6 +6580,67 @@ lua_GetMasterVolume :: proc "c" (L: ^lua.State) -> c.int {
     result := rl.GetMasterVolume()
 
     lua.pushnumber(L, lua.Number(result))
+    return 1
+}
+
+@(private)
+lua_LoadWave :: proc "c" (L: ^lua.State) -> c.int {
+    p_fileName := lua.tostring(L, 1)
+
+    result := rl.LoadWave(p_fileName)
+
+    tolua_Wave(L, result)
+    return 1
+}
+
+@(private)
+lua_IsWaveValid :: proc "c" (L: ^lua.State) -> c.int {
+    p_wave := fromlua_Wave(L, 1)
+
+    result := rl.IsWaveValid(p_wave)
+
+    lua.pushboolean(L, b32(result))
+    return 1
+}
+
+@(private)
+lua_UnloadWave :: proc "c" (L: ^lua.State) -> c.int {
+    p_wave := fromlua_Wave(L, 1)
+
+    rl.UnloadWave(p_wave)
+
+    return 0
+}
+
+@(private)
+lua_ExportWave :: proc "c" (L: ^lua.State) -> c.int {
+    p_wave := fromlua_Wave(L, 1)
+    p_fileName := lua.tostring(L, 2)
+
+    result := rl.ExportWave(p_wave, p_fileName)
+
+    lua.pushboolean(L, b32(result))
+    return 1
+}
+
+@(private)
+lua_ExportWaveAsCode :: proc "c" (L: ^lua.State) -> c.int {
+    p_wave := fromlua_Wave(L, 1)
+    p_fileName := lua.tostring(L, 2)
+
+    result := rl.ExportWaveAsCode(p_wave, p_fileName)
+
+    lua.pushboolean(L, b32(result))
+    return 1
+}
+
+@(private)
+lua_WaveCopy :: proc "c" (L: ^lua.State) -> c.int {
+    p_wave := fromlua_Wave(L, 1)
+
+    result := rl.WaveCopy(p_wave)
+
+    tolua_Wave(L, result)
     return 1
 }
 

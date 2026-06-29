@@ -69,6 +69,7 @@ function _update() end
     fmt.wprintln(w, strings.to_string(sb_defs))
     fmt.wprintln(w, "")
 
+    fmt.println("")
     write_builder_to_file(&sb, "bindings.odin")
     fmt.println("Wrote bindings to bindings.odin")
 
@@ -142,11 +143,16 @@ write_functions :: proc(
         returnType := v["returnType"].(json.String)
         params := parse_function_params(v)
 
+        _, ignored := slice.linear_search(ignore_functions, name)
+        if ignored {
+            continue funcloop
+        }
+
         totalCount += 1
 
         // TODO: implement all features
         // skip unimplemented guys
-        _, unimp := slice.linear_search(skip_functions, name)
+        _, unimp := slice.linear_search(funcs_not_yet_implemented, name)
         skip := false
         if unimp {
             errors = fmt.tprintf("%v\nSkipping %v: marked unimplemented", errors, name)
@@ -280,7 +286,7 @@ write_functions :: proc(
     // for type, count in unimpGuys {
     //     fmt.printfln("%v: %v", type, count)
     // }
-    // fmt.println(errors)
+    fmt.println(errors)
 }
 
 write_struct_helpers :: proc(

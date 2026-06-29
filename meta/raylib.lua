@@ -400,6 +400,21 @@ function _update() end
 ---@field texture Raylib.Texture Color buffer attachment texture
 ---@field depth Raylib.Texture Depth buffer attachment texture
 
+---@class Raylib.NPatchInfo
+---@field source Raylib.Rectangle Texture source rectangle
+---@field left integer Left border offset
+---@field top integer Top border offset
+---@field right integer Right border offset
+---@field bottom integer Bottom border offset
+---@field layout integer Layout of the n-patch: 3x3, 1x3 or 3x1
+
+---@class Raylib.GlyphInfo
+---@field value integer Character value (Unicode)
+---@field offsetX integer Character offset X when drawing
+---@field offsetY integer Character offset Y when drawing
+---@field advanceX integer Character advance position X
+---@field image Raylib.Image Character image data
+
 ---@class Raylib.Camera3D
 ---@field position Raylib.Vector3 Camera position
 ---@field target Raylib.Vector3 Camera target it looks-at
@@ -412,6 +427,37 @@ function _update() end
 ---@field target Raylib.Vector2 Camera target (rotation and zoom origin)
 ---@field rotation number Camera rotation in degrees
 ---@field zoom number Camera zoom (scaling), should be 1.0f by default
+
+---@class Raylib.MaterialMap
+---@field texture Raylib.Texture2D Material map texture
+---@field color Raylib.Color Material map color
+---@field value number Material map value
+
+---@class Raylib.Transform
+---@field translation Raylib.Vector3 Translation
+---@field rotation Raylib.Quaternion Rotation
+---@field scale Raylib.Vector3 Scale
+
+---@class Raylib.Ray
+---@field position Raylib.Vector3 Ray position (origin)
+---@field direction Raylib.Vector3 Ray direction (normalized)
+
+---@class Raylib.RayCollision
+---@field hit boolean Did the ray hit something?
+---@field distance number Distance to the nearest hit
+---@field point Raylib.Vector3 Point of the nearest hit
+---@field normal Raylib.Vector3 Surface normal of hit
+
+---@class Raylib.BoundingBox
+---@field min Raylib.Vector3 Minimum vertex box-corner
+---@field max Raylib.Vector3 Maximum vertex box-corner
+
+---@class Raylib.Wave
+---@field frameCount integer Total number of frames (considering channels)
+---@field sampleRate integer Frequency (samples per second)
+---@field sampleSize integer Bit depth (bits per sample): 8, 16, 32 (24 not supported)
+---@field channels integer Number of channels (1-mono, 2-stereo, ...)
+---@field data any Buffer data pointer
 
 ---@alias Raylib.Quaternion Raylib.Vector4
 
@@ -690,6 +736,20 @@ function ray.EndScissorMode() end
 ---End stereo rendering (requires VR simulator)
 function ray.EndVrStereoMode() end
 
+---Get a ray trace from screen position (i.e mouse)
+---@param position Raylib.Vector2
+---@param camera Raylib.Camera
+---@return Raylib.Ray
+function ray.GetScreenToWorldRay(position, camera) end
+
+---Get a ray trace from screen position (i.e mouse) in a viewport
+---@param position Raylib.Vector2
+---@param camera Raylib.Camera
+---@param width integer
+---@param height integer
+---@return Raylib.Ray
+function ray.GetScreenToWorldRayEx(position, camera, width, height) end
+
 ---Get the screen space position for a 3d world space position
 ---@param position Raylib.Vector3
 ---@param camera Raylib.Camera
@@ -855,6 +915,11 @@ function ray.IsFileNameValid(fileName) end
 ---Check if a file has been dropped into window
 ---@return boolean
 function ray.IsFileDropped() end
+
+---Get file modification time (last write time)
+---@param fileName string
+---@return integer
+function ray.GetFileModTime(fileName) end
 
 ---Set automation event internal base frame to start recording
 ---@param frame integer
@@ -1993,6 +2058,15 @@ function ray.DrawTextureRec(texture, source, position, tint) end
 ---@param tint Raylib.Color
 function ray.DrawTexturePro(texture, source, dest, origin, rotation, tint) end
 
+---Draws a texture (or part of it) that stretches or shrinks nicely
+---@param texture Raylib.Texture2D
+---@param nPatchInfo Raylib.NPatchInfo
+---@param dest Raylib.Rectangle
+---@param origin Raylib.Vector2
+---@param rotation number
+---@param tint Raylib.Color
+function ray.DrawTextureNPatch(texture, nPatchInfo, dest, origin, rotation, tint) end
+
 ---Get color with alpha applied, alpha goes from 0.0f to 1.0f
 ---@param color Raylib.Color
 ---@param alpha number
@@ -2299,10 +2373,20 @@ function ray.DrawCapsuleWires(startPos, endPos, radius, slices, rings, color) en
 ---@param color Raylib.Color
 function ray.DrawPlane(centerPos, size, color) end
 
+---Draw a ray line
+---@param ray Raylib.Ray
+---@param color Raylib.Color
+function ray.DrawRay(ray, color) end
+
 ---Draw a grid (centered at (0, 0, 0))
 ---@param slices integer
 ---@param spacing number
 function ray.DrawGrid(slices, spacing) end
+
+---Draw bounding box (wires)
+---@param box Raylib.BoundingBox
+---@param color Raylib.Color
+function ray.DrawBoundingBox(box, color) end
 
 ---Draw a billboard texture
 ---@param camera Raylib.Camera
@@ -2341,6 +2425,49 @@ function ray.DrawBillboardPro(camera, texture, source, position, up, size, origi
 ---@return boolean
 function ray.CheckCollisionSpheres(center1, radius1, center2, radius2) end
 
+---Check collision between two bounding boxes
+---@param box1 Raylib.BoundingBox
+---@param box2 Raylib.BoundingBox
+---@return boolean
+function ray.CheckCollisionBoxes(box1, box2) end
+
+---Check collision between box and sphere
+---@param box Raylib.BoundingBox
+---@param center Raylib.Vector3
+---@param radius number
+---@return boolean
+function ray.CheckCollisionBoxSphere(box, center, radius) end
+
+---Get collision info between ray and sphere
+---@param ray Raylib.Ray
+---@param center Raylib.Vector3
+---@param radius number
+---@return Raylib.RayCollision
+function ray.GetRayCollisionSphere(ray, center, radius) end
+
+---Get collision info between ray and box
+---@param ray Raylib.Ray
+---@param box Raylib.BoundingBox
+---@return Raylib.RayCollision
+function ray.GetRayCollisionBox(ray, box) end
+
+---Get collision info between ray and triangle
+---@param ray Raylib.Ray
+---@param p1 Raylib.Vector3
+---@param p2 Raylib.Vector3
+---@param p3 Raylib.Vector3
+---@return Raylib.RayCollision
+function ray.GetRayCollisionTriangle(ray, p1, p2, p3) end
+
+---Get collision info between ray and quad
+---@param ray Raylib.Ray
+---@param p1 Raylib.Vector3
+---@param p2 Raylib.Vector3
+---@param p3 Raylib.Vector3
+---@param p4 Raylib.Vector3
+---@return Raylib.RayCollision
+function ray.GetRayCollisionQuad(ray, p1, p2, p3, p4) end
+
 ---Initialize audio device and context
 function ray.InitAudioDevice() end
 
@@ -2358,6 +2485,37 @@ function ray.SetMasterVolume(volume) end
 ---Get master volume (listener)
 ---@return number
 function ray.GetMasterVolume() end
+
+---Load wave data from file
+---@param fileName string
+---@return Raylib.Wave
+function ray.LoadWave(fileName) end
+
+---Checks if wave data is valid (data loaded and parameters)
+---@param wave Raylib.Wave
+---@return boolean
+function ray.IsWaveValid(wave) end
+
+---Unload wave data
+---@param wave Raylib.Wave
+function ray.UnloadWave(wave) end
+
+---Export wave data to file, returns true on success
+---@param wave Raylib.Wave
+---@param fileName string
+---@return boolean
+function ray.ExportWave(wave, fileName) end
+
+---Export wave sample data to code (.h), returns true on success
+---@param wave Raylib.Wave
+---@param fileName string
+---@return boolean
+function ray.ExportWaveAsCode(wave, fileName) end
+
+---Copy a wave to a new wave
+---@param wave Raylib.Wave
+---@return Raylib.Wave
+function ray.WaveCopy(wave) end
 
 ---Default size for new audio streams
 ---@param size integer

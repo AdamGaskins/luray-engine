@@ -12,7 +12,7 @@ gencode_value_from_lua__idxstr :: proc(type: string, idx: string, source: string
 
     for override in param_type_overrides {
         if override.source == source {
-            prefix = fmt.tprintf("%v(rl.%v)", override.cast_type, override.type)
+            prefix = fmt.tprintf("%v(%v)", override.cast_type, override.type)
             break
         }
     }
@@ -22,6 +22,8 @@ gencode_value_from_lua__idxstr :: proc(type: string, idx: string, source: string
        type == "unsigned char *" ||
        type == "char *" {
         value = fmt.tprintf("lua.tostring(L, %v)", idx)
+    } else if type == "long" {
+        value = fmt.tprintf("c.long(lua.tonumber(L, %v))", idx)
     } else if type == "int" {
         value = fmt.tprintf("c.int(lua.tonumber(L, %v))", idx)
     } else if type == "unsigned int" {
@@ -56,6 +58,8 @@ gencode_push_value_to_lua__string :: proc(type: string, value: string = "result"
        type == "char *" ||
        type == "STRING" {
         return fmt.tprintf("lua.pushstring(L, %v)", value)
+    } else if type == "long" {
+        return fmt.tprintf("lua.pushinteger(L, lua.Integer(%v))", value)
     } else if type == "int" || type == "INT" {
         return fmt.tprintf("lua.pushinteger(L, lua.Integer(%v))", value)
     } else if type == "unsigned int" {
@@ -95,7 +99,7 @@ c_type_to_lua :: proc(type: string, source: string = "") -> string {
        type == "char *" ||
        type == "STRING" {
         return "string"
-    } else if type == "int" || type == "unsigned int" || type == "INT" {
+    } else if type == "int" || type == "unsigned int" || type == "long" || type == "INT" {
         return "integer"
     } else if type == "float" || type == "double" || type == "FLOAT" {
         return "number"
