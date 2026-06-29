@@ -39,6 +39,10 @@ write_builder_to_file :: proc(sb: ^strings.Builder, path: string) {
     }
 }
 
+add_quotes :: proc(str: string) -> string {
+    return fmt.tprintf(`"%v"`, str)
+}
+
 Param :: struct {
     name: string,
     type: string,

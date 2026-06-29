@@ -53,13 +53,14 @@ gencode_push_value_to_lua__string :: proc(type: string, value: string = "result"
     if type == "const unsigned char *" ||
        type == "const char *" ||
        type == "unsigned char *" ||
-       type == "char *" {
+       type == "char *" ||
+       type == "STRING" {
         return fmt.tprintf("lua.pushstring(L, %v)", value)
-    } else if type == "int" {
+    } else if type == "int" || type == "INT" {
         return fmt.tprintf("lua.pushinteger(L, lua.Integer(%v))", value)
     } else if type == "unsigned int" {
         return fmt.tprintf("lua.pushinteger(L, lua.Integer(%v))", value)
-    } else if type == "float" {
+    } else if type == "float" || type == "FLOAT" {
         return fmt.tprintf("lua.pushnumber(L, lua.Number(%v))", value)
     } else if type == "double" {
         return fmt.tprintf("lua.pushnumber(L, lua.Number(%v))", value)
@@ -91,17 +92,20 @@ c_type_to_lua :: proc(type: string, source: string = "") -> string {
     if type == "const unsigned char *" ||
        type == "const char *" ||
        type == "unsigned char *" ||
-       type == "char *" {
+       type == "char *" ||
+       type == "STRING" {
         return "string"
-    } else if type == "int" || type == "unsigned int" {
+    } else if type == "int" || type == "unsigned int" || type == "INT" {
         return "integer"
-    } else if type == "float" || type == "double" {
+    } else if type == "float" || type == "double" || type == "FLOAT" {
         return "number"
     } else if type == "bool" {
         return "boolean"
     } else if type == "void *" {
         return "any"
     } else {
+        type := type
+        if type == "COLOR" do type = "Color"
         // struct or other type
         return fmt.tprintf("Raylib.%v", type)
     }

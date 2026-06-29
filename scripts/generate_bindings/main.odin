@@ -97,25 +97,26 @@ write_constants :: proc(w_binds: io.Writer, w_docs: io.Writer, constants: json.A
             continue
         }
 
-        bindStr := ""
+        strValue := ""
         if type == "INT" {
-            type = "int"
-            bindStr = gencode_push_value_to_lua("int", value.(json.Float))
+            strValue = gencode_push_value_to_lua(type, value.(json.Float))
         } else if type == "STRING" {
-            type = "char *"
-            bindStr = gencode_push_value_to_lua("char *", fmt.tprintf(`"%v"`, value.(json.String)))
+            strValue = gencode_push_value_to_lua(type, add_quotes(value.(json.String)))
         } else if type == "FLOAT" {
-            type = "float"
-            bindStr = gencode_push_value_to_lua("float", value.(json.Float))
+            strValue = gencode_push_value_to_lua(type, value.(json.Float))
         } else if type == "COLOR" {
             type = "Color"
-            bindStr = gencode_push_value_to_lua("Color", fmt.tprintf("rl.%v", name))
+            strValue = gencode_push_value_to_lua(type, fmt.tprintf("rl.%v", name))
             value = ""
+        } else {
+            strValue = gencode_push_value_to_lua(type, fmt.tprintf("%v", value))
         }
-        fmt.wprintfln(w_binds, "    %v", bindStr)
+
+        fmt.wprintfln(w_binds, "    %v", strValue)
         fmt.wprintfln(w_binds, "    lua.setfield(L, -2, \"%v\")", name)
         fmt.wprintfln(w_binds, "")
 
+        if type == "COLOR" do value = ""
         fmt.wprintfln(w_docs, "---@field %v %v %v", name, c_type_to_lua(type), value)
     }
 }
