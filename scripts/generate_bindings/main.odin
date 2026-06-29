@@ -122,6 +122,12 @@ write_constants :: proc(w_binds: io.Writer, w_docs: io.Writer, constants: json.A
     }
 }
 
+Function :: struct {
+    name:        string,
+    description: string,
+    returnType:  string,
+    params:      []Param,
+}
 write_functions :: proc(
     w: io.Writer,
     w_binds: io.Writer,
@@ -135,148 +141,34 @@ write_functions :: proc(
 
     unimpGuys: map[string]int
 
-    funcloop: for v, i in functions {
+    for v, i in functions {
         v := v.(json.Object)
+        funcDef := Function {
+            name        = v["name"].(json.String),
+            description = v["description"].(json.String),
+            returnType  = v["returnType"].(json.String),
+            params      = parse_function_params(v),
+        }
 
-        name := v["name"].(json.String)
-        description := v["description"].(json.String)
-        returnType := v["returnType"].(json.String)
-        params := parse_function_params(v)
-
-        _, ignored := slice.linear_search(ignore_functions, name)
-        if ignored {
-            continue funcloop
+        if func__is_ignored(funcDef) {
+            continue
         }
 
         totalCount += 1
 
         // TODO: implement all features
         // skip unimplemented guys
-        _, unimp := slice.linear_search(funcs_not_yet_implemented, name)
-        skip := false
-        if unimp {
-            errors = fmt.tprintf("%v\nSkipping %v: marked unimplemented", errors, name)
-            skip = true
-        }
-        _, impReturn := slice.linear_search(implemented_types, returnType)
-        if !impReturn {
-            errors = fmt.tprintf(
-                "%v\nSkipping %v: return type %v unimplemented",
-                errors,
-                name,
-                returnType,
-            )
-            if returnType in unimpGuys do unimpGuys[returnType] += 1
-            else do unimpGuys[returnType] = 1
-            skip = true
-        }
-        for param in params {
-            _, found := slice.linear_search(implemented_types, param.type)
-            if !found {
-                errors = fmt.tprintf(
-                    "%v\nSkipping %v: type %v unimplemented",
-                    errors,
-                    name,
-                    param.type,
-                )
-                skip = true
-                if param.type in unimpGuys do unimpGuys[param.type] += 1
-                else do unimpGuys[param.type] = 1
-            }
-        }
-        if skip {
-            continue funcloop
+        if func__is_not_yet_implemented(funcDef, &errors, &unimpGuys) {
+            continue
         }
 
         implementedCount += 1
 
-        // function binding
-        fmt.wprintfln(w_binds, "    lua.pushcfunction(L, lua_%v)", name)
-        fmt.wprintfln(w_binds, "    lua.setfield(L, -2, \"%v\")", name)
-        fmt.wprintfln(w_binds, "", name)
-
-        // function definition
-        fmt.wprintfln(w, "@(private)")
-        fmt.wprintfln(w, `lua_%v :: proc "c" (L: ^lua.State) -> c.int {{`, name)
-        parameterNamesPrefixed := [dynamic]string{}
-        pnames := [dynamic]string{}
-        for param, i in params {
-            ptrstr := ""
-
-            _, isptr := slice.linear_search(
-                params_modified_in_place,
-                fmt.tprintf("%v.%v", name, param.name),
-            )
-            if isptr do ptrstr = "&"
-
-            append(&parameterNamesPrefixed, fmt.tprintf("%vp_%v", ptrstr, param.name))
-
-            source := fmt.tprintf("%v.%v", name, param.name)
-            fmt.wprintfln(
-                w,
-                "    p_%v := %v",
-                param.name,
-                gencode_value_from_lua(param.type, i + 1, source),
-            )
-        }
-
-        pnameprefixlist := strings.join(parameterNamesPrefixed[:], ", ")
-
-        if len(params) > 0 {
-            fmt.wprintfln(w, "")
-        }
-
-        if returnType == "void" {
-            fmt.wprintfln(w, "    rl.%v(%v)", name, pnameprefixlist)
-        } else {
-            fmt.wprintfln(w, "    result := rl.%v(%v)", name, pnameprefixlist)
-        }
-
-        fmt.wprintfln(w, "")
-
-        // pushback modified in place values
-        for param, i in params {
-            _, modified_in_place := slice.linear_search(
-                params_modified_in_place,
-                fmt.tprintf("%v.%v", name, param.name),
-            )
-            if !modified_in_place {
-                continue
-            }
-
-            // source := fmt.tprintf("%v.%v", name, param.name)
-            cuttype, _ := strings.substring_to(param.type, len(param.type) - 2)
-            fmt.wprintfln(w, "    tolua_%v(L, p_%v, %v)", cuttype, param.name, i + 1)
-            // fmt.wprintfln(w, "    %v", push_value(param.type, i + 1))
-        }
-
-        if returnType == "void" do fmt.wprintfln(w, "    return 0")
-        else {
-            fmt.wprintfln(w, "    %v", gencode_push_value_to_lua(returnType, "result"))
-            fmt.wprintfln(w, "    return 1")
-        }
-        fmt.wprintfln(w, "}")
-        fmt.wprintfln(w, "")
-
-        // docs
-        fmt.wprintfln(w_docs, "---%v", description)
-        luaPNames := [dynamic]string{}
-        for param in params {
-            name := param.name
-            if name == "end" {
-                // "end" is a keyword in lua
-                name = "finish"
-            }
-            append(&luaPNames, fmt.tprintf("%v", name))
-            fmt.wprintfln(w_docs, "---@param %v %v", name, c_type_to_lua(param.type))
-        }
-        luaPNamesStr := strings.join(luaPNames[:], ", ")
-        if returnType != "void" {
-            fmt.wprintfln(w_docs, "---@return %v", c_type_to_lua(returnType))
-        }
-        fmt.wprintfln(w_docs, "function ray.%v(%v) end", name, luaPNamesStr)
-        fmt.wprintfln(w_docs, "")
+        func__write_bindings(w_binds, funcDef)
+        func__write_definition(w, funcDef)
+        func__write_docs(w_docs, funcDef)
     }
+
     fmt.printfln(
         "Functions: %v/%v (%v%%)",
         implementedCount,
@@ -287,6 +179,142 @@ write_functions :: proc(
     //     fmt.printfln("%v: %v", type, count)
     // }
     fmt.println(errors)
+}
+
+func__is_ignored :: proc(funcDef: Function) -> bool {
+    _, ignored := slice.linear_search(ignore_functions, funcDef.name)
+    return ignored
+}
+
+func__is_not_yet_implemented :: proc(
+    funcDef: Function,
+    errors: ^string,
+    unimpGuys: ^map[string]int,
+) -> bool {
+    _, unimp := slice.linear_search(funcs_not_yet_implemented, funcDef.name)
+    skip := false
+    if unimp {
+        errors^ = fmt.tprintf("%v\nSkipping %v: marked unimplemented", errors^, funcDef.name)
+        skip = true
+    }
+    _, impReturn := slice.linear_search(implemented_types, funcDef.returnType)
+    if !impReturn {
+        errors^ = fmt.tprintf(
+            "%v\nSkipping %v: return type %v unimplemented",
+            errors^,
+            funcDef.name,
+            funcDef.returnType,
+        )
+        if funcDef.returnType in unimpGuys do unimpGuys[funcDef.returnType] += 1
+        else do unimpGuys[funcDef.returnType] = 1
+        skip = true
+    }
+    for param in funcDef.params {
+        _, found := slice.linear_search(implemented_types, param.type)
+        if !found {
+            errors^ = fmt.tprintf(
+                "%v\nSkipping %v: type %v unimplemented",
+                errors^,
+                funcDef.name,
+                param.type,
+            )
+            skip = true
+            if param.type in unimpGuys do unimpGuys[param.type] += 1
+            else do unimpGuys[param.type] = 1
+        }
+    }
+
+    return skip
+}
+
+func__write_bindings :: proc(w: io.Writer, funcDef: Function) {
+    fmt.wprintfln(w, "    lua.pushcfunction(L, lua_%v)", funcDef.name)
+    fmt.wprintfln(w, "    lua.setfield(L, -2, \"%v\")", funcDef.name)
+    fmt.wprintfln(w, "", funcDef.name)
+}
+
+func__write_definition :: proc(w: io.Writer, funcDef: Function) {
+    fmt.wprintfln(w, "@(private)")
+    fmt.wprintfln(w, `lua_%v :: proc "c" (L: ^lua.State) -> c.int {{`, funcDef.name)
+    parameterNamesPrefixed := [dynamic]string{}
+    pnames := [dynamic]string{}
+    for param, i in funcDef.params {
+        ptrstr := ""
+
+        _, isptr := slice.linear_search(
+            params_modified_in_place,
+            fmt.tprintf("%v.%v", funcDef.name, param.name),
+        )
+        if isptr do ptrstr = "&"
+
+        append(&parameterNamesPrefixed, fmt.tprintf("%vp_%v", ptrstr, param.name))
+
+        source := fmt.tprintf("%v.%v", funcDef.name, param.name)
+        fmt.wprintfln(
+            w,
+            "    p_%v := %v",
+            param.name,
+            gencode_value_from_lua(param.type, i + 1, source),
+        )
+    }
+
+    pnameprefixlist := strings.join(parameterNamesPrefixed[:], ", ")
+
+    if len(funcDef.params) > 0 {
+        fmt.wprintfln(w, "")
+    }
+
+    if funcDef.returnType == "void" {
+        fmt.wprintfln(w, "    rl.%v(%v)", funcDef.name, pnameprefixlist)
+    } else {
+        fmt.wprintfln(w, "    result := rl.%v(%v)", funcDef.name, pnameprefixlist)
+    }
+
+    fmt.wprintfln(w, "")
+
+    // pushback modified in place values
+    for param, i in funcDef.params {
+        _, modified_in_place := slice.linear_search(
+            params_modified_in_place,
+            fmt.tprintf("%v.%v", funcDef.name, param.name),
+        )
+        if !modified_in_place {
+            continue
+        }
+
+        // source := fmt.tprintf("%v.%v", funcDef.name, param.name)
+        cuttype, _ := strings.substring_to(param.type, len(param.type) - 2)
+        fmt.wprintfln(w, "    tolua_%v(L, p_%v, %v)", cuttype, param.name, i + 1)
+        // fmt.wprintfln(w, "    %v", push_value(param.type, i + 1))
+    }
+
+    if funcDef.returnType == "void" do fmt.wprintfln(w, "    return 0")
+    else {
+        fmt.wprintfln(w, "    %v", gencode_push_value_to_lua(funcDef.returnType, "result"))
+        fmt.wprintfln(w, "    return 1")
+    }
+    fmt.wprintfln(w, "}")
+    fmt.wprintfln(w, "")
+}
+
+func__write_docs :: proc(w: io.Writer, funcDef: Function) {
+    fmt.wprintfln(w, "---%v", funcDef.description)
+    luaPNames := [dynamic]string{}
+    for param in funcDef.params {
+        pname := param.name
+        if pname == "end" {
+            // "end" is a keyword in lua
+            pname = "finish"
+        }
+        append(&luaPNames, fmt.tprintf("%v", pname))
+        fmt.wprintfln(w, "---@param %v %v", pname, c_type_to_lua(param.type))
+    }
+    luaPNamesStr := strings.join(luaPNames[:], ", ")
+    if funcDef.returnType != "void" {
+        fmt.wprintfln(w, "---@return %v", c_type_to_lua(funcDef.returnType))
+    }
+    fmt.wprintfln(w, "function ray.%v(%v) end", funcDef.name, luaPNamesStr)
+    fmt.wprintfln(w, "")
 }
 
 write_struct_helpers :: proc(

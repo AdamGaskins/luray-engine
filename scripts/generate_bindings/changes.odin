@@ -138,12 +138,31 @@ params_modified_in_place :: []string {
     "ImageDrawText.dst",
     "ImageDrawTextEx.dst",
 }
-ParamOverride :: struct {
+
+ParamArrayPointer :: struct {
+    source:     string,
+    arrayParam: string,
+    countParam: string,
+}
+// these function parameters are two values in C (a pointer and a count),
+// but are a normal array in lua
+param_array_pointers :: []ParamArrayPointer {
+    {"DrawLineStrip", "points", "pointCount"},
+    {"DrawTriangleFan", "points", "pointCount"},
+    {"DrawTriangleStrip", "points", "pointCount"},
+    {"DrawSplineLinear", "points", "pointCount"},
+    {"DrawSplineBasis", "points", "pointCount"},
+    {"DrawSplineCatmullRom", "points", "pointCount"},
+    {"DrawSplineBezierQuadratic", "points", "pointCount"},
+    {"DrawSplineBezierCubic", "points", "pointCount"},
+}
+
+ParamTypeOverride :: struct {
     source:    string,
     cast_type: string,
     type:      string,
 }
-param_type_overrides :: []ParamOverride {
+param_type_overrides :: []ParamTypeOverride {
     // functions
     {"IsWindowState.flag", "transmute", "rl.ConfigFlags"},
     {"SetWindowState.flags", "transmute", "rl.ConfigFlags"},
