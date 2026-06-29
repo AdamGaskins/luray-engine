@@ -382,7 +382,7 @@ function _update() end
 ---@field height number Rectangle height
 
 ---@class Raylib.Image
----@field data Raylib.void * Image raw data
+---@field data any Image raw data
 ---@field width integer Image base width
 ---@field height integer Image base height
 ---@field mipmaps integer Mipmap levels, 1 by default

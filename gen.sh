@@ -1,1 +1,1 @@
-odin run scripts/gen_bindings.odin -file && odinfmt bindings.odin -w
+odin run scripts/generate_bindings && odinfmt bindings.odin -w

@@ -1,10 +1,9 @@
-package gen_bindings
+package generate_bindings
 
 import "core:encoding/json"
 import "core:fmt"
 import "core:io"
 import "core:math"
-import "core:os"
 import "core:slice"
 import "core:strings"
 
@@ -77,40 +76,6 @@ function _update() end
     fmt.println("Wrote lua stubs to meta/raylib.lua")
 }
 
-read_api_json :: proc() -> json.Object {
-    dir: string
-    filename: string
-    error: os.Error
-
-    dir, error = os.get_executable_directory(context.allocator)
-    filename, error = os.join_path([]string{dir, "scripts", "raylib_api.json"}, context.allocator)
-
-    data: []u8
-    data, error = os.read_entire_file(filename, context.allocator)
-    if error != nil {
-        fmt.printfln("Failed to read file: %v (%v)", error, filename)
-        os.exit(1)
-    }
-    defer delete(data)
-
-    api, error2 := json.parse(data)
-    if error2 != nil {
-        fmt.println("Failed to parse json.")
-        os.exit(1)
-    }
-
-    return api.(json.Object)
-}
-
-write_builder_to_file :: proc(sb: ^strings.Builder, path: string) {
-    content := strings.to_string(sb^)
-    err := os.write_entire_file(path, transmute([]byte)content)
-    if err != nil {
-        fmt.eprintfln("Failed to write file %v: %v", path, err)
-        os.exit(1)
-    }
-}
-
 write_enums :: proc(w_binds: io.Writer, w_docs: io.Writer, enums: json.Array) {
     for v, i in enums {
         v := v.(json.Object)
@@ -135,78 +100,26 @@ write_constants :: proc(w_binds: io.Writer, w_docs: io.Writer, constants: json.A
         bindStr := ""
         if type == "INT" {
             type = "int"
-            bindStr = push_value("int", value.(json.Float))
+            bindStr = gencode_push_value_to_lua("int", value.(json.Float))
         } else if type == "STRING" {
             type = "char *"
-            bindStr = push_value("char *", fmt.tprintf(`"%v"`, value.(json.String)))
+            bindStr = gencode_push_value_to_lua("char *", fmt.tprintf(`"%v"`, value.(json.String)))
         } else if type == "FLOAT" {
             type = "float"
-            bindStr = push_value("float", value.(json.Float))
+            bindStr = gencode_push_value_to_lua("float", value.(json.Float))
         } else if type == "COLOR" {
             type = "Color"
-            bindStr = push_value("Color", fmt.tprintf("rl.%v", name))
+            bindStr = gencode_push_value_to_lua("Color", fmt.tprintf("rl.%v", name))
             value = ""
         }
         fmt.wprintfln(w_binds, "    %v", bindStr)
         fmt.wprintfln(w_binds, "    lua.setfield(L, -2, \"%v\")", name)
         fmt.wprintfln(w_binds, "")
 
-        fmt.wprintfln(w_docs, "---@field %v %v %v", name, get_param_lua_type(type), value)
+        fmt.wprintfln(w_docs, "---@field %v %v %v", name, c_type_to_lua(type), value)
     }
 }
 
-implemented_types :: []string {
-    "void",
-    "const unsigned char *",
-    "unsigned char *",
-    "const char *",
-    "char *",
-    "int",
-    "unsigned int",
-    "float",
-    "double",
-    "bool",
-
-    // structs
-    "Color",
-    "Vector2",
-    "Vector3",
-    "Vector4",
-    "Matrix",
-    "Rectangle",
-    "Camera",
-    "Camera2D",
-    "Camera3D",
-    "Image",
-    "Texture",
-    "Texture2D",
-    "TextureCubemap",
-    "Quaternion",
-
-    //
-    "Image *",
-}
-skip_functions :: []string {
-    "ExportDataAsCode",
-    "LoadFileText",
-    "UnloadFileText",
-    "UnloadFileData",
-    "SaveFileText",
-    "LoadImageRaw",
-    "LoadImageFromMemory",
-    "UnloadUTF8",
-    "TextInsert",
-    "TextCopy",
-    "TextReplace",
-    "LoadWaveFromMemory",
-    "LoadMusicStreamFromMemory",
-    "GetGestureDetected",
-    "ComputeCRC32",
-    "ColorIsEqual", // deprecated
-
-    //need to implement
-    "SetWindowIcons",
-}
 write_functions :: proc(
     w: io.Writer,
     w_binds: io.Writer,
@@ -293,7 +206,7 @@ write_functions :: proc(
                 w,
                 "    p_%v := %v",
                 param.name,
-                generate_fromlua(param.type, i + 1, source),
+                gencode_value_from_lua(param.type, i + 1, source),
             )
         }
 
@@ -329,7 +242,7 @@ write_functions :: proc(
 
         if returnType == "void" do fmt.wprintfln(w, "    return 0")
         else {
-            fmt.wprintfln(w, "    %v", push_value(returnType, "result"))
+            fmt.wprintfln(w, "    %v", gencode_push_value_to_lua(returnType, "result"))
             fmt.wprintfln(w, "    return 1")
         }
         fmt.wprintfln(w, "}")
@@ -345,11 +258,11 @@ write_functions :: proc(
                 name = "finish"
             }
             append(&luaPNames, fmt.tprintf("%v", name))
-            fmt.wprintfln(w_docs, "---@param %v %v", name, get_param_lua_type(param.type))
+            fmt.wprintfln(w_docs, "---@param %v %v", name, c_type_to_lua(param.type))
         }
         luaPNamesStr := strings.join(luaPNames[:], ", ")
         if returnType != "void" {
-            fmt.wprintfln(w_docs, "---@return %v", get_param_lua_type(returnType))
+            fmt.wprintfln(w_docs, "---@return %v", c_type_to_lua(returnType))
         }
         fmt.wprintfln(w_docs, "function ray.%v(%v) end", name, luaPNamesStr)
         fmt.wprintfln(w_docs, "")
@@ -362,223 +275,6 @@ write_functions :: proc(
     fmt.println()
 }
 
-Param :: struct {
-    name: string,
-    type: string,
-}
-parse_function_params :: proc(v: json.Object) -> []Param {
-    ret := [dynamic]Param{}
-
-    if "params" not_in v {
-        return ret[:]
-    }
-
-    params := v["params"].(json.Array)
-    for param, i in params {
-        param := param.(json.Object)
-        ptype := param["type"].(json.String)
-        pname := param["name"].(json.String)
-        append(&ret, Param{pname, ptype})
-    }
-
-    return ret[:]
-}
-
-params_modified_in_place :: []string {
-    "ImageFormat.image",
-    "ImageToPOT.image",
-    "ImageCrop.image",
-    "ImageAlphaCrop.image",
-    "ImageAlphaClear.image",
-    "ImageAlphaMask.image",
-    "ImageAlphaPremultiply.image",
-    "ImageBlurGaussian.image",
-    "ImageKernelConvolution.image",
-    "ImageResize.image",
-    "ImageResizeNN.image",
-    "ImageResizeCanvas.image",
-    "ImageMipmaps.image",
-    "ImageDither.image",
-    "ImageFlipVertical.image",
-    "ImageFlipHorizontal.image",
-    "ImageRotate.image",
-    "ImageRotateCW.image",
-    "ImageRotateCCW.image",
-    "ImageColorTint.image",
-    "ImageColorInvert.image",
-    "ImageColorGrayscale.image",
-    "ImageColorContrast.image",
-    "ImageColorBrightness.image",
-    "ImageColorReplace.image",
-    "ImageClearBackground.dst",
-    "ImageDrawPixel.dst",
-    "ImageDrawPixelV.dst",
-    "ImageDrawLine.dst",
-    "ImageDrawLineV.dst",
-    "ImageDrawLineEx.dst",
-    "ImageDrawCircle.dst",
-    "ImageDrawCircleV.dst",
-    "ImageDrawCircleLines.dst",
-    "ImageDrawCircleLinesV.dst",
-    "ImageDrawRectangle.dst",
-    "ImageDrawRectangleV.dst",
-    "ImageDrawRectangleRec.dst",
-    "ImageDrawRectangleLines.dst",
-    "ImageDrawTriangle.dst",
-    "ImageDrawTriangleEx.dst",
-    "ImageDrawTriangleLines.dst",
-    "ImageDrawTriangleFan.dst",
-    "ImageDrawTriangleStrip.dst",
-    "ImageDraw.dst",
-    "ImageDrawText.dst",
-    "ImageDrawTextEx.dst",
-}
-ParamOverride :: struct {
-    source:    string,
-    cast_type: string,
-    type:      string,
-}
-param_type_overrides :: []ParamOverride {
-    // functions
-    {"IsWindowState.flag", "transmute", "ConfigFlags"},
-    {"SetWindowState.flags", "transmute", "ConfigFlags"},
-    {"ClearWindowState.flags", "transmute", "ConfigFlags"},
-    {"BeginBlendMode.mode", "cast", "BlendMode"},
-    {"SetConfigFlags.flags", "transmute", "ConfigFlags"},
-    {"SetTraceLogLevel.logLevel", "cast", "TraceLogLevel"},
-    {"IsKeyPressed.key", "cast", "KeyboardKey"},
-    {"IsKeyPressedRepeat.key", "cast", "KeyboardKey"},
-    {"IsKeyDown.key", "cast", "KeyboardKey"},
-    {"IsKeyReleased.key", "cast", "KeyboardKey"},
-    {"IsKeyUp.key", "cast", "KeyboardKey"},
-    {"SetExitKey.key", "cast", "KeyboardKey"},
-    {"IsGamepadButtonPressed.button", "cast", "GamepadButton"},
-    {"IsGamepadButtonDown.button", "cast", "GamepadButton"},
-    {"IsGamepadButtonReleased.button", "cast", "GamepadButton"},
-    {"IsGamepadButtonUp.button", "cast", "GamepadButton"},
-    {"GetGamepadAxisMovement.axis", "cast", "GamepadAxis"},
-    {"IsMouseButtonPressed.button", "cast", "MouseButton"},
-    {"IsMouseButtonDown.button", "cast", "MouseButton"},
-    {"IsMouseButtonReleased.button", "cast", "MouseButton"},
-    {"IsMouseButtonUp.button", "cast", "MouseButton"},
-    {"SetMouseCursor.cursor", "cast", "MouseCursor"},
-    {"SetGesturesEnabled.flags", "transmute", "Gestures"},
-    {"IsGestureDetected.gesture", "cast", "Gesture"},
-    {"GetPixelDataSize.format", "cast", "PixelFormat"},
-    {"SetTextureFilter.filter", "cast", "TextureFilter"},
-    {"SetTextureWrap.wrap", "cast", "TextureWrap"},
-    {"LoadTextureCubemap.layout", "cast", "CubemapLayout"},
-    {"ImageFormat.newFormat", "cast", "PixelFormat"},
-
-    // structs
-    {"Texture.format", "cast", "PixelFormat"},
-    {"Image.format", "cast", "PixelFormat"},
-    {"Camera3D.projection", "cast", "CameraProjection"},
-}
-
-generate_fromlua :: proc {
-    generate_fromlua_idxstr,
-    generate_fromlua_idxint,
-}
-generate_fromlua_idxint :: proc(type: string, idx: int, source: string = "") -> string {
-    return generate_fromlua_idxstr(type, fmt.tprintf("%v", idx), source)
-}
-generate_fromlua_idxstr :: proc(type: string, idx: string, source: string = "") -> string {
-    prefix := ""
-    value := ""
-
-    for override in param_type_overrides {
-        if override.source == source {
-            prefix = fmt.tprintf("%v(rl.%v)", override.cast_type, override.type)
-            break
-        }
-    }
-
-    if type == "const unsigned char *" ||
-       type == "const char *" ||
-       type == "unsigned char *" ||
-       type == "char *" {
-        value = fmt.tprintf("lua.tostring(L, %v)", idx)
-    } else if type == "int" {
-        value = fmt.tprintf("c.int(lua.tonumber(L, %v))", idx)
-    } else if type == "unsigned int" {
-        value = fmt.tprintf("c.uint(lua.tonumber(L, %v))", idx)
-    } else if type == "float" {
-        value = fmt.tprintf("c.float(lua.tonumber(L, %v))", idx)
-    } else if type == "double" {
-        value = fmt.tprintf("c.double(lua.tonumber(L, %v))", idx)
-    } else if type == "bool" {
-        value = fmt.tprintf("c.bool(lua.toboolean(L, %v))", idx)
-    } else if type == "void *" {
-        value = fmt.tprintf("lua.touserdata(L, %v)", idx)
-    } else if strings.ends_with(type, " *") {
-        // pointer to struct
-        cuttype, _ := strings.substring_to(type, len(type) - 2)
-        value = fmt.tprintf("fromlua_%v(L, %v)", cuttype, idx)
-    } else {
-        value = fmt.tprintf("fromlua_%v(L, %v)", type, idx)
-    }
-
-    return fmt.tprintf("%v%v", prefix, value)
-}
-
-push_value_string :: proc(type: string, value: string = "result") -> string {
-    if type == "const unsigned char *" ||
-       type == "const char *" ||
-       type == "unsigned char *" ||
-       type == "char *" {
-        return fmt.tprintf("lua.pushstring(L, %v)", value)
-    } else if type == "int" {
-        return fmt.tprintf("lua.pushinteger(L, lua.Integer(%v))", value)
-    } else if type == "unsigned int" {
-        return fmt.tprintf("lua.pushinteger(L, lua.Integer(%v))", value)
-    } else if type == "float" {
-        return fmt.tprintf("lua.pushnumber(L, lua.Number(%v))", value)
-    } else if type == "double" {
-        return fmt.tprintf("lua.pushnumber(L, lua.Number(%v))", value)
-    } else if type == "bool" {
-        return fmt.tprintf("lua.pushboolean(L, b32(%v))", value)
-    } else if type == "void *" {
-        return fmt.tprintf("lua.pushlightuserdata(L, %v)", value)
-    } else if strings.ends_with(type, " *") {
-        // pointer to struct
-        cuttype, _ := strings.substring_to(type, len(type) - 2)
-        return fmt.tprintf("tolua_%v(L, %v)", cuttype, value)
-    } else {
-        return fmt.tprintf("tolua_%v(L, %v)", type, value)
-    }
-}
-push_value_float :: proc(type: string, value: f64) -> string {
-    return push_value_string(type, fmt.tprintf("%v", value))
-}
-push_value_int :: proc(type: string, value: int) -> string {
-    return push_value_string(type, fmt.tprintf("%v", value))
-}
-push_value :: proc {
-    push_value_string,
-    push_value_int,
-    push_value_float,
-}
-
-get_param_lua_type :: proc(type: string, source: string = "") -> string {
-    if type == "const unsigned char *" ||
-       type == "const char *" ||
-       type == "unsigned char *" ||
-       type == "char *" {
-        return "string"
-    } else if type == "int" || type == "unsigned int" {
-        return "integer"
-    } else if type == "float" || type == "double" {
-        return "number"
-    } else if type == "bool" {
-        return "boolean"
-    } else {
-        // struct or other type
-        return fmt.tprintf("Raylib.%v", type)
-    }
-}
-
-array_structs :: []string{"Vector2", "Vector3", "Vector4", "Matrix"}
 write_struct_helpers :: proc(
     w: io.Writer,
     w_binds: io.Writer,
@@ -622,7 +318,7 @@ write_struct_helpers :: proc(
             }
             append(&fields, field)
 
-            type := get_param_lua_type(field.type)
+            type := c_type_to_lua(field.type)
             fmt.wprintfln(w_docs, "---@field %v %v %v", field.name, type, field.desc)
         }
         fmt.wprintfln(w_docs, "")
@@ -646,7 +342,7 @@ write_struct_helpers :: proc(
             if name == "Matrix" {
                 v = fmt.tprintf("s[%v][%v]", i % 4, math.floor(f32(i) / 4))
             }
-            fmt.wprintfln(w, "    %v", push_value(field.type, v))
+            fmt.wprintfln(w, "    %v", gencode_push_value_to_lua(field.type, v))
             fmt.wprintfln(w, `    lua.setfield(L, idx, "%v")`, field.name)
         }
         fmt.wprintfln(w, "}")
@@ -662,7 +358,12 @@ write_struct_helpers :: proc(
         for field in fields {
             source := fmt.tprintf("%v.%v", name, field.name)
             fmt.wprintfln(w, `    lua.getfield(L, idx, "%v")`, field.name)
-            fmt.wprintfln(w, "    %v := %v", field.name, generate_fromlua(field.type, -1, source))
+            fmt.wprintfln(
+                w,
+                "    %v := %v",
+                field.name,
+                gencode_value_from_lua(field.type, -1, source),
+            )
             fmt.wprintfln(w, "    lua.pop(L, 1)")
         }
         fmt.wprintfln(w, "    return rl.%v {{", name)

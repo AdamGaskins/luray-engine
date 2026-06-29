@@ -1,6 +1,5 @@
 package main
 
-import "core:c"
 import "core:fmt"
 import lua "vendor:lua/5.4"
 import rl "vendor:raylib"
