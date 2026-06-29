@@ -129,9 +129,11 @@ write_functions :: proc(
 ) {
     errors := ""
 
+    totalCount := 0
+    implementedCount := 0
+
     unimpGuys: map[string]int
 
-    fmt.print("Writing functions: ")
     funcloop: for v, i in functions {
         v := v.(json.Object)
 
@@ -139,6 +141,8 @@ write_functions :: proc(
         description := v["description"].(json.String)
         returnType := v["returnType"].(json.String)
         params := parse_function_params(v)
+
+        totalCount += 1
 
         // TODO: implement all features
         // skip unimplemented guys
@@ -177,8 +181,8 @@ write_functions :: proc(
         if skip {
             continue funcloop
         }
-        if i > 0 do fmt.print(", ")
-        fmt.print(name)
+
+        implementedCount += 1
 
         // function binding
         fmt.wprintfln(w_binds, "    lua.pushcfunction(L, lua_%v)", name)
@@ -187,7 +191,6 @@ write_functions :: proc(
 
         // function definition
         fmt.wprintfln(w, "@(private)")
-        fmt.print("A")
         fmt.wprintfln(w, `lua_%v :: proc "c" (L: ^lua.State) -> c.int {{`, name)
         parameterNamesPrefixed := [dynamic]string{}
         pnames := [dynamic]string{}
@@ -268,12 +271,16 @@ write_functions :: proc(
         fmt.wprintfln(w_docs, "function ray.%v(%v) end", name, luaPNamesStr)
         fmt.wprintfln(w_docs, "")
     }
-    fmt.println()
+    fmt.printfln(
+        "Functions: %v/%v (%v%%)",
+        implementedCount,
+        totalCount,
+        math.floor(f64(implementedCount) / f64(totalCount) * 100),
+    )
     // for type, count in unimpGuys {
     //     fmt.printfln("%v: %v", type, count)
     // }
-    fmt.println(errors)
-    fmt.println()
+    // fmt.println(errors)
 }
 
 write_struct_helpers :: proc(
@@ -282,25 +289,28 @@ write_struct_helpers :: proc(
     w_docs: io.Writer,
     structs: json.Array,
 ) {
-    fmt.print("Writing structs: ")
+    total := 0
+    impl := 0
+
     for v, i in structs {
         v := v.(json.Object)
 
         name := v["name"].(json.String)
         fieldsJson := v["fields"].(json.Array)
 
+        total += 1
+
         _, found := slice.linear_search(implemented_types, name)
         if !found {
             continue
         }
 
+        impl += 1
+
         if name == "Color" {
             // See bindings_static.odin
             continue
         }
-
-        if i > 0 do fmt.print(", ")
-        fmt.print(name)
 
         StructField :: struct {
             type: string,
@@ -381,8 +391,7 @@ write_struct_helpers :: proc(
         fmt.wprintfln(w, "")
 
     }
-    fmt.println()
-    fmt.println()
+    fmt.printfln("Structs: %v/%v (%v%%)", impl, total, math.floor(f64(impl) / f64(total) * 100))
 }
 
 write_struct_aliases :: proc(
