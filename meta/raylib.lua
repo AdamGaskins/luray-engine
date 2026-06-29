@@ -395,6 +395,11 @@ function _update() end
 ---@field mipmaps integer Mipmap levels, 1 by default
 ---@field format integer Data format (PixelFormat type)
 
+---@class Raylib.RenderTexture
+---@field id integer OpenGL framebuffer object id
+---@field texture Raylib.Texture Color buffer attachment texture
+---@field depth Raylib.Texture Depth buffer attachment texture
+
 ---@class Raylib.Camera3D
 ---@field position Raylib.Vector3 Camera position
 ---@field target Raylib.Vector3 Camera target it looks-at
@@ -413,6 +418,8 @@ function _update() end
 ---@alias Raylib.Texture2D Raylib.Texture
 
 ---@alias Raylib.TextureCubemap Raylib.Texture
+
+---@alias Raylib.RenderTexture2D Raylib.RenderTexture
 
 ---@alias Raylib.Camera Raylib.Camera3D
 
@@ -652,6 +659,10 @@ function ray.BeginMode3D(camera) end
 
 ---Ends 3D mode and returns to default 2D orthographic mode
 function ray.EndMode3D() end
+
+---Begin drawing to render texture
+---@param target Raylib.RenderTexture2D
+function ray.BeginTextureMode(target) end
 
 ---Ends drawing to render texture
 function ray.EndTextureMode() end
@@ -1911,6 +1922,12 @@ function ray.LoadTextureFromImage(image) end
 ---@return Raylib.TextureCubemap
 function ray.LoadTextureCubemap(image, layout) end
 
+---Load texture for rendering (framebuffer)
+---@param width integer
+---@param height integer
+---@return Raylib.RenderTexture2D
+function ray.LoadRenderTexture(width, height) end
+
 ---Check if a texture is valid (loaded in GPU)
 ---@param texture Raylib.Texture2D
 ---@return boolean
@@ -1919,6 +1936,15 @@ function ray.IsTextureValid(texture) end
 ---Unload texture from GPU memory (VRAM)
 ---@param texture Raylib.Texture2D
 function ray.UnloadTexture(texture) end
+
+---Check if a render texture is valid (loaded in GPU)
+---@param target Raylib.RenderTexture2D
+---@return boolean
+function ray.IsRenderTextureValid(target) end
+
+---Unload render texture from GPU memory (VRAM)
+---@param target Raylib.RenderTexture2D
+function ray.UnloadRenderTexture(target) end
 
 ---Set texture scaling filter mode
 ---@param texture Raylib.Texture2D

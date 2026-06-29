@@ -1180,6 +1180,9 @@ bind_raylib :: proc(L: ^lua.State) {
     lua.pushcfunction(L, lua_EndMode3D)
     lua.setfield(L, -2, "EndMode3D")
 
+    lua.pushcfunction(L, lua_BeginTextureMode)
+    lua.setfield(L, -2, "BeginTextureMode")
+
     lua.pushcfunction(L, lua_EndTextureMode)
     lua.setfield(L, -2, "EndTextureMode")
 
@@ -1822,11 +1825,20 @@ bind_raylib :: proc(L: ^lua.State) {
     lua.pushcfunction(L, lua_LoadTextureCubemap)
     lua.setfield(L, -2, "LoadTextureCubemap")
 
+    lua.pushcfunction(L, lua_LoadRenderTexture)
+    lua.setfield(L, -2, "LoadRenderTexture")
+
     lua.pushcfunction(L, lua_IsTextureValid)
     lua.setfield(L, -2, "IsTextureValid")
 
     lua.pushcfunction(L, lua_UnloadTexture)
     lua.setfield(L, -2, "UnloadTexture")
+
+    lua.pushcfunction(L, lua_IsRenderTextureValid)
+    lua.setfield(L, -2, "IsRenderTextureValid")
+
+    lua.pushcfunction(L, lua_UnloadRenderTexture)
+    lua.setfield(L, -2, "UnloadRenderTexture")
 
     lua.pushcfunction(L, lua_SetTextureFilter)
     lua.setfield(L, -2, "SetTextureFilter")
@@ -2315,6 +2327,33 @@ fromlua_Texture :: proc "c" (L: ^lua.State, idx: c.int) -> rl.Texture {
     return rl.Texture{id = id, width = width, height = height, mipmaps = mipmaps, format = format}
 }
 
+tolua_RenderTexture :: proc "c" (L: ^lua.State, s: rl.RenderTexture, idx: c.int = -99) {
+    idx := idx
+    if idx == -99 {
+        lua.newtable(L)
+        idx = -2
+    }
+    lua.pushinteger(L, lua.Integer(s.id))
+    lua.setfield(L, idx, "id")
+    tolua_Texture(L, s.texture)
+    lua.setfield(L, idx, "texture")
+    tolua_Texture(L, s.depth)
+    lua.setfield(L, idx, "depth")
+}
+
+fromlua_RenderTexture :: proc "c" (L: ^lua.State, idx: c.int) -> rl.RenderTexture {
+    lua.getfield(L, idx, "id")
+    id := c.uint(lua.tonumber(L, -1))
+    lua.pop(L, 1)
+    lua.getfield(L, idx, "texture")
+    texture := fromlua_Texture(L, -1)
+    lua.pop(L, 1)
+    lua.getfield(L, idx, "depth")
+    depth := fromlua_Texture(L, -1)
+    lua.pop(L, 1)
+    return rl.RenderTexture{id = id, texture = texture, depth = depth}
+}
+
 tolua_Camera3D :: proc "c" (L: ^lua.State, s: rl.Camera3D, idx: c.int = -99) {
     idx := idx
     if idx == -99 {
@@ -2412,6 +2451,14 @@ tolua_TextureCubemap :: proc "c" (L: ^lua.State, s: rl.TextureCubemap) {
 
 fromlua_TextureCubemap :: proc "c" (L: ^lua.State, idx: c.int) -> rl.TextureCubemap {
     return fromlua_Texture(L, idx)
+}
+
+tolua_RenderTexture2D :: proc "c" (L: ^lua.State, s: rl.RenderTexture2D) {
+    tolua_RenderTexture(L, s)
+}
+
+fromlua_RenderTexture2D :: proc "c" (L: ^lua.State, idx: c.int) -> rl.RenderTexture2D {
+    return fromlua_RenderTexture(L, idx)
 }
 
 tolua_Camera :: proc "c" (L: ^lua.State, s: rl.Camera) {
@@ -2918,6 +2965,15 @@ lua_BeginMode3D :: proc "c" (L: ^lua.State) -> c.int {
 @(private)
 lua_EndMode3D :: proc "c" (L: ^lua.State) -> c.int {
     rl.EndMode3D()
+
+    return 0
+}
+
+@(private)
+lua_BeginTextureMode :: proc "c" (L: ^lua.State) -> c.int {
+    p_target := fromlua_RenderTexture2D(L, 1)
+
+    rl.BeginTextureMode(p_target)
 
     return 0
 }
@@ -5275,6 +5331,17 @@ lua_LoadTextureCubemap :: proc "c" (L: ^lua.State) -> c.int {
 }
 
 @(private)
+lua_LoadRenderTexture :: proc "c" (L: ^lua.State) -> c.int {
+    p_width := c.int(lua.tonumber(L, 1))
+    p_height := c.int(lua.tonumber(L, 2))
+
+    result := rl.LoadRenderTexture(p_width, p_height)
+
+    tolua_RenderTexture2D(L, result)
+    return 1
+}
+
+@(private)
 lua_IsTextureValid :: proc "c" (L: ^lua.State) -> c.int {
     p_texture := fromlua_Texture2D(L, 1)
 
@@ -5289,6 +5356,25 @@ lua_UnloadTexture :: proc "c" (L: ^lua.State) -> c.int {
     p_texture := fromlua_Texture2D(L, 1)
 
     rl.UnloadTexture(p_texture)
+
+    return 0
+}
+
+@(private)
+lua_IsRenderTextureValid :: proc "c" (L: ^lua.State) -> c.int {
+    p_target := fromlua_RenderTexture2D(L, 1)
+
+    result := rl.IsRenderTextureValid(p_target)
+
+    lua.pushboolean(L, b32(result))
+    return 1
+}
+
+@(private)
+lua_UnloadRenderTexture :: proc "c" (L: ^lua.State) -> c.int {
+    p_target := fromlua_RenderTexture2D(L, 1)
+
+    rl.UnloadRenderTexture(p_target)
 
     return 0
 }
@@ -6045,3 +6131,4 @@ lua_SetAudioStreamBufferSizeDefault :: proc "c" (L: ^lua.State) -> c.int {
 
     return 0
 }
+

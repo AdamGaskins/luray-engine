@@ -26,6 +26,8 @@ implemented_types :: []string {
     "Texture",
     "Texture2D",
     "TextureCubemap",
+    "RenderTexture",
+    "RenderTexture2D",
     "Quaternion",
 
     //
