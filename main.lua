@@ -8,6 +8,9 @@ function _init()
     ray.ImageFlipVertical(img)
     ray.ImageBlurGaussian(img, 2)
     character = ray.LoadTextureFromImage(img)
+
+
+    print(ray.LoadFileText("odinfmt.json"))
 end
 
 function _update()

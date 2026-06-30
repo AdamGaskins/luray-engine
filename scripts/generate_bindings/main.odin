@@ -326,15 +326,27 @@ func__write_definition :: proc(w: io.Writer, funcDef: Function) {
             continue
         }
 
-        // source := fmt.tprintf("%v.%v", funcDef.name, param.name)
         cuttype, _ := strings.substring_to(param.type, len(param.type) - 2)
         fmt.wprintfln(w, "    tolua_%v(L, p_%v, %v)", cuttype, param.name, i + 1)
-        // fmt.wprintfln(w, "    %v", push_value(param.type, i + 1))
     }
 
+    if funcDef.returnType != "void" {
+        fmt.wprintfln(
+            w,
+            "    %v",
+            gencode_push_value_to_lua(funcDef.returnType, "result", funcDef.name, "return"),
+        )
+    }
+
+    // free any resources
+    auto_free, has_auto_free := func__auto_free_statement(funcDef.name)
+    if has_auto_free {
+        fmt.wprintfln(w, "    %v", auto_free.statement)
+    }
+
+    // return return count
     if funcDef.returnType == "void" do fmt.wprintfln(w, "    return 0")
     else {
-        fmt.wprintfln(w, "    %v", gencode_push_value_to_lua(funcDef.returnType, "result"))
         fmt.wprintfln(w, "    return 1")
     }
     fmt.wprintfln(w, "}")
@@ -361,6 +373,14 @@ funcparam__is_ptr_array :: proc(
         }
     }
     return ParamArrayPointer{}, false
+}
+func__auto_free_statement :: proc(funcName: string) -> (AutoFree, bool) {
+    for p in auto_free_statements {
+        if p.funcName == funcName {
+            return p, true
+        }
+    }
+    return AutoFree{}, false
 }
 
 func__write_docs :: proc(w: io.Writer, funcDef: Function) {

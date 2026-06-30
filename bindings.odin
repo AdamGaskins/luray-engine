@@ -1271,6 +1271,12 @@ bind_raylib :: proc(L: ^lua.State) {
     lua.pushcfunction(L, lua_SetTraceLogLevel)
     lua.setfield(L, -2, "SetTraceLogLevel")
 
+    lua.pushcfunction(L, lua_LoadFileText)
+    lua.setfield(L, -2, "LoadFileText")
+
+    lua.pushcfunction(L, lua_SaveFileText)
+    lua.setfield(L, -2, "SaveFileText")
+
     lua.pushcfunction(L, lua_FileExists)
     lua.setfield(L, -2, "FileExists")
 
@@ -3609,6 +3615,28 @@ lua_SetTraceLogLevel :: proc "c" (L: ^lua.State) -> c.int {
     rl.SetTraceLogLevel(p_logLevel)
 
     return 0
+}
+
+@(private)
+lua_LoadFileText :: proc "c" (L: ^lua.State) -> c.int {
+    p_fileName := lua.tostring(L, 1)
+
+    result := rl.LoadFileText(p_fileName)
+
+    lua.pushstring(L, transmute(cstring)result)
+    rl.UnloadFileText(result)
+    return 1
+}
+
+@(private)
+lua_SaveFileText :: proc "c" (L: ^lua.State) -> c.int {
+    p_fileName := lua.tostring(L, 1)
+    p_text := transmute(^u8)lua.tostring(L, 2)
+
+    result := rl.SaveFileText(p_fileName, p_text)
+
+    lua.pushboolean(L, b32(result))
+    return 1
 }
 
 @(private)

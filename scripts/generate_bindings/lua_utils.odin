@@ -58,37 +58,64 @@ gencode_value_from_lua :: proc {
     gencode_value_from_lua__idxint,
 }
 
-gencode_push_value_to_lua__string :: proc(type: string, value: string = "result") -> string {
+gencode_push_value_to_lua__string :: proc(
+    type: string,
+    value: string = "result",
+    source: string = "",
+    source_param: string = "",
+) -> string {
+    value := value
+    prefix := ""
+
+    for override in param_type_overrides {
+        if override.source == source && override.source_param == source_param {
+            value = fmt.tprintf("%v(%v)%v", override.cast_type, override.type, value)
+            break
+        }
+    }
+
     if type == "const unsigned char *" ||
        type == "const char *" ||
        type == "unsigned char *" ||
        type == "char *" ||
        type == "STRING" {
-        return fmt.tprintf("lua.pushstring(L, %v)", value)
+        value = fmt.tprintf("lua.pushstring(L, %v)", value)
     } else if type == "long" {
-        return fmt.tprintf("lua.pushinteger(L, lua.Integer(%v))", value)
+        value = fmt.tprintf("lua.pushinteger(L, lua.Integer(%v))", value)
     } else if type == "int" || type == "INT" {
-        return fmt.tprintf("lua.pushinteger(L, lua.Integer(%v))", value)
+        value = fmt.tprintf("lua.pushinteger(L, lua.Integer(%v))", value)
     } else if type == "unsigned int" {
-        return fmt.tprintf("lua.pushinteger(L, lua.Integer(%v))", value)
+        value = fmt.tprintf("lua.pushinteger(L, lua.Integer(%v))", value)
     } else if type == "float" || type == "FLOAT" {
-        return fmt.tprintf("lua.pushnumber(L, lua.Number(%v))", value)
+        value = fmt.tprintf("lua.pushnumber(L, lua.Number(%v))", value)
     } else if type == "double" {
-        return fmt.tprintf("lua.pushnumber(L, lua.Number(%v))", value)
+        value = fmt.tprintf("lua.pushnumber(L, lua.Number(%v))", value)
     } else if type == "bool" {
-        return fmt.tprintf("lua.pushboolean(L, b32(%v))", value)
+        value = fmt.tprintf("lua.pushboolean(L, b32(%v))", value)
     } else if type == "void *" {
-        return fmt.tprintf("lua.pushlightuserdata(L, %v)", value)
+        value = fmt.tprintf("lua.pushlightuserdata(L, %v)", value)
     } else {
         type := trim_c_type(type)
-        return fmt.tprintf("tolua_%v(L, %v)", type, value)
+        value = fmt.tprintf("tolua_%v(L, %v)", type, value)
     }
+
+    return value
 }
-gencode_push_value_to_lua__float :: proc(type: string, value: f64) -> string {
-    return gencode_push_value_to_lua__string(type, fmt.tprintf("%v", value))
+gencode_push_value_to_lua__float :: proc(
+    type: string,
+    value: f64,
+    source: string = "",
+    source_param: string = "",
+) -> string {
+    return gencode_push_value_to_lua__string(type, fmt.tprintf("%v", value), source, source_param)
 }
-gencode_push_value_to_lua__int :: proc(type: string, value: int) -> string {
-    return gencode_push_value_to_lua__string(type, fmt.tprintf("%v", value))
+gencode_push_value_to_lua__int :: proc(
+    type: string,
+    value: int,
+    source: string = "",
+    source_param: string = "",
+) -> string {
+    return gencode_push_value_to_lua__string(type, fmt.tprintf("%v", value), source, source_param)
 }
 gencode_push_value_to_lua :: proc {
     gencode_push_value_to_lua__string,

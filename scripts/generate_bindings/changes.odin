@@ -72,15 +72,13 @@ ignore_functions :: []string {
     "LoadFileData",
     "UnloadFileData",
     "ExportDataAsCode",
+    "UnloadFileText",
     // probably don't work
     "SetPixelColor",
     "GetPixelColor",
 }
 
 funcs_not_yet_implemented :: []string {
-    "LoadFileText",
-    "UnloadFileText",
-    "SaveFileText",
     "LoadImageRaw",
     "LoadImageFromMemory",
     "UnloadUTF8",
@@ -169,6 +167,12 @@ param_array_pointers :: []ParamArrayPointer {
     {"ImageDrawTriangleStrip", "points", "pointCount"},
 }
 
+AutoFree :: struct {
+    funcName:  string,
+    statement: string,
+}
+auto_free_statements :: []AutoFree{{"LoadFileText", "rl.UnloadFileText(result)"}}
+
 ParamTypeOverride :: struct {
     source:       string,
     source_param: string,
@@ -210,6 +214,8 @@ param_type_overrides :: []ParamTypeOverride {
     {"ImageFormat", "newFormat", "cast", "rl.PixelFormat"},
     {"NPatchInfo", "layout", "cast", "rl.NPatchLayout"},
     {"GlyphInfo", "value", "cast", "rune"},
+    {"SaveFileText", "text", "transmute", "^u8"},
+    {"LoadFileText", "return", "transmute", "cstring"},
 
     // structs
     {"Texture", "format", "cast", "rl.PixelFormat"},

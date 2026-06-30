@@ -842,6 +842,17 @@ function ray.OpenURL(url) end
 ---@param logLevel integer
 function ray.SetTraceLogLevel(logLevel) end
 
+---Load text data from file (read), returns a '\0' terminated string
+---@param fileName string
+---@return string
+function ray.LoadFileText(fileName) end
+
+---Save text data to file (write), string must be '\0' terminated, returns true on success
+---@param fileName string
+---@param text string
+---@return boolean
+function ray.SaveFileText(fileName, text) end
+
 ---Check if file exists
 ---@param fileName string
 ---@return boolean
