@@ -176,10 +176,10 @@ write_functions :: proc(
         totalCount,
         math.floor(f64(implementedCount) / f64(totalCount) * 100),
     )
-    // for type, count in unimpGuys {
-    //     fmt.printfln("%v: %v", type, count)
-    // }
     fmt.println(errors)
+    for type, count in unimpGuys {
+        fmt.printfln("%v: %v", type, count)
+    }
 }
 
 func__is_ignored :: proc(funcDef: Function) -> bool {
@@ -264,34 +264,18 @@ func__write_definition :: proc(w: io.Writer, funcDef: Function) {
             append(&parameterNamesPrefixed, fmt.tprintf("p_%v", ptr_array.countParam))
 
             fmt.wprintfln(w, "    context = runtime.default_context()")
-            fmt.wprintfln(w, "    p_%v := c.int(lua.rawlen(L, %v))", ptr_array.countParam, idx)
+            t := trim_c_type(param.type)
             fmt.wprintfln(
                 w,
-                "    p_%v := make([^]rl.%v, p_%v, context.temp_allocator)",
+                "    p_%v, p_%v := fromlua_array(L, %v, %v, fromlua_%v)",
                 ptr_array.arrayParam,
-                trim_c_type(param.type),
                 ptr_array.countParam,
+                idx,
+                prefix_c_type(t),
+                t,
             )
-
-            fmt.wprintfln(w, "    for i in 0..<p_%v {{", ptr_array.countParam)
-            fmt.wprintfln(w, "        lua.rawgeti(L, %v, lua.Integer(i + 1))", idx)
-            fmt.wprintfln(
-                w,
-                "        p_%v[i] = %v",
-                ptr_array.arrayParam,
-                gencode_value_from_lua(param.type, -1, funcDef.name, param.name),
-            )
-            fmt.wprintfln(w, "        lua.pop(L, 1)")
-            fmt.wprintfln(w, "    }}")
 
             idx_offset = idx_offset - 1
-            // n := c.int(lua.objlen(L, 2))
-            // points := make([^]rl.Vector2, n, context.temp_allocator)
-            // for i in 0..<n {
-            //     lua.rawgeti(L, 2, lua.Integer(i + 1))
-            //     points[i] = fromlua_Vector2(L, -1)
-            //     lua.pop(L, 1)
-            // }
         } else {
             fmt.wprintfln(
                 w,
@@ -476,7 +460,10 @@ write_struct_helpers :: proc(
             structName,
             structName,
         )
+        fmt.wprintfln(w, "    context = runtime.default_context()")
         // -99 is the default value. if IDX isn't specified, create a new table.
+        // IDX isn't specified in cases when we want to modify a table in place.
+        // thus instead of creating a new one, we write back to the one passed to the function.
         fmt.wprintfln(w, "    idx := idx")
         fmt.wprintfln(w, "    if idx == -99 {{")
         fmt.wprintfln(w, "        lua.newtable(L)")
@@ -484,10 +471,21 @@ write_struct_helpers :: proc(
         fmt.wprintfln(w, "    }}")
         for field, i in fields {
             v := fmt.tprintf("s.%v", field.name)
-            if structName == "Matrix" {
-                v = fmt.tprintf("s[%v][%v]", i % 4, math.floor(f32(i) / 4))
+            ptr_array, is_ptr_array := funcparam__is_ptr_array(structName, field.name)
+            if is_ptr_array {
+                fmt.wprintfln(
+                    w,
+                    "    tolua_array(L, s.%v, s.%v, tolua_%v)",
+                    field.name,
+                    ptr_array.countParam,
+                    trim_c_type(field.type),
+                )
+            } else {
+                if structName == "Matrix" {
+                    v = fmt.tprintf("s[%v][%v]", i % 4, math.floor(f32(i) / 4))
+                }
+                fmt.wprintfln(w, "    %v", gencode_push_value_to_lua(field.type, v))
             }
-            fmt.wprintfln(w, "    %v", gencode_push_value_to_lua(field.type, v))
             fmt.wprintfln(w, `    lua.setfield(L, idx, "%v")`, field.name)
         }
         fmt.wprintfln(w, "}")
@@ -500,15 +498,28 @@ write_struct_helpers :: proc(
             structName,
             structName,
         )
+        fmt.wprintfln(w, "    context = runtime.default_context()")
         for field in fields {
-            source := fmt.tprintf("%v.%v", structName, field.name)
+            // source := fmt.tprintf("%v.%v", structName, field.name)
             fmt.wprintfln(w, `    lua.getfield(L, idx, "%v")`, field.name)
-            fmt.wprintfln(
-                w,
-                "    %v := %v",
-                field.name,
-                gencode_value_from_lua(field.type, -1, structName, field.name),
-            )
+            ptr_array, is_ptr_array := funcparam__is_ptr_array(structName, field.name)
+            if is_ptr_array {
+                t := trim_c_type(field.type)
+                fmt.wprintfln(
+                    w,
+                    "    %v, _ := fromlua_array(L, -1, rl.%v, fromlua_%v)",
+                    field.name,
+                    t,
+                    t,
+                )
+            } else {
+                fmt.wprintfln(
+                    w,
+                    "    %v := %v",
+                    field.name,
+                    gencode_value_from_lua(field.type, -1, structName, field.name),
+                )
+            }
             fmt.wprintfln(w, "    lua.pop(L, 1)")
         }
         fmt.wprintfln(w, "    return rl.%v {{", structName)

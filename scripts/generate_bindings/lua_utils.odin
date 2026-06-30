@@ -2,6 +2,8 @@ package generate_bindings
 
 import "core:fmt"
 import "core:strings"
+import "core:unicode"
+import "core:unicode/utf8"
 
 gencode_value_from_lua__idxint :: proc(
     type: string,
@@ -124,20 +126,27 @@ gencode_push_value_to_lua :: proc {
 }
 
 c_type_to_lua :: proc(type: string, source: string = "", source_param: string = "") -> string {
+    suffix := ""
+    value := ""
+
+    if is_null_terminated_array(source, source_param) {
+        suffix = "[]"
+    }
+
     if type == "const unsigned char *" ||
        type == "const char *" ||
        type == "unsigned char *" ||
        type == "char *" ||
        type == "STRING" {
-        return "string"
+        value = "string"
     } else if type == "int" || type == "unsigned int" || type == "long" || type == "INT" {
-        return "integer"
+        value = "integer"
     } else if type == "float" || type == "double" || type == "FLOAT" {
-        return "number"
+        value = "number"
     } else if type == "bool" {
-        return "boolean"
+        value = "boolean"
     } else if type == "void *" || type == "char **" {
-        return "any"
+        value = "any"
     } else {
         type := type
         if type == "COLOR" do type = "Color"
@@ -145,8 +154,10 @@ c_type_to_lua :: proc(type: string, source: string = "", source_param: string = 
         _, is_ptr_array := funcparam__is_ptr_array(source, source_param)
         if is_ptr_array do type = fmt.tprintf("%v[]", type)
         // struct or other type
-        return fmt.tprintf("Raylib.%v", type)
+        value = fmt.tprintf("Raylib.%v", type)
     }
+
+    return fmt.tprintf("%v%v", value, suffix)
 }
 
 trim_c_type :: proc(type: string) -> string {
@@ -160,5 +171,22 @@ trim_c_type :: proc(type: string) -> string {
         type = cut
     }
     return type
+}
+
+prefix_c_type :: proc(type: string) -> string {
+    first_rune, _ := utf8.decode_rune_in_string(type)
+    if unicode.is_upper(first_rune) {
+        return fmt.tprintf("rl.%v", type)
+    }
+    return type
+}
+
+is_null_terminated_array :: proc(source, source_param: string) -> bool {
+    for arry in null_terminated_arrays {
+        if arry.source == source && arry.source_param == source_param {
+            return true
+        }
+    }
+    return false
 }
 

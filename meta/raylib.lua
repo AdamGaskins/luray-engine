@@ -415,6 +415,14 @@ function _update() end
 ---@field advanceX integer Character advance position X
 ---@field image Raylib.Image Character image data
 
+---@class Raylib.Font
+---@field baseSize integer Base size (default chars height)
+---@field glyphCount integer Number of glyph characters
+---@field glyphPadding integer Padding around the glyph characters
+---@field texture Raylib.Texture2D Texture atlas containing the glyphs
+---@field recs Raylib.Rectangle[] Rectangles in texture for the glyphs
+---@field glyphs Raylib.GlyphInfo[] Glyphs info data
+
 ---@class Raylib.Camera3D
 ---@field position Raylib.Vector3 Camera position
 ---@field target Raylib.Vector3 Camera target it looks-at
@@ -1811,6 +1819,15 @@ function ray.ImageFromChannel(image, selectedChannel) end
 ---@return Raylib.Image
 function ray.ImageText(text, fontSize, color) end
 
+---Create an image from text (custom sprite font)
+---@param font Raylib.Font
+---@param text string
+---@param fontSize number
+---@param spacing number
+---@param tint Raylib.Color
+---@return Raylib.Image
+function ray.ImageTextEx(font, text, fontSize, spacing, tint) end
+
 ---Convert image data to desired format
 ---@param image Raylib.Image
 ---@param newFormat integer
@@ -2103,6 +2120,16 @@ function ray.ImageDraw(dst, src, srcRec, dstRec, tint) end
 ---@param color Raylib.Color
 function ray.ImageDrawText(dst, text, posX, posY, fontSize, color) end
 
+---Draw text (custom sprite font) within an image (destination)
+---@param dst Raylib.Image
+---@param font Raylib.Font
+---@param text string
+---@param position Raylib.Vector2
+---@param fontSize number
+---@param spacing number
+---@param tint Raylib.Color
+function ray.ImageDrawTextEx(dst, font, text, position, fontSize, spacing, tint) end
+
 ---Load texture from file into GPU memory (VRAM)
 ---@param fileName string
 ---@return Raylib.Texture2D
@@ -2282,6 +2309,37 @@ function ray.GetColor(hexValue) end
 ---@return integer
 function ray.GetPixelDataSize(width, height, format) end
 
+---Get the default Font
+---@return Raylib.Font
+function ray.GetFontDefault() end
+
+---Load font from file into GPU memory (VRAM)
+---@param fileName string
+---@return Raylib.Font
+function ray.LoadFont(fileName) end
+
+---Load font from Image (XNA style)
+---@param image Raylib.Image
+---@param key Raylib.Color
+---@param firstChar integer
+---@return Raylib.Font
+function ray.LoadFontFromImage(image, key, firstChar) end
+
+---Check if a font is valid (font data loaded, WARNING: GPU texture not checked)
+---@param font Raylib.Font
+---@return boolean
+function ray.IsFontValid(font) end
+
+---Unload font from GPU memory (VRAM)
+---@param font Raylib.Font
+function ray.UnloadFont(font) end
+
+---Export font as code file, returns true on success
+---@param font Raylib.Font
+---@param fileName string
+---@return boolean
+function ray.ExportFontAsCode(font, fileName) end
+
 ---Draw current FPS
 ---@param posX integer
 ---@param posY integer
@@ -2295,6 +2353,34 @@ function ray.DrawFPS(posX, posY) end
 ---@param color Raylib.Color
 function ray.DrawText(text, posX, posY, fontSize, color) end
 
+---Draw text using font and additional parameters
+---@param font Raylib.Font
+---@param text string
+---@param position Raylib.Vector2
+---@param fontSize number
+---@param spacing number
+---@param tint Raylib.Color
+function ray.DrawTextEx(font, text, position, fontSize, spacing, tint) end
+
+---Draw text using Font and pro parameters (rotation)
+---@param font Raylib.Font
+---@param text string
+---@param position Raylib.Vector2
+---@param origin Raylib.Vector2
+---@param rotation number
+---@param fontSize number
+---@param spacing number
+---@param tint Raylib.Color
+function ray.DrawTextPro(font, text, position, origin, rotation, fontSize, spacing, tint) end
+
+---Draw one character (codepoint)
+---@param font Raylib.Font
+---@param codepoint integer
+---@param position Raylib.Vector2
+---@param fontSize number
+---@param tint Raylib.Color
+function ray.DrawTextCodepoint(font, codepoint, position, fontSize, tint) end
+
 ---Set vertical line spacing when drawing with line-breaks
 ---@param spacing integer
 function ray.SetTextLineSpacing(spacing) end
@@ -2304,6 +2390,32 @@ function ray.SetTextLineSpacing(spacing) end
 ---@param fontSize integer
 ---@return integer
 function ray.MeasureText(text, fontSize) end
+
+---Measure string size for Font
+---@param font Raylib.Font
+---@param text string
+---@param fontSize number
+---@param spacing number
+---@return Raylib.Vector2
+function ray.MeasureTextEx(font, text, fontSize, spacing) end
+
+---Get glyph index position in font for a codepoint (unicode character), fallback to '?' if not found
+---@param font Raylib.Font
+---@param codepoint integer
+---@return integer
+function ray.GetGlyphIndex(font, codepoint) end
+
+---Get glyph font info data for a codepoint (unicode character), fallback to '?' if not found
+---@param font Raylib.Font
+---@param codepoint integer
+---@return Raylib.GlyphInfo
+function ray.GetGlyphInfo(font, codepoint) end
+
+---Get glyph rectangle in font atlas for a codepoint (unicode character), fallback to '?' if not found
+---@param font Raylib.Font
+---@param codepoint integer
+---@return Raylib.Rectangle
+function ray.GetGlyphAtlasRec(font, codepoint) end
 
 ---Get total number of codepoints in a UTF-8 encoded string
 ---@param text string

@@ -6,7 +6,9 @@ import rl "vendor:raylib"
 
 main :: proc() {
     state := lua.L_newstate()
-    lua.open_base(state)
+    lua.L_openlibs(state)
+    // lua.open_base(state)
+    // lua.open_table(state)
     bind_raylib(state)
 
     if lua.L_dofile(state, "main.lua") != 0 {

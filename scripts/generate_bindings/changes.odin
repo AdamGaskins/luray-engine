@@ -36,7 +36,7 @@ implemented_types :: []string {
     "BoundingBox",
     "NPatchInfo",
     "GlyphInfo",
-    // "Font",
+    "Font",
     // "Mesh",
     // "Shader",
     "MaterialMap",
@@ -61,6 +61,8 @@ implemented_types :: []string {
     "Image *",
     "const Vector2 *",
     "Vector2 *",
+    // "Rectangle *",
+    // "GlyphInfo *",
     "Camera *",
 }
 
@@ -77,6 +79,44 @@ ignore_functions :: []string {
     // probably don't work
     "SetPixelColor",
     "GetPixelColor",
+    // todo
+    "BeginShaderMode",
+    "BeginVrStereoMode",
+    "LoadVrStereoConfig",
+    "LoadVrStereoConfig",
+    "UnloadVrStereoConfig",
+    "LoadShader",
+    "LoadShaderFromMemory",
+    "IsShaderValid",
+    "GetShaderLocation",
+    "GetShaderLocationAttrib",
+    "SetShaderValue",
+    "SetShaderValue",
+    "SetShaderValueV",
+    "SetShaderValueV",
+    "SetShaderValueMatrix",
+    "SetShaderValueTexture",
+    "UnloadShader",
+    "LoadRandomSequence",
+    "UnloadRandomSequence",
+    "TraceLog",
+    "SetTraceLogCallback",
+    "SetLoadFileDataCallback",
+    "SetSaveFileDataCallback",
+    "SetLoadFileTextCallback",
+    "SetSaveFileTextCallback",
+    "CompressData",
+    "DecompressData",
+    "EncodeDataBase64",
+    "DecodeDataBase64",
+    "ComputeCRC32",
+    "ComputeMD5",
+    "ComputeSHA1",
+    "LoadAutomationEventList",
+    "UnloadAutomationEventList",
+    "ExportAutomationEventList",
+    "SetAutomationEventList",
+    "PlayAutomationEvent",
 }
 
 funcs_not_yet_implemented :: []string {
@@ -168,6 +208,8 @@ param_array_pointers :: []ParamArrayPointer {
     {"CheckCollisionPointPoly", "points", "pointCount"},
     {"ImageDrawTriangleFan", "points", "pointCount"},
     {"ImageDrawTriangleStrip", "points", "pointCount"},
+    {"Font", "recs", "glyphCount"},
+    {"Font", "glyphs", "glyphCount"},
 }
 
 AutoFree :: struct {
@@ -175,6 +217,12 @@ AutoFree :: struct {
     statement: string,
 }
 auto_free_statements :: []AutoFree{{"LoadFileText", "rl.UnloadFileText(result)"}}
+
+NullTerminatedArray :: struct {
+    source:       string,
+    source_param: string,
+}
+null_terminated_arrays :: []NullTerminatedArray{}
 
 ParamTypeOverride :: struct {
     source:       string,
@@ -221,6 +269,12 @@ param_type_overrides :: []ParamTypeOverride {
     {"SaveFileText", "text", "transmute", "^u8"},
     {"LoadFileText", "return", "transmute", "cstring"},
     {"UpdateCamera", "mode", "cast", "rl.CameraMode"},
+    {"LoadFontFromImage", "firstChar", "cast", "rune"},
+    {"DrawTextCodepoint", "codepoint", "cast", "rune"},
+    {"GetGlyphIndex", "codepoint", "cast", "rune"},
+    {"GetGlyphInfo", "codepoint", "cast", "rune"},
+    {"GetGlyphAtlasRec", "codepoint", "cast", "rune"},
+
 
     // structs
     {"Texture", "format", "cast", "rl.PixelFormat"},
