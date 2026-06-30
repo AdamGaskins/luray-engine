@@ -459,6 +459,11 @@ function _update() end
 ---@field channels integer Number of channels (1-mono, 2-stereo, ...)
 ---@field data any Buffer data pointer
 
+---@class Raylib.FilePathList
+---@field capacity integer Filepaths max entries
+---@field count integer Filepaths entries count
+---@field paths any Filepaths entries
+
 ---@alias Raylib.Quaternion Raylib.Vector4
 
 ---@alias Raylib.Texture2D Raylib.Texture
@@ -927,9 +932,33 @@ function ray.IsPathFile(path) end
 ---@return boolean
 function ray.IsFileNameValid(fileName) end
 
+---Load directory filepaths
+---@param dirPath string
+---@return Raylib.FilePathList
+function ray.LoadDirectoryFiles(dirPath) end
+
+---Load directory filepaths with extension filtering and recursive directory scan. Use 'DIR' in the filter string to include directories in the result
+---@param basePath string
+---@param filter string
+---@param scanSubdirs boolean
+---@return Raylib.FilePathList
+function ray.LoadDirectoryFilesEx(basePath, filter, scanSubdirs) end
+
+---Unload filepaths
+---@param files Raylib.FilePathList
+function ray.UnloadDirectoryFiles(files) end
+
 ---Check if a file has been dropped into window
 ---@return boolean
 function ray.IsFileDropped() end
+
+---Load dropped filepaths
+---@return Raylib.FilePathList
+function ray.LoadDroppedFiles() end
+
+---Unload dropped filepaths
+---@param files Raylib.FilePathList
+function ray.UnloadDroppedFiles(files) end
 
 ---Get file modification time (last write time)
 ---@param fileName string

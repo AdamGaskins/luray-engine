@@ -44,7 +44,7 @@ gencode_value_from_lua__idxstr :: proc(
         value = fmt.tprintf("c.double(lua.tonumber(L, %v))", idx)
     } else if type == "bool" {
         value = fmt.tprintf("c.bool(lua.toboolean(L, %v))", idx)
-    } else if type == "void *" {
+    } else if type == "void *" || type == "char **" {
         value = fmt.tprintf("lua.touserdata(L, %v)", idx)
     } else {
         type := trim_c_type(type)
@@ -92,7 +92,7 @@ gencode_push_value_to_lua__string :: proc(
         value = fmt.tprintf("lua.pushnumber(L, lua.Number(%v))", value)
     } else if type == "bool" {
         value = fmt.tprintf("lua.pushboolean(L, b32(%v))", value)
-    } else if type == "void *" {
+    } else if type == "void *" || type == "char **" {
         value = fmt.tprintf("lua.pushlightuserdata(L, %v)", value)
     } else {
         type := trim_c_type(type)
@@ -136,7 +136,7 @@ c_type_to_lua :: proc(type: string, source: string = "", source_param: string = 
         return "number"
     } else if type == "bool" {
         return "boolean"
-    } else if type == "void *" {
+    } else if type == "void *" || type == "char **" {
         return "any"
     } else {
         type := type

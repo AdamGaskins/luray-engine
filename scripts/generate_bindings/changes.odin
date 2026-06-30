@@ -53,7 +53,7 @@ implemented_types :: []string {
     // "Music",
     // "VrDeviceInfo",
     // "VrStereoConfig",
-    // "FilePathList",
+    "FilePathList",
     // "AutomationEvent",
     // "AutomationEventList",
 
@@ -221,5 +221,6 @@ param_type_overrides :: []ParamTypeOverride {
     {"Texture", "format", "cast", "rl.PixelFormat"},
     {"Image", "format", "cast", "rl.PixelFormat"},
     {"Camera3D", "projection", "cast", "rl.CameraProjection"},
+    {"FilePathList", "paths", "transmute", "[^]cstring"},
 }
 

@@ -1322,8 +1322,23 @@ bind_raylib :: proc(L: ^lua.State) {
     lua.pushcfunction(L, lua_IsFileNameValid)
     lua.setfield(L, -2, "IsFileNameValid")
 
+    lua.pushcfunction(L, lua_LoadDirectoryFiles)
+    lua.setfield(L, -2, "LoadDirectoryFiles")
+
+    lua.pushcfunction(L, lua_LoadDirectoryFilesEx)
+    lua.setfield(L, -2, "LoadDirectoryFilesEx")
+
+    lua.pushcfunction(L, lua_UnloadDirectoryFiles)
+    lua.setfield(L, -2, "UnloadDirectoryFiles")
+
     lua.pushcfunction(L, lua_IsFileDropped)
     lua.setfield(L, -2, "IsFileDropped")
+
+    lua.pushcfunction(L, lua_LoadDroppedFiles)
+    lua.setfield(L, -2, "LoadDroppedFiles")
+
+    lua.pushcfunction(L, lua_UnloadDroppedFiles)
+    lua.setfield(L, -2, "UnloadDroppedFiles")
 
     lua.pushcfunction(L, lua_GetFileModTime)
     lua.setfield(L, -2, "GetFileModTime")
@@ -2794,6 +2809,33 @@ fromlua_Wave :: proc "c" (L: ^lua.State, idx: c.int) -> rl.Wave {
     }
 }
 
+tolua_FilePathList :: proc "c" (L: ^lua.State, s: rl.FilePathList, idx: c.int = -99) {
+    idx := idx
+    if idx == -99 {
+        lua.newtable(L)
+        idx = -2
+    }
+    lua.pushinteger(L, lua.Integer(s.capacity))
+    lua.setfield(L, idx, "capacity")
+    lua.pushinteger(L, lua.Integer(s.count))
+    lua.setfield(L, idx, "count")
+    lua.pushlightuserdata(L, s.paths)
+    lua.setfield(L, idx, "paths")
+}
+
+fromlua_FilePathList :: proc "c" (L: ^lua.State, idx: c.int) -> rl.FilePathList {
+    lua.getfield(L, idx, "capacity")
+    capacity := c.uint(lua.tonumber(L, -1))
+    lua.pop(L, 1)
+    lua.getfield(L, idx, "count")
+    count := c.uint(lua.tonumber(L, -1))
+    lua.pop(L, 1)
+    lua.getfield(L, idx, "paths")
+    paths := transmute([^]cstring)lua.touserdata(L, -1)
+    lua.pop(L, 1)
+    return rl.FilePathList{capacity = capacity, count = count, paths = paths}
+}
+
 tolua_Quaternion :: proc "c" (L: ^lua.State, s: rl.Quaternion) {
     tolua_Vector4(L, transmute(rl.Vector4)s)
 }
@@ -3787,11 +3829,59 @@ lua_IsFileNameValid :: proc "c" (L: ^lua.State) -> c.int {
 }
 
 @(private)
+lua_LoadDirectoryFiles :: proc "c" (L: ^lua.State) -> c.int {
+    p_dirPath := lua.tostring(L, 1)
+
+    result := rl.LoadDirectoryFiles(p_dirPath)
+
+    tolua_FilePathList(L, result)
+    return 1
+}
+
+@(private)
+lua_LoadDirectoryFilesEx :: proc "c" (L: ^lua.State) -> c.int {
+    p_basePath := lua.tostring(L, 1)
+    p_filter := lua.tostring(L, 2)
+    p_scanSubdirs := c.bool(lua.toboolean(L, 3))
+
+    result := rl.LoadDirectoryFilesEx(p_basePath, p_filter, p_scanSubdirs)
+
+    tolua_FilePathList(L, result)
+    return 1
+}
+
+@(private)
+lua_UnloadDirectoryFiles :: proc "c" (L: ^lua.State) -> c.int {
+    p_files := fromlua_FilePathList(L, 1)
+
+    rl.UnloadDirectoryFiles(p_files)
+
+    return 0
+}
+
+@(private)
 lua_IsFileDropped :: proc "c" (L: ^lua.State) -> c.int {
     result := rl.IsFileDropped()
 
     lua.pushboolean(L, b32(result))
     return 1
+}
+
+@(private)
+lua_LoadDroppedFiles :: proc "c" (L: ^lua.State) -> c.int {
+    result := rl.LoadDroppedFiles()
+
+    tolua_FilePathList(L, result)
+    return 1
+}
+
+@(private)
+lua_UnloadDroppedFiles :: proc "c" (L: ^lua.State) -> c.int {
+    p_files := fromlua_FilePathList(L, 1)
+
+    rl.UnloadDroppedFiles(p_files)
+
+    return 0
 }
 
 @(private)
