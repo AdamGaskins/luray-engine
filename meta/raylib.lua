@@ -1167,6 +1167,10 @@ function ray.SetGesturesEnabled(flags) end
 ---@return boolean
 function ray.IsGestureDetected(gesture) end
 
+---Get latest detected gesture
+---@return integer
+function ray.GetGestureDetected() end
+
 ---Get gesture hold time in seconds
 ---@return number
 function ray.GetGestureHoldDuration() end

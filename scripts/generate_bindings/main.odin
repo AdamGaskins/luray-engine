@@ -550,11 +550,16 @@ write_struct_aliases :: proc(
 
 
         // write conversion funcs
-        fmt.wprintfln(w, `tolua_%v :: proc "c" (L: ^lua.State, s: rl.%v) {{`, name, name)
+        fmt.wprintfln(
+            w,
+            `tolua_%v :: proc "c" (L: ^lua.State, s: rl.%v, idx: c.int = -99) {{`,
+            name,
+            name,
+        )
         if name == "Quaternion" {
-            fmt.wprintfln(w, "    tolua_%v(L, transmute(rl.Vector4)s)", type)
+            fmt.wprintfln(w, "    tolua_%v(L, transmute(rl.Vector4)s, idx)", type)
         } else {
-            fmt.wprintfln(w, "    tolua_%v(L, s)", type)
+            fmt.wprintfln(w, "    tolua_%v(L, s, idx)", type)
         }
         fmt.wprintfln(w, "}")
         fmt.wprintfln(w, "")

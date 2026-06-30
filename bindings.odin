@@ -1472,6 +1472,9 @@ bind_raylib :: proc(L: ^lua.State) {
     lua.pushcfunction(L, lua_IsGestureDetected)
     lua.setfield(L, -2, "IsGestureDetected")
 
+    lua.pushcfunction(L, lua_GetGestureDetected)
+    lua.setfield(L, -2, "GetGestureDetected")
+
     lua.pushcfunction(L, lua_GetGestureHoldDuration)
     lua.setfield(L, -2, "GetGestureHoldDuration")
 
@@ -2842,40 +2845,40 @@ fromlua_FilePathList :: proc "c" (L: ^lua.State, idx: c.int) -> rl.FilePathList 
     return rl.FilePathList{capacity = capacity, count = count, paths = paths}
 }
 
-tolua_Quaternion :: proc "c" (L: ^lua.State, s: rl.Quaternion) {
-    tolua_Vector4(L, transmute(rl.Vector4)s)
+tolua_Quaternion :: proc "c" (L: ^lua.State, s: rl.Quaternion, idx: c.int = -99) {
+    tolua_Vector4(L, transmute(rl.Vector4)s, idx)
 }
 
 fromlua_Quaternion :: proc "c" (L: ^lua.State, idx: c.int) -> rl.Quaternion {
     return transmute(rl.Quaternion)fromlua_Vector4(L, idx)
 }
 
-tolua_Texture2D :: proc "c" (L: ^lua.State, s: rl.Texture2D) {
-    tolua_Texture(L, s)
+tolua_Texture2D :: proc "c" (L: ^lua.State, s: rl.Texture2D, idx: c.int = -99) {
+    tolua_Texture(L, s, idx)
 }
 
 fromlua_Texture2D :: proc "c" (L: ^lua.State, idx: c.int) -> rl.Texture2D {
     return fromlua_Texture(L, idx)
 }
 
-tolua_TextureCubemap :: proc "c" (L: ^lua.State, s: rl.TextureCubemap) {
-    tolua_Texture(L, s)
+tolua_TextureCubemap :: proc "c" (L: ^lua.State, s: rl.TextureCubemap, idx: c.int = -99) {
+    tolua_Texture(L, s, idx)
 }
 
 fromlua_TextureCubemap :: proc "c" (L: ^lua.State, idx: c.int) -> rl.TextureCubemap {
     return fromlua_Texture(L, idx)
 }
 
-tolua_RenderTexture2D :: proc "c" (L: ^lua.State, s: rl.RenderTexture2D) {
-    tolua_RenderTexture(L, s)
+tolua_RenderTexture2D :: proc "c" (L: ^lua.State, s: rl.RenderTexture2D, idx: c.int = -99) {
+    tolua_RenderTexture(L, s, idx)
 }
 
 fromlua_RenderTexture2D :: proc "c" (L: ^lua.State, idx: c.int) -> rl.RenderTexture2D {
     return fromlua_RenderTexture(L, idx)
 }
 
-tolua_Camera :: proc "c" (L: ^lua.State, s: rl.Camera) {
-    tolua_Camera3D(L, s)
+tolua_Camera :: proc "c" (L: ^lua.State, s: rl.Camera, idx: c.int = -99) {
+    tolua_Camera3D(L, s, idx)
 }
 
 fromlua_Camera :: proc "c" (L: ^lua.State, idx: c.int) -> rl.Camera {
@@ -4304,6 +4307,14 @@ lua_IsGestureDetected :: proc "c" (L: ^lua.State) -> c.int {
 }
 
 @(private)
+lua_GetGestureDetected :: proc "c" (L: ^lua.State) -> c.int {
+    result := rl.GetGestureDetected()
+
+    lua.pushinteger(L, lua.Integer(transmute(i32)result))
+    return 1
+}
+
+@(private)
 lua_GetGestureHoldDuration :: proc "c" (L: ^lua.State) -> c.int {
     result := rl.GetGestureHoldDuration()
 
@@ -4346,7 +4357,7 @@ lua_GetGesturePinchAngle :: proc "c" (L: ^lua.State) -> c.int {
 @(private)
 lua_UpdateCamera :: proc "c" (L: ^lua.State) -> c.int {
     p_camera := fromlua_Camera(L, 1)
-    p_mode := c.int(lua.tonumber(L, 2))
+    p_mode := cast(rl.CameraMode)c.int(lua.tonumber(L, 2))
 
     rl.UpdateCamera(&p_camera, p_mode)
 

@@ -88,7 +88,7 @@ funcs_not_yet_implemented :: []string {
     "TextReplace",
     "LoadWaveFromMemory",
     "LoadMusicStreamFromMemory",
-    "GetGestureDetected",
+    // "GetGestureDetected",
     "ComputeCRC32",
     "ColorIsEqual", // deprecated
 }
@@ -207,6 +207,7 @@ param_type_overrides :: []ParamTypeOverride {
     {"IsMouseButtonUp", "button", "cast", "rl.MouseButton"},
     {"SetMouseCursor", "cursor", "cast", "rl.MouseCursor"},
     {"SetGesturesEnabled", "flags", "transmute", "rl.Gestures"},
+    {"GetGestureDetected", "return", "transmute", "i32"},
     {"IsGestureDetected", "gesture", "cast", "rl.Gesture"},
     {"GetPixelDataSize", "format", "cast", "rl.PixelFormat"},
     {"GetPixelColor", "format", "cast", "rl.PixelFormat"},
@@ -219,6 +220,7 @@ param_type_overrides :: []ParamTypeOverride {
     {"GlyphInfo", "value", "cast", "rune"},
     {"SaveFileText", "text", "transmute", "^u8"},
     {"LoadFileText", "return", "transmute", "cstring"},
+    {"UpdateCamera", "mode", "cast", "rl.CameraMode"},
 
     // structs
     {"Texture", "format", "cast", "rl.PixelFormat"},
