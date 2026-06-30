@@ -1187,6 +1187,18 @@ function ray.GetGesturePinchVector() end
 ---@return number
 function ray.GetGesturePinchAngle() end
 
+---Update camera position for selected mode
+---@param camera Raylib.Camera
+---@param mode integer
+function ray.UpdateCamera(camera, mode) end
+
+---Update camera movement/rotation
+---@param camera Raylib.Camera
+---@param movement Raylib.Vector3
+---@param rotation Raylib.Vector3
+---@param zoom number
+function ray.UpdateCameraPro(camera, movement, rotation, zoom) end
+
 ---Set texture and rectangle to be used on shapes drawing
 ---@param texture Raylib.Texture2D
 ---@param source Raylib.Rectangle

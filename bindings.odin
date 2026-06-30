@@ -1487,6 +1487,12 @@ bind_raylib :: proc(L: ^lua.State) {
     lua.pushcfunction(L, lua_GetGesturePinchAngle)
     lua.setfield(L, -2, "GetGesturePinchAngle")
 
+    lua.pushcfunction(L, lua_UpdateCamera)
+    lua.setfield(L, -2, "UpdateCamera")
+
+    lua.pushcfunction(L, lua_UpdateCameraPro)
+    lua.setfield(L, -2, "UpdateCameraPro")
+
     lua.pushcfunction(L, lua_SetShapesTexture)
     lua.setfield(L, -2, "SetShapesTexture")
 
@@ -4335,6 +4341,30 @@ lua_GetGesturePinchAngle :: proc "c" (L: ^lua.State) -> c.int {
 
     lua.pushnumber(L, lua.Number(result))
     return 1
+}
+
+@(private)
+lua_UpdateCamera :: proc "c" (L: ^lua.State) -> c.int {
+    p_camera := fromlua_Camera(L, 1)
+    p_mode := c.int(lua.tonumber(L, 2))
+
+    rl.UpdateCamera(&p_camera, p_mode)
+
+    tolua_Camera(L, p_camera, 1)
+    return 0
+}
+
+@(private)
+lua_UpdateCameraPro :: proc "c" (L: ^lua.State) -> c.int {
+    p_camera := fromlua_Camera(L, 1)
+    p_movement := fromlua_Vector3(L, 2)
+    p_rotation := fromlua_Vector3(L, 3)
+    p_zoom := c.float(lua.tonumber(L, 4))
+
+    rl.UpdateCameraPro(&p_camera, p_movement, p_rotation, p_zoom)
+
+    tolua_Camera(L, p_camera, 1)
+    return 0
 }
 
 @(private)

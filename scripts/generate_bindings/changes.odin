@@ -61,6 +61,7 @@ implemented_types :: []string {
     "Image *",
     "const Vector2 *",
     "Vector2 *",
+    "Camera *",
 }
 
 ignore_functions :: []string {
@@ -143,6 +144,8 @@ params_modified_in_place :: []string {
     "ImageDrawText.dst",
     "ImageDrawTextEx.dst",
     "CheckCollisionLines.collisionPoint",
+    "UpdateCamera.camera",
+    "UpdateCameraPro.camera",
 }
 
 ParamArrayPointer :: struct {
