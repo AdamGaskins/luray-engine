@@ -1188,6 +1188,11 @@ function ray.DrawLineV(startPos, endPos, color) end
 ---@param color Raylib.Color
 function ray.DrawLineEx(startPos, endPos, thick, color) end
 
+---Draw lines sequence (using gl lines)
+---@param points Raylib.Vector2[]
+---@param color Raylib.Color
+function ray.DrawLineStrip(points, color) end
+
 ---Draw line segment cubic-bezier in-out interpolation
 ---@param startPos Raylib.Vector2
 ---@param endPos Raylib.Vector2
@@ -1385,6 +1390,16 @@ function ray.DrawTriangle(v1, v2, v3, color) end
 ---@param color Raylib.Color
 function ray.DrawTriangleLines(v1, v2, v3, color) end
 
+---Draw a triangle fan defined by points (first vertex is the center)
+---@param points Raylib.Vector2[]
+---@param color Raylib.Color
+function ray.DrawTriangleFan(points, color) end
+
+---Draw a triangle strip defined by points
+---@param points Raylib.Vector2[]
+---@param color Raylib.Color
+function ray.DrawTriangleStrip(points, color) end
+
 ---Draw a regular polygon (Vector version)
 ---@param center Raylib.Vector2
 ---@param sides integer
@@ -1409,6 +1424,36 @@ function ray.DrawPolyLines(center, sides, radius, rotation, color) end
 ---@param lineThick number
 ---@param color Raylib.Color
 function ray.DrawPolyLinesEx(center, sides, radius, rotation, lineThick, color) end
+
+---Draw spline: Linear, minimum 2 points
+---@param points Raylib.Vector2[]
+---@param thick number
+---@param color Raylib.Color
+function ray.DrawSplineLinear(points, thick, color) end
+
+---Draw spline: B-Spline, minimum 4 points
+---@param points Raylib.Vector2[]
+---@param thick number
+---@param color Raylib.Color
+function ray.DrawSplineBasis(points, thick, color) end
+
+---Draw spline: Catmull-Rom, minimum 4 points
+---@param points Raylib.Vector2[]
+---@param thick number
+---@param color Raylib.Color
+function ray.DrawSplineCatmullRom(points, thick, color) end
+
+---Draw spline: Quadratic Bezier, minimum 3 points (1 control point): [p1, c2, p3, c4...]
+---@param points Raylib.Vector2[]
+---@param thick number
+---@param color Raylib.Color
+function ray.DrawSplineBezierQuadratic(points, thick, color) end
+
+---Draw spline: Cubic Bezier, minimum 4 points (2 control points): [p1, c2, c3, p4, c5, c6...]
+---@param points Raylib.Vector2[]
+---@param thick number
+---@param color Raylib.Color
+function ray.DrawSplineBezierCubic(points, thick, color) end
 
 ---Draw spline segment: Linear, 2 points
 ---@param p1 Raylib.Vector2
@@ -1552,6 +1597,21 @@ function ray.CheckCollisionPointTriangle(point, p1, p2, p3) end
 ---@return boolean
 function ray.CheckCollisionPointLine(point, p1, p2, threshold) end
 
+---Check if point is within a polygon described by array of vertices
+---@param point Raylib.Vector2
+---@param points Raylib.Vector2[]
+---@return boolean
+function ray.CheckCollisionPointPoly(point, points) end
+
+---Check the collision between two lines defined by two points each, returns collision point by reference
+---@param startPos1 Raylib.Vector2
+---@param endPos1 Raylib.Vector2
+---@param startPos2 Raylib.Vector2
+---@param endPos2 Raylib.Vector2
+---@param collisionPoint Raylib.Vector2
+---@return boolean
+function ray.CheckCollisionLines(startPos1, endPos1, startPos2, endPos2, collisionPoint) end
+
 ---Get collision rectangle for two rectangles collision
 ---@param rec1 Raylib.Rectangle
 ---@param rec2 Raylib.Rectangle
@@ -1692,59 +1752,59 @@ function ray.ImageFromChannel(image, selectedChannel) end
 function ray.ImageText(text, fontSize, color) end
 
 ---Convert image data to desired format
----@param image Raylib.Image *
+---@param image Raylib.Image
 ---@param newFormat integer
 function ray.ImageFormat(image, newFormat) end
 
 ---Convert image to POT (power-of-two)
----@param image Raylib.Image *
+---@param image Raylib.Image
 ---@param fill Raylib.Color
 function ray.ImageToPOT(image, fill) end
 
 ---Crop an image to a defined rectangle
----@param image Raylib.Image *
+---@param image Raylib.Image
 ---@param crop Raylib.Rectangle
 function ray.ImageCrop(image, crop) end
 
 ---Crop image depending on alpha value
----@param image Raylib.Image *
+---@param image Raylib.Image
 ---@param threshold number
 function ray.ImageAlphaCrop(image, threshold) end
 
 ---Clear alpha channel to desired color
----@param image Raylib.Image *
+---@param image Raylib.Image
 ---@param color Raylib.Color
 ---@param threshold number
 function ray.ImageAlphaClear(image, color, threshold) end
 
 ---Apply alpha mask to image
----@param image Raylib.Image *
+---@param image Raylib.Image
 ---@param alphaMask Raylib.Image
 function ray.ImageAlphaMask(image, alphaMask) end
 
 ---Premultiply alpha channel
----@param image Raylib.Image *
+---@param image Raylib.Image
 function ray.ImageAlphaPremultiply(image) end
 
 ---Apply Gaussian blur using a box blur approximation
----@param image Raylib.Image *
+---@param image Raylib.Image
 ---@param blurSize integer
 function ray.ImageBlurGaussian(image, blurSize) end
 
 ---Resize image (Bicubic scaling algorithm)
----@param image Raylib.Image *
+---@param image Raylib.Image
 ---@param newWidth integer
 ---@param newHeight integer
 function ray.ImageResize(image, newWidth, newHeight) end
 
 ---Resize image (Nearest-Neighbor scaling algorithm)
----@param image Raylib.Image *
+---@param image Raylib.Image
 ---@param newWidth integer
 ---@param newHeight integer
 function ray.ImageResizeNN(image, newWidth, newHeight) end
 
 ---Resize canvas and fill with color
----@param image Raylib.Image *
+---@param image Raylib.Image
 ---@param newWidth integer
 ---@param newHeight integer
 ---@param offsetX integer
@@ -1753,11 +1813,11 @@ function ray.ImageResizeNN(image, newWidth, newHeight) end
 function ray.ImageResizeCanvas(image, newWidth, newHeight, offsetX, offsetY, fill) end
 
 ---Compute all mipmap levels for a provided image
----@param image Raylib.Image *
+---@param image Raylib.Image
 function ray.ImageMipmaps(image) end
 
 ---Dither image data to 16bpp or lower (Floyd-Steinberg dithering)
----@param image Raylib.Image *
+---@param image Raylib.Image
 ---@param rBpp integer
 ---@param gBpp integer
 ---@param bBpp integer
@@ -1765,51 +1825,51 @@ function ray.ImageMipmaps(image) end
 function ray.ImageDither(image, rBpp, gBpp, bBpp, aBpp) end
 
 ---Flip image vertically
----@param image Raylib.Image *
+---@param image Raylib.Image
 function ray.ImageFlipVertical(image) end
 
 ---Flip image horizontally
----@param image Raylib.Image *
+---@param image Raylib.Image
 function ray.ImageFlipHorizontal(image) end
 
 ---Rotate image by input angle in degrees (-359 to 359)
----@param image Raylib.Image *
+---@param image Raylib.Image
 ---@param degrees integer
 function ray.ImageRotate(image, degrees) end
 
 ---Rotate image clockwise 90deg
----@param image Raylib.Image *
+---@param image Raylib.Image
 function ray.ImageRotateCW(image) end
 
 ---Rotate image counter-clockwise 90deg
----@param image Raylib.Image *
+---@param image Raylib.Image
 function ray.ImageRotateCCW(image) end
 
 ---Modify image color: tint
----@param image Raylib.Image *
+---@param image Raylib.Image
 ---@param color Raylib.Color
 function ray.ImageColorTint(image, color) end
 
 ---Modify image color: invert
----@param image Raylib.Image *
+---@param image Raylib.Image
 function ray.ImageColorInvert(image) end
 
 ---Modify image color: grayscale
----@param image Raylib.Image *
+---@param image Raylib.Image
 function ray.ImageColorGrayscale(image) end
 
 ---Modify image color: contrast (-100 to 100)
----@param image Raylib.Image *
+---@param image Raylib.Image
 ---@param contrast number
 function ray.ImageColorContrast(image, contrast) end
 
 ---Modify image color: brightness (-255 to 255)
----@param image Raylib.Image *
+---@param image Raylib.Image
 ---@param brightness integer
 function ray.ImageColorBrightness(image, brightness) end
 
 ---Modify image color: replace color
----@param image Raylib.Image *
+---@param image Raylib.Image
 ---@param color Raylib.Color
 ---@param replace Raylib.Color
 function ray.ImageColorReplace(image, color, replace) end
@@ -1828,25 +1888,25 @@ function ray.GetImageAlphaBorder(image, threshold) end
 function ray.GetImageColor(image, x, y) end
 
 ---Clear image background with given color
----@param dst Raylib.Image *
+---@param dst Raylib.Image
 ---@param color Raylib.Color
 function ray.ImageClearBackground(dst, color) end
 
 ---Draw pixel within an image
----@param dst Raylib.Image *
+---@param dst Raylib.Image
 ---@param posX integer
 ---@param posY integer
 ---@param color Raylib.Color
 function ray.ImageDrawPixel(dst, posX, posY, color) end
 
 ---Draw pixel within an image (Vector version)
----@param dst Raylib.Image *
+---@param dst Raylib.Image
 ---@param position Raylib.Vector2
 ---@param color Raylib.Color
 function ray.ImageDrawPixelV(dst, position, color) end
 
 ---Draw line within an image
----@param dst Raylib.Image *
+---@param dst Raylib.Image
 ---@param startPosX integer
 ---@param startPosY integer
 ---@param endPosX integer
@@ -1855,14 +1915,14 @@ function ray.ImageDrawPixelV(dst, position, color) end
 function ray.ImageDrawLine(dst, startPosX, startPosY, endPosX, endPosY, color) end
 
 ---Draw line within an image (Vector version)
----@param dst Raylib.Image *
+---@param dst Raylib.Image
 ---@param start Raylib.Vector2
 ---@param finish Raylib.Vector2
 ---@param color Raylib.Color
 function ray.ImageDrawLineV(dst, start, finish, color) end
 
 ---Draw a line defining thickness within an image
----@param dst Raylib.Image *
+---@param dst Raylib.Image
 ---@param start Raylib.Vector2
 ---@param finish Raylib.Vector2
 ---@param thick integer
@@ -1870,7 +1930,7 @@ function ray.ImageDrawLineV(dst, start, finish, color) end
 function ray.ImageDrawLineEx(dst, start, finish, thick, color) end
 
 ---Draw a filled circle within an image
----@param dst Raylib.Image *
+---@param dst Raylib.Image
 ---@param centerX integer
 ---@param centerY integer
 ---@param radius integer
@@ -1878,14 +1938,14 @@ function ray.ImageDrawLineEx(dst, start, finish, thick, color) end
 function ray.ImageDrawCircle(dst, centerX, centerY, radius, color) end
 
 ---Draw a filled circle within an image (Vector version)
----@param dst Raylib.Image *
+---@param dst Raylib.Image
 ---@param center Raylib.Vector2
 ---@param radius integer
 ---@param color Raylib.Color
 function ray.ImageDrawCircleV(dst, center, radius, color) end
 
 ---Draw circle outline within an image
----@param dst Raylib.Image *
+---@param dst Raylib.Image
 ---@param centerX integer
 ---@param centerY integer
 ---@param radius integer
@@ -1893,14 +1953,14 @@ function ray.ImageDrawCircleV(dst, center, radius, color) end
 function ray.ImageDrawCircleLines(dst, centerX, centerY, radius, color) end
 
 ---Draw circle outline within an image (Vector version)
----@param dst Raylib.Image *
+---@param dst Raylib.Image
 ---@param center Raylib.Vector2
 ---@param radius integer
 ---@param color Raylib.Color
 function ray.ImageDrawCircleLinesV(dst, center, radius, color) end
 
 ---Draw rectangle within an image
----@param dst Raylib.Image *
+---@param dst Raylib.Image
 ---@param posX integer
 ---@param posY integer
 ---@param width integer
@@ -1909,27 +1969,27 @@ function ray.ImageDrawCircleLinesV(dst, center, radius, color) end
 function ray.ImageDrawRectangle(dst, posX, posY, width, height, color) end
 
 ---Draw rectangle within an image (Vector version)
----@param dst Raylib.Image *
+---@param dst Raylib.Image
 ---@param position Raylib.Vector2
 ---@param size Raylib.Vector2
 ---@param color Raylib.Color
 function ray.ImageDrawRectangleV(dst, position, size, color) end
 
 ---Draw rectangle within an image
----@param dst Raylib.Image *
+---@param dst Raylib.Image
 ---@param rec Raylib.Rectangle
 ---@param color Raylib.Color
 function ray.ImageDrawRectangleRec(dst, rec, color) end
 
 ---Draw rectangle lines within an image
----@param dst Raylib.Image *
+---@param dst Raylib.Image
 ---@param rec Raylib.Rectangle
 ---@param thick integer
 ---@param color Raylib.Color
 function ray.ImageDrawRectangleLines(dst, rec, thick, color) end
 
 ---Draw triangle within an image
----@param dst Raylib.Image *
+---@param dst Raylib.Image
 ---@param v1 Raylib.Vector2
 ---@param v2 Raylib.Vector2
 ---@param v3 Raylib.Vector2
@@ -1937,7 +1997,7 @@ function ray.ImageDrawRectangleLines(dst, rec, thick, color) end
 function ray.ImageDrawTriangle(dst, v1, v2, v3, color) end
 
 ---Draw triangle with interpolated colors within an image
----@param dst Raylib.Image *
+---@param dst Raylib.Image
 ---@param v1 Raylib.Vector2
 ---@param v2 Raylib.Vector2
 ---@param v3 Raylib.Vector2
@@ -1947,15 +2007,27 @@ function ray.ImageDrawTriangle(dst, v1, v2, v3, color) end
 function ray.ImageDrawTriangleEx(dst, v1, v2, v3, c1, c2, c3) end
 
 ---Draw triangle outline within an image
----@param dst Raylib.Image *
+---@param dst Raylib.Image
 ---@param v1 Raylib.Vector2
 ---@param v2 Raylib.Vector2
 ---@param v3 Raylib.Vector2
 ---@param color Raylib.Color
 function ray.ImageDrawTriangleLines(dst, v1, v2, v3, color) end
 
+---Draw a triangle fan defined by points within an image (first vertex is the center)
+---@param dst Raylib.Image
+---@param points Raylib.Vector2[]
+---@param color Raylib.Color
+function ray.ImageDrawTriangleFan(dst, points, color) end
+
+---Draw a triangle strip defined by points within an image
+---@param dst Raylib.Image
+---@param points Raylib.Vector2[]
+---@param color Raylib.Color
+function ray.ImageDrawTriangleStrip(dst, points, color) end
+
 ---Draw a source image within a destination image (tint applied to source)
----@param dst Raylib.Image *
+---@param dst Raylib.Image
 ---@param src Raylib.Image
 ---@param srcRec Raylib.Rectangle
 ---@param dstRec Raylib.Rectangle
@@ -1963,7 +2035,7 @@ function ray.ImageDrawTriangleLines(dst, v1, v2, v3, color) end
 function ray.ImageDraw(dst, src, srcRec, dstRec, tint) end
 
 ---Draw text (using default font) within an image (destination)
----@param dst Raylib.Image *
+---@param dst Raylib.Image
 ---@param text string
 ---@param posX integer
 ---@param posY integer

@@ -58,6 +58,8 @@ implemented_types :: []string {
 
     //
     "Image *",
+    "const Vector2 *",
+    "Vector2 *",
 }
 
 ignore_functions :: []string{"GetWindowHandle"}
@@ -137,6 +139,7 @@ params_modified_in_place :: []string {
     "ImageDraw.dst",
     "ImageDrawText.dst",
     "ImageDrawTextEx.dst",
+    "CheckCollisionLines.collisionPoint",
 }
 
 ParamArrayPointer :: struct {
@@ -155,50 +158,54 @@ param_array_pointers :: []ParamArrayPointer {
     {"DrawSplineCatmullRom", "points", "pointCount"},
     {"DrawSplineBezierQuadratic", "points", "pointCount"},
     {"DrawSplineBezierCubic", "points", "pointCount"},
+    {"CheckCollisionPointPoly", "points", "pointCount"},
+    {"ImageDrawTriangleFan", "points", "pointCount"},
+    {"ImageDrawTriangleStrip", "points", "pointCount"},
 }
 
 ParamTypeOverride :: struct {
-    source:    string,
-    cast_type: string,
-    type:      string,
+    source:       string,
+    source_param: string,
+    cast_type:    string,
+    type:         string,
 }
 param_type_overrides :: []ParamTypeOverride {
     // functions
-    {"IsWindowState.flag", "transmute", "rl.ConfigFlags"},
-    {"SetWindowState.flags", "transmute", "rl.ConfigFlags"},
-    {"ClearWindowState.flags", "transmute", "rl.ConfigFlags"},
-    {"BeginBlendMode.mode", "cast", "rl.BlendMode"},
-    {"SetConfigFlags.flags", "transmute", "rl.ConfigFlags"},
-    {"SetTraceLogLevel.logLevel", "cast", "rl.TraceLogLevel"},
-    {"IsKeyPressed.key", "cast", "rl.KeyboardKey"},
-    {"IsKeyPressedRepeat.key", "cast", "rl.KeyboardKey"},
-    {"IsKeyDown.key", "cast", "rl.KeyboardKey"},
-    {"IsKeyReleased.key", "cast", "rl.KeyboardKey"},
-    {"IsKeyUp.key", "cast", "rl.KeyboardKey"},
-    {"SetExitKey.key", "cast", "rl.KeyboardKey"},
-    {"IsGamepadButtonPressed.button", "cast", "rl.GamepadButton"},
-    {"IsGamepadButtonDown.button", "cast", "rl.GamepadButton"},
-    {"IsGamepadButtonReleased.button", "cast", "rl.GamepadButton"},
-    {"IsGamepadButtonUp.button", "cast", "rl.GamepadButton"},
-    {"GetGamepadAxisMovement.axis", "cast", "rl.GamepadAxis"},
-    {"IsMouseButtonPressed.button", "cast", "rl.MouseButton"},
-    {"IsMouseButtonDown.button", "cast", "rl.MouseButton"},
-    {"IsMouseButtonReleased.button", "cast", "rl.MouseButton"},
-    {"IsMouseButtonUp.button", "cast", "rl.MouseButton"},
-    {"SetMouseCursor.cursor", "cast", "rl.MouseCursor"},
-    {"SetGesturesEnabled.flags", "transmute", "rl.Gestures"},
-    {"IsGestureDetected.gesture", "cast", "rl.Gesture"},
-    {"GetPixelDataSize.format", "cast", "rl.PixelFormat"},
-    {"SetTextureFilter.filter", "cast", "rl.TextureFilter"},
-    {"SetTextureWrap.wrap", "cast", "rl.TextureWrap"},
-    {"LoadTextureCubemap.layout", "cast", "rl.CubemapLayout"},
-    {"ImageFormat.newFormat", "cast", "rl.PixelFormat"},
-    {"NPatchInfo.layout", "cast", "rl.NPatchLayout"},
-    {"GlyphInfo.value", "cast", "rune"},
+    {"IsWindowState", "flag", "transmute", "rl.ConfigFlags"},
+    {"SetWindowState", "flags", "transmute", "rl.ConfigFlags"},
+    {"ClearWindowState", "flags", "transmute", "rl.ConfigFlags"},
+    {"BeginBlendMode", "mode", "cast", "rl.BlendMode"},
+    {"SetConfigFlags", "flags", "transmute", "rl.ConfigFlags"},
+    {"SetTraceLogLevel", "logLevel", "cast", "rl.TraceLogLevel"},
+    {"IsKeyPressed", "key", "cast", "rl.KeyboardKey"},
+    {"IsKeyPressedRepeat", "key", "cast", "rl.KeyboardKey"},
+    {"IsKeyDown", "key", "cast", "rl.KeyboardKey"},
+    {"IsKeyReleased", "key", "cast", "rl.KeyboardKey"},
+    {"IsKeyUp", "key", "cast", "rl.KeyboardKey"},
+    {"SetExitKey", "key", "cast", "rl.KeyboardKey"},
+    {"IsGamepadButtonPressed", "button", "cast", "rl.GamepadButton"},
+    {"IsGamepadButtonDown", "button", "cast", "rl.GamepadButton"},
+    {"IsGamepadButtonReleased", "button", "cast", "rl.GamepadButton"},
+    {"IsGamepadButtonUp", "button", "cast", "rl.GamepadButton"},
+    {"GetGamepadAxisMovement", "axis", "cast", "rl.GamepadAxis"},
+    {"IsMouseButtonPressed", "button", "cast", "rl.MouseButton"},
+    {"IsMouseButtonDown", "button", "cast", "rl.MouseButton"},
+    {"IsMouseButtonReleased", "button", "cast", "rl.MouseButton"},
+    {"IsMouseButtonUp", "button", "cast", "rl.MouseButton"},
+    {"SetMouseCursor", "cursor", "cast", "rl.MouseCursor"},
+    {"SetGesturesEnabled", "flags", "transmute", "rl.Gestures"},
+    {"IsGestureDetected", "gesture", "cast", "rl.Gesture"},
+    {"GetPixelDataSize", "format", "cast", "rl.PixelFormat"},
+    {"SetTextureFilter", "filter", "cast", "rl.TextureFilter"},
+    {"SetTextureWrap", "wrap", "cast", "rl.TextureWrap"},
+    {"LoadTextureCubemap", "layout", "cast", "rl.CubemapLayout"},
+    {"ImageFormat", "newFormat", "cast", "rl.PixelFormat"},
+    {"NPatchInfo", "layout", "cast", "rl.NPatchLayout"},
+    {"GlyphInfo", "value", "cast", "rune"},
 
     // structs
-    {"Texture.format", "cast", "rl.PixelFormat"},
-    {"Image.format", "cast", "rl.PixelFormat"},
-    {"Camera3D.projection", "cast", "rl.CameraProjection"},
+    {"Texture", "format", "cast", "rl.PixelFormat"},
+    {"Image", "format", "cast", "rl.PixelFormat"},
+    {"Camera3D", "projection", "cast", "rl.CameraProjection"},
 }
 

@@ -58,6 +58,7 @@ function _update() end
     fmt.wprintln(w, `import "core:c"`)
     fmt.wprintln(w, `import lua "vendor:lua/5.4"`)
     fmt.wprintln(w, `import rl "vendor:raylib"`)
+    fmt.wprintln(w, `import "core:runtime"`)
     fmt.wprintln(w, "")
     fmt.wprintln(w, "bind_raylib :: proc(L: ^lua.State) {")
     fmt.wprintln(w, "    lua.newtable(L)")
@@ -238,24 +239,66 @@ func__write_definition :: proc(w: io.Writer, funcDef: Function) {
     fmt.wprintfln(w, `lua_%v :: proc "c" (L: ^lua.State) -> c.int {{`, funcDef.name)
     parameterNamesPrefixed := [dynamic]string{}
     pnames := [dynamic]string{}
+    idx_offset := 0
     for param, i in funcDef.params {
+        idx := i + 1 + idx_offset
         ptrstr := ""
+
+        is_ptr_array_count := funcparam__is_ptr_array_count(funcDef.name, param.name)
+        if is_ptr_array_count {
+            continue
+        }
 
         _, isptr := slice.linear_search(
             params_modified_in_place,
             fmt.tprintf("%v.%v", funcDef.name, param.name),
         )
-        if isptr do ptrstr = "&"
+
+
+        ptr_array, is_ptr_array := funcparam__is_ptr_array(funcDef.name, param.name)
+        if (isptr) do ptrstr = "&"
 
         append(&parameterNamesPrefixed, fmt.tprintf("%vp_%v", ptrstr, param.name))
+        // ptr_array: ^ParamArrayPointer = nil
+        if is_ptr_array {
+            append(&parameterNamesPrefixed, fmt.tprintf("p_%v", ptr_array.countParam))
 
-        source := fmt.tprintf("%v.%v", funcDef.name, param.name)
-        fmt.wprintfln(
-            w,
-            "    p_%v := %v",
-            param.name,
-            gencode_value_from_lua(param.type, i + 1, source),
-        )
+            fmt.wprintfln(w, "    context = runtime.default_context()")
+            fmt.wprintfln(w, "    p_%v := c.int(lua.rawlen(L, %v))", ptr_array.countParam, idx)
+            fmt.wprintfln(
+                w,
+                "    p_%v := make([^]rl.Vector2, p_%v, context.temp_allocator)",
+                ptr_array.arrayParam,
+                ptr_array.countParam,
+            )
+
+            fmt.wprintfln(w, "    for i in 0..<p_%v {{", ptr_array.countParam)
+            fmt.wprintfln(w, "        lua.rawgeti(L, %v, lua.Integer(i + 1))", idx)
+            fmt.wprintfln(
+                w,
+                "        p_%v[i] = %v",
+                ptr_array.arrayParam,
+                gencode_value_from_lua(param.type, -1, funcDef.name, param.name),
+            )
+            fmt.wprintfln(w, "        lua.pop(L, 1)")
+            fmt.wprintfln(w, "    }}")
+
+            idx_offset = idx_offset - 1
+            // n := c.int(lua.objlen(L, 2))
+            // points := make([^]rl.Vector2, n, context.temp_allocator)
+            // for i in 0..<n {
+            //     lua.rawgeti(L, 2, lua.Integer(i + 1))
+            //     points[i] = fromlua_Vector2(L, -1)
+            //     lua.pop(L, 1)
+            // }
+        } else {
+            fmt.wprintfln(
+                w,
+                "    p_%v := %v",
+                param.name,
+                gencode_value_from_lua(param.type, idx, funcDef.name, param.name),
+            )
+        }
     }
 
     pnameprefixlist := strings.join(parameterNamesPrefixed[:], ", ")
@@ -296,22 +339,58 @@ func__write_definition :: proc(w: io.Writer, funcDef: Function) {
     fmt.wprintfln(w, "}")
     fmt.wprintfln(w, "")
 }
+funcparam__is_ptr_array_count :: proc(source: string, source_param: string) -> bool {
+    for p in param_array_pointers {
+        if p.source == source && p.countParam == source_param {
+            return true
+        }
+    }
+    return false
+}
+funcparam__is_ptr_array :: proc(
+    source: string,
+    source_param: string,
+) -> (
+    ParamArrayPointer,
+    bool,
+) {
+    for p in param_array_pointers {
+        if p.source == source && p.arrayParam == source_param {
+            return p, true
+        }
+    }
+    return ParamArrayPointer{}, false
+}
 
 func__write_docs :: proc(w: io.Writer, funcDef: Function) {
     fmt.wprintfln(w, "---%v", funcDef.description)
     luaPNames := [dynamic]string{}
     for param in funcDef.params {
+        is_ptr_array_count := funcparam__is_ptr_array_count(funcDef.name, param.name)
+        if is_ptr_array_count {
+            continue
+        }
+
         pname := param.name
         if pname == "end" {
             // "end" is a keyword in lua
             pname = "finish"
         }
         append(&luaPNames, fmt.tprintf("%v", pname))
-        fmt.wprintfln(w, "---@param %v %v", pname, c_type_to_lua(param.type))
+        fmt.wprintfln(
+            w,
+            "---@param %v %v",
+            pname,
+            c_type_to_lua(param.type, funcDef.name, param.name),
+        )
     }
     luaPNamesStr := strings.join(luaPNames[:], ", ")
     if funcDef.returnType != "void" {
-        fmt.wprintfln(w, "---@return %v", c_type_to_lua(funcDef.returnType))
+        fmt.wprintfln(
+            w,
+            "---@return %v",
+            c_type_to_lua(funcDef.returnType, funcDef.name, "return"),
+        )
     }
     fmt.wprintfln(w, "function ray.%v(%v) end", funcDef.name, luaPNamesStr)
     fmt.wprintfln(w, "")
@@ -329,19 +408,19 @@ write_struct_helpers :: proc(
     for v, i in structs {
         v := v.(json.Object)
 
-        name := v["name"].(json.String)
+        structName := v["name"].(json.String)
         fieldsJson := v["fields"].(json.Array)
 
         total += 1
 
-        _, found := slice.linear_search(implemented_types, name)
+        _, found := slice.linear_search(implemented_types, structName)
         if !found {
             continue
         }
 
         impl += 1
 
-        if name == "Color" {
+        if structName == "Color" {
             // See bindings_static.odin
             continue
         }
@@ -353,7 +432,7 @@ write_struct_helpers :: proc(
         }
         fields: [dynamic]StructField
         // write docs
-        fmt.wprintfln(w_docs, "---@class Raylib.%v", name)
+        fmt.wprintfln(w_docs, "---@class Raylib.%v", structName)
         for fieldJson in fieldsJson {
             fieldJson := fieldJson.(json.Object)
             field := StructField {
@@ -363,7 +442,7 @@ write_struct_helpers :: proc(
             }
             append(&fields, field)
 
-            type := c_type_to_lua(field.type)
+            type := c_type_to_lua(field.type, structName, field.name)
             fmt.wprintfln(w_docs, "---@field %v %v %v", field.name, type, field.desc)
         }
         fmt.wprintfln(w_docs, "")
@@ -373,8 +452,8 @@ write_struct_helpers :: proc(
         fmt.wprintfln(
             w,
             `tolua_%v :: proc "c" (L: ^lua.State, s: rl.%v, idx: c.int = -99) {{`,
-            name,
-            name,
+            structName,
+            structName,
         )
         // -99 is the default value. if IDX isn't specified, create a new table.
         fmt.wprintfln(w, "    idx := idx")
@@ -384,7 +463,7 @@ write_struct_helpers :: proc(
         fmt.wprintfln(w, "    }}")
         for field, i in fields {
             v := fmt.tprintf("s.%v", field.name)
-            if name == "Matrix" {
+            if structName == "Matrix" {
                 v = fmt.tprintf("s[%v][%v]", i % 4, math.floor(f32(i) / 4))
             }
             fmt.wprintfln(w, "    %v", gencode_push_value_to_lua(field.type, v))
@@ -397,22 +476,22 @@ write_struct_helpers :: proc(
         fmt.wprintfln(
             w,
             `fromlua_%v :: proc "c" (L: ^lua.State, idx: c.int) -> rl.%v {{`,
-            name,
-            name,
+            structName,
+            structName,
         )
         for field in fields {
-            source := fmt.tprintf("%v.%v", name, field.name)
+            source := fmt.tprintf("%v.%v", structName, field.name)
             fmt.wprintfln(w, `    lua.getfield(L, idx, "%v")`, field.name)
             fmt.wprintfln(
                 w,
                 "    %v := %v",
                 field.name,
-                gencode_value_from_lua(field.type, -1, source),
+                gencode_value_from_lua(field.type, -1, structName, field.name),
             )
             fmt.wprintfln(w, "    lua.pop(L, 1)")
         }
-        fmt.wprintfln(w, "    return rl.%v {{", name)
-        _, isArrayStruct := slice.linear_search(array_structs, name)
+        fmt.wprintfln(w, "    return rl.%v {{", structName)
+        _, isArrayStruct := slice.linear_search(array_structs, structName)
         for field in fields {
             if isArrayStruct {
                 fmt.wprintfln(w, "        %v,", field.name)

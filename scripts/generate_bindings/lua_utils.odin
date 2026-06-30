@@ -3,15 +3,25 @@ package generate_bindings
 import "core:fmt"
 import "core:strings"
 
-gencode_value_from_lua__idxint :: proc(type: string, idx: int, source: string = "") -> string {
-    return gencode_value_from_lua__idxstr(type, fmt.tprintf("%v", idx), source)
+gencode_value_from_lua__idxint :: proc(
+    type: string,
+    idx: int,
+    source: string = "",
+    source_param: string,
+) -> string {
+    return gencode_value_from_lua__idxstr(type, fmt.tprintf("%v", idx), source, source_param)
 }
-gencode_value_from_lua__idxstr :: proc(type: string, idx: string, source: string = "") -> string {
+gencode_value_from_lua__idxstr :: proc(
+    type: string,
+    idx: string,
+    source: string = "",
+    source_param: string = "",
+) -> string {
     prefix := ""
     value := ""
 
     for override in param_type_overrides {
-        if override.source == source {
+        if override.source == source && override.source_param == source_param {
             prefix = fmt.tprintf("%v(%v)", override.cast_type, override.type)
             break
         }
@@ -36,11 +46,16 @@ gencode_value_from_lua__idxstr :: proc(type: string, idx: string, source: string
         value = fmt.tprintf("c.bool(lua.toboolean(L, %v))", idx)
     } else if type == "void *" {
         value = fmt.tprintf("lua.touserdata(L, %v)", idx)
-    } else if strings.ends_with(type, " *") {
-        // pointer to struct
-        cuttype, _ := strings.substring_to(type, len(type) - 2)
-        value = fmt.tprintf("fromlua_%v(L, %v)", cuttype, idx)
     } else {
+        type := type
+        if strings.ends_with(type, " *") {
+            cut, _ := strings.substring_to(type, len(type) - 2)
+            type = cut
+        }
+        if strings.starts_with(type, "const ") {
+            cut, _ := strings.substring_from(type, 6)
+            type = cut
+        }
         value = fmt.tprintf("fromlua_%v(L, %v)", type, idx)
     }
 
@@ -72,11 +87,16 @@ gencode_push_value_to_lua__string :: proc(type: string, value: string = "result"
         return fmt.tprintf("lua.pushboolean(L, b32(%v))", value)
     } else if type == "void *" {
         return fmt.tprintf("lua.pushlightuserdata(L, %v)", value)
-    } else if strings.ends_with(type, " *") {
-        // pointer to struct
-        cuttype, _ := strings.substring_to(type, len(type) - 2)
-        return fmt.tprintf("tolua_%v(L, %v)", cuttype, value)
     } else {
+        type := type
+        if strings.ends_with(type, " *") {
+            cut, _ := strings.substring_to(type, len(type) - 2)
+            type = cut
+        }
+        if strings.starts_with(type, "const ") {
+            cut, _ := strings.substring_from(type, 6)
+            type = cut
+        }
         return fmt.tprintf("tolua_%v(L, %v)", type, value)
     }
 }
@@ -92,7 +112,7 @@ gencode_push_value_to_lua :: proc {
     gencode_push_value_to_lua__float,
 }
 
-c_type_to_lua :: proc(type: string, source: string = "") -> string {
+c_type_to_lua :: proc(type: string, source: string = "", source_param: string = "") -> string {
     if type == "const unsigned char *" ||
        type == "const char *" ||
        type == "unsigned char *" ||
@@ -110,6 +130,16 @@ c_type_to_lua :: proc(type: string, source: string = "") -> string {
     } else {
         type := type
         if type == "COLOR" do type = "Color"
+        if strings.ends_with(type, " *") {
+            cut, _ := strings.substring_to(type, len(type) - 2)
+            type = cut
+        }
+        if strings.starts_with(type, "const ") {
+            cut, _ := strings.substring_from(type, 6)
+            type = cut
+        }
+        _, is_ptr_array := funcparam__is_ptr_array(source, source_param)
+        if is_ptr_array do type = fmt.tprintf("%v[]", type)
         // struct or other type
         return fmt.tprintf("Raylib.%v", type)
     }

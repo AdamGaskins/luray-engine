@@ -1,6 +1,7 @@
 package main
 
 import "core:c"
+import "core:runtime"
 import lua "vendor:lua/5.4"
 import rl "vendor:raylib"
 
@@ -1486,6 +1487,9 @@ bind_raylib :: proc(L: ^lua.State) {
     lua.pushcfunction(L, lua_DrawLineEx)
     lua.setfield(L, -2, "DrawLineEx")
 
+    lua.pushcfunction(L, lua_DrawLineStrip)
+    lua.setfield(L, -2, "DrawLineStrip")
+
     lua.pushcfunction(L, lua_DrawLineBezier)
     lua.setfield(L, -2, "DrawLineBezier")
 
@@ -1564,6 +1568,12 @@ bind_raylib :: proc(L: ^lua.State) {
     lua.pushcfunction(L, lua_DrawTriangleLines)
     lua.setfield(L, -2, "DrawTriangleLines")
 
+    lua.pushcfunction(L, lua_DrawTriangleFan)
+    lua.setfield(L, -2, "DrawTriangleFan")
+
+    lua.pushcfunction(L, lua_DrawTriangleStrip)
+    lua.setfield(L, -2, "DrawTriangleStrip")
+
     lua.pushcfunction(L, lua_DrawPoly)
     lua.setfield(L, -2, "DrawPoly")
 
@@ -1572,6 +1582,21 @@ bind_raylib :: proc(L: ^lua.State) {
 
     lua.pushcfunction(L, lua_DrawPolyLinesEx)
     lua.setfield(L, -2, "DrawPolyLinesEx")
+
+    lua.pushcfunction(L, lua_DrawSplineLinear)
+    lua.setfield(L, -2, "DrawSplineLinear")
+
+    lua.pushcfunction(L, lua_DrawSplineBasis)
+    lua.setfield(L, -2, "DrawSplineBasis")
+
+    lua.pushcfunction(L, lua_DrawSplineCatmullRom)
+    lua.setfield(L, -2, "DrawSplineCatmullRom")
+
+    lua.pushcfunction(L, lua_DrawSplineBezierQuadratic)
+    lua.setfield(L, -2, "DrawSplineBezierQuadratic")
+
+    lua.pushcfunction(L, lua_DrawSplineBezierCubic)
+    lua.setfield(L, -2, "DrawSplineBezierCubic")
 
     lua.pushcfunction(L, lua_DrawSplineSegmentLinear)
     lua.setfield(L, -2, "DrawSplineSegmentLinear")
@@ -1626,6 +1651,12 @@ bind_raylib :: proc(L: ^lua.State) {
 
     lua.pushcfunction(L, lua_CheckCollisionPointLine)
     lua.setfield(L, -2, "CheckCollisionPointLine")
+
+    lua.pushcfunction(L, lua_CheckCollisionPointPoly)
+    lua.setfield(L, -2, "CheckCollisionPointPoly")
+
+    lua.pushcfunction(L, lua_CheckCollisionLines)
+    lua.setfield(L, -2, "CheckCollisionLines")
 
     lua.pushcfunction(L, lua_GetCollisionRec)
     lua.setfield(L, -2, "GetCollisionRec")
@@ -1818,6 +1849,12 @@ bind_raylib :: proc(L: ^lua.State) {
 
     lua.pushcfunction(L, lua_ImageDrawTriangleLines)
     lua.setfield(L, -2, "ImageDrawTriangleLines")
+
+    lua.pushcfunction(L, lua_ImageDrawTriangleFan)
+    lua.setfield(L, -2, "ImageDrawTriangleFan")
+
+    lua.pushcfunction(L, lua_ImageDrawTriangleStrip)
+    lua.setfield(L, -2, "ImageDrawTriangleStrip")
 
     lua.pushcfunction(L, lua_ImageDraw)
     lua.setfield(L, -2, "ImageDraw")
@@ -4247,6 +4284,23 @@ lua_DrawLineEx :: proc "c" (L: ^lua.State) -> c.int {
 }
 
 @(private)
+lua_DrawLineStrip :: proc "c" (L: ^lua.State) -> c.int {
+    context = runtime.default_context()
+    p_pointCount := c.int(lua.rawlen(L, 1))
+    p_points := make([^]rl.Vector2, p_pointCount, context.temp_allocator)
+    for i in 0 ..< p_pointCount {
+        lua.rawgeti(L, 1, lua.Integer(i + 1))
+        p_points[i] = fromlua_Vector2(L, -1)
+        lua.pop(L, 1)
+    }
+    p_color := fromlua_Color(L, 2)
+
+    rl.DrawLineStrip(p_points, p_pointCount, p_color)
+
+    return 0
+}
+
+@(private)
 lua_DrawLineBezier :: proc "c" (L: ^lua.State) -> c.int {
     p_startPos := fromlua_Vector2(L, 1)
     p_endPos := fromlua_Vector2(L, 2)
@@ -4590,6 +4644,40 @@ lua_DrawTriangleLines :: proc "c" (L: ^lua.State) -> c.int {
 }
 
 @(private)
+lua_DrawTriangleFan :: proc "c" (L: ^lua.State) -> c.int {
+    context = runtime.default_context()
+    p_pointCount := c.int(lua.rawlen(L, 1))
+    p_points := make([^]rl.Vector2, p_pointCount, context.temp_allocator)
+    for i in 0 ..< p_pointCount {
+        lua.rawgeti(L, 1, lua.Integer(i + 1))
+        p_points[i] = fromlua_Vector2(L, -1)
+        lua.pop(L, 1)
+    }
+    p_color := fromlua_Color(L, 2)
+
+    rl.DrawTriangleFan(p_points, p_pointCount, p_color)
+
+    return 0
+}
+
+@(private)
+lua_DrawTriangleStrip :: proc "c" (L: ^lua.State) -> c.int {
+    context = runtime.default_context()
+    p_pointCount := c.int(lua.rawlen(L, 1))
+    p_points := make([^]rl.Vector2, p_pointCount, context.temp_allocator)
+    for i in 0 ..< p_pointCount {
+        lua.rawgeti(L, 1, lua.Integer(i + 1))
+        p_points[i] = fromlua_Vector2(L, -1)
+        lua.pop(L, 1)
+    }
+    p_color := fromlua_Color(L, 2)
+
+    rl.DrawTriangleStrip(p_points, p_pointCount, p_color)
+
+    return 0
+}
+
+@(private)
 lua_DrawPoly :: proc "c" (L: ^lua.State) -> c.int {
     p_center := fromlua_Vector2(L, 1)
     p_sides := c.int(lua.tonumber(L, 2))
@@ -4625,6 +4713,96 @@ lua_DrawPolyLinesEx :: proc "c" (L: ^lua.State) -> c.int {
     p_color := fromlua_Color(L, 6)
 
     rl.DrawPolyLinesEx(p_center, p_sides, p_radius, p_rotation, p_lineThick, p_color)
+
+    return 0
+}
+
+@(private)
+lua_DrawSplineLinear :: proc "c" (L: ^lua.State) -> c.int {
+    context = runtime.default_context()
+    p_pointCount := c.int(lua.rawlen(L, 1))
+    p_points := make([^]rl.Vector2, p_pointCount, context.temp_allocator)
+    for i in 0 ..< p_pointCount {
+        lua.rawgeti(L, 1, lua.Integer(i + 1))
+        p_points[i] = fromlua_Vector2(L, -1)
+        lua.pop(L, 1)
+    }
+    p_thick := c.float(lua.tonumber(L, 2))
+    p_color := fromlua_Color(L, 3)
+
+    rl.DrawSplineLinear(p_points, p_pointCount, p_thick, p_color)
+
+    return 0
+}
+
+@(private)
+lua_DrawSplineBasis :: proc "c" (L: ^lua.State) -> c.int {
+    context = runtime.default_context()
+    p_pointCount := c.int(lua.rawlen(L, 1))
+    p_points := make([^]rl.Vector2, p_pointCount, context.temp_allocator)
+    for i in 0 ..< p_pointCount {
+        lua.rawgeti(L, 1, lua.Integer(i + 1))
+        p_points[i] = fromlua_Vector2(L, -1)
+        lua.pop(L, 1)
+    }
+    p_thick := c.float(lua.tonumber(L, 2))
+    p_color := fromlua_Color(L, 3)
+
+    rl.DrawSplineBasis(p_points, p_pointCount, p_thick, p_color)
+
+    return 0
+}
+
+@(private)
+lua_DrawSplineCatmullRom :: proc "c" (L: ^lua.State) -> c.int {
+    context = runtime.default_context()
+    p_pointCount := c.int(lua.rawlen(L, 1))
+    p_points := make([^]rl.Vector2, p_pointCount, context.temp_allocator)
+    for i in 0 ..< p_pointCount {
+        lua.rawgeti(L, 1, lua.Integer(i + 1))
+        p_points[i] = fromlua_Vector2(L, -1)
+        lua.pop(L, 1)
+    }
+    p_thick := c.float(lua.tonumber(L, 2))
+    p_color := fromlua_Color(L, 3)
+
+    rl.DrawSplineCatmullRom(p_points, p_pointCount, p_thick, p_color)
+
+    return 0
+}
+
+@(private)
+lua_DrawSplineBezierQuadratic :: proc "c" (L: ^lua.State) -> c.int {
+    context = runtime.default_context()
+    p_pointCount := c.int(lua.rawlen(L, 1))
+    p_points := make([^]rl.Vector2, p_pointCount, context.temp_allocator)
+    for i in 0 ..< p_pointCount {
+        lua.rawgeti(L, 1, lua.Integer(i + 1))
+        p_points[i] = fromlua_Vector2(L, -1)
+        lua.pop(L, 1)
+    }
+    p_thick := c.float(lua.tonumber(L, 2))
+    p_color := fromlua_Color(L, 3)
+
+    rl.DrawSplineBezierQuadratic(p_points, p_pointCount, p_thick, p_color)
+
+    return 0
+}
+
+@(private)
+lua_DrawSplineBezierCubic :: proc "c" (L: ^lua.State) -> c.int {
+    context = runtime.default_context()
+    p_pointCount := c.int(lua.rawlen(L, 1))
+    p_points := make([^]rl.Vector2, p_pointCount, context.temp_allocator)
+    for i in 0 ..< p_pointCount {
+        lua.rawgeti(L, 1, lua.Integer(i + 1))
+        p_points[i] = fromlua_Vector2(L, -1)
+        lua.pop(L, 1)
+    }
+    p_thick := c.float(lua.tonumber(L, 2))
+    p_color := fromlua_Color(L, 3)
+
+    rl.DrawSplineBezierCubic(p_points, p_pointCount, p_thick, p_color)
 
     return 0
 }
@@ -4857,6 +5035,45 @@ lua_CheckCollisionPointLine :: proc "c" (L: ^lua.State) -> c.int {
 
     result := rl.CheckCollisionPointLine(p_point, p_p1, p_p2, p_threshold)
 
+    lua.pushboolean(L, b32(result))
+    return 1
+}
+
+@(private)
+lua_CheckCollisionPointPoly :: proc "c" (L: ^lua.State) -> c.int {
+    p_point := fromlua_Vector2(L, 1)
+    context = runtime.default_context()
+    p_pointCount := c.int(lua.rawlen(L, 2))
+    p_points := make([^]rl.Vector2, p_pointCount, context.temp_allocator)
+    for i in 0 ..< p_pointCount {
+        lua.rawgeti(L, 2, lua.Integer(i + 1))
+        p_points[i] = fromlua_Vector2(L, -1)
+        lua.pop(L, 1)
+    }
+
+    result := rl.CheckCollisionPointPoly(p_point, p_points, p_pointCount)
+
+    lua.pushboolean(L, b32(result))
+    return 1
+}
+
+@(private)
+lua_CheckCollisionLines :: proc "c" (L: ^lua.State) -> c.int {
+    p_startPos1 := fromlua_Vector2(L, 1)
+    p_endPos1 := fromlua_Vector2(L, 2)
+    p_startPos2 := fromlua_Vector2(L, 3)
+    p_endPos2 := fromlua_Vector2(L, 4)
+    p_collisionPoint := fromlua_Vector2(L, 5)
+
+    result := rl.CheckCollisionLines(
+        p_startPos1,
+        p_endPos1,
+        p_startPos2,
+        p_endPos2,
+        &p_collisionPoint,
+    )
+
+    tolua_Vector2(L, p_collisionPoint, 5)
     lua.pushboolean(L, b32(result))
     return 1
 }
@@ -5618,6 +5835,44 @@ lua_ImageDrawTriangleLines :: proc "c" (L: ^lua.State) -> c.int {
     p_color := fromlua_Color(L, 5)
 
     rl.ImageDrawTriangleLines(&p_dst, p_v1, p_v2, p_v3, p_color)
+
+    tolua_Image(L, p_dst, 1)
+    return 0
+}
+
+@(private)
+lua_ImageDrawTriangleFan :: proc "c" (L: ^lua.State) -> c.int {
+    p_dst := fromlua_Image(L, 1)
+    context = runtime.default_context()
+    p_pointCount := c.int(lua.rawlen(L, 2))
+    p_points := make([^]rl.Vector2, p_pointCount, context.temp_allocator)
+    for i in 0 ..< p_pointCount {
+        lua.rawgeti(L, 2, lua.Integer(i + 1))
+        p_points[i] = fromlua_Vector2(L, -1)
+        lua.pop(L, 1)
+    }
+    p_color := fromlua_Color(L, 3)
+
+    rl.ImageDrawTriangleFan(&p_dst, p_points, p_pointCount, p_color)
+
+    tolua_Image(L, p_dst, 1)
+    return 0
+}
+
+@(private)
+lua_ImageDrawTriangleStrip :: proc "c" (L: ^lua.State) -> c.int {
+    p_dst := fromlua_Image(L, 1)
+    context = runtime.default_context()
+    p_pointCount := c.int(lua.rawlen(L, 2))
+    p_points := make([^]rl.Vector2, p_pointCount, context.temp_allocator)
+    for i in 0 ..< p_pointCount {
+        lua.rawgeti(L, 2, lua.Integer(i + 1))
+        p_points[i] = fromlua_Vector2(L, -1)
+        lua.pop(L, 1)
+    }
+    p_color := fromlua_Color(L, 3)
+
+    rl.ImageDrawTriangleStrip(&p_dst, p_points, p_pointCount, p_color)
 
     tolua_Image(L, p_dst, 1)
     return 0
