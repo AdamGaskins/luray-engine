@@ -1,7 +1,7 @@
 package main
 
+import "base:runtime"
 import "core:c"
-import "core:runtime"
 import lua "vendor:lua/5.4"
 import rl "vendor:raylib"
 
@@ -1057,6 +1057,9 @@ bind_raylib :: proc(L: ^lua.State) {
 
     lua.pushcfunction(L, lua_SetWindowIcon)
     lua.setfield(L, -2, "SetWindowIcon")
+
+    lua.pushcfunction(L, lua_SetWindowIcons)
+    lua.setfield(L, -2, "SetWindowIcons")
 
     lua.pushcfunction(L, lua_SetWindowTitle)
     lua.setfield(L, -2, "SetWindowTitle")
@@ -2975,6 +2978,22 @@ lua_SetWindowIcon :: proc "c" (L: ^lua.State) -> c.int {
     p_image := fromlua_Image(L, 1)
 
     rl.SetWindowIcon(p_image)
+
+    return 0
+}
+
+@(private)
+lua_SetWindowIcons :: proc "c" (L: ^lua.State) -> c.int {
+    context = runtime.default_context()
+    p_count := c.int(lua.rawlen(L, 1))
+    p_images := make([^]rl.Image, p_count, context.temp_allocator)
+    for i in 0 ..< p_count {
+        lua.rawgeti(L, 1, lua.Integer(i + 1))
+        p_images[i] = fromlua_Image(L, -1)
+        lua.pop(L, 1)
+    }
+
+    rl.SetWindowIcons(p_images, p_count)
 
     return 0
 }

@@ -542,6 +542,10 @@ function ray.RestoreWindow() end
 ---@param image Raylib.Image
 function ray.SetWindowIcon(image) end
 
+---Set icon for window (multiple images, RGBA 32bit)
+---@param images Raylib.Image[]
+function ray.SetWindowIcons(images) end
+
 ---Set title for window
 ---@param title string
 function ray.SetWindowTitle(title) end

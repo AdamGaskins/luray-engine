@@ -2,6 +2,7 @@ package generate_bindings
 
 implemented_types :: []string {
     "void",
+    "void *",
     "const unsigned char *",
     "unsigned char *",
     "const char *",
@@ -62,13 +63,23 @@ implemented_types :: []string {
     "Vector2 *",
 }
 
-ignore_functions :: []string{"GetWindowHandle"}
+ignore_functions :: []string {
+    "GetWindowHandle",
+    "MemAlloc",
+    "MemRealloc",
+    "MemFree",
+    "SaveFileData",
+    "LoadFileData",
+    "UnloadFileData",
+    "ExportDataAsCode",
+    // probably don't work
+    "SetPixelColor",
+    "GetPixelColor",
+}
 
 funcs_not_yet_implemented :: []string {
-    "ExportDataAsCode",
     "LoadFileText",
     "UnloadFileText",
-    "UnloadFileData",
     "SaveFileText",
     "LoadImageRaw",
     "LoadImageFromMemory",
@@ -81,12 +92,6 @@ funcs_not_yet_implemented :: []string {
     "GetGestureDetected",
     "ComputeCRC32",
     "ColorIsEqual", // deprecated
-
-    //need to implement
-    "SetWindowIcons",
-
-    // won't implement
-    "GetWindowHandle",
 }
 
 array_structs :: []string{"Vector2", "Vector3", "Vector4", "Matrix"}
@@ -150,6 +155,7 @@ ParamArrayPointer :: struct {
 // these function parameters are two values in C (a pointer and a count),
 // but are a normal array in lua
 param_array_pointers :: []ParamArrayPointer {
+    {"SetWindowIcons", "images", "count"},
     {"DrawLineStrip", "points", "pointCount"},
     {"DrawTriangleFan", "points", "pointCount"},
     {"DrawTriangleStrip", "points", "pointCount"},
@@ -196,6 +202,8 @@ param_type_overrides :: []ParamTypeOverride {
     {"SetGesturesEnabled", "flags", "transmute", "rl.Gestures"},
     {"IsGestureDetected", "gesture", "cast", "rl.Gesture"},
     {"GetPixelDataSize", "format", "cast", "rl.PixelFormat"},
+    {"GetPixelColor", "format", "cast", "rl.PixelFormat"},
+    {"SetPixelColor", "format", "cast", "rl.PixelFormat"},
     {"SetTextureFilter", "filter", "cast", "rl.TextureFilter"},
     {"SetTextureWrap", "wrap", "cast", "rl.TextureWrap"},
     {"LoadTextureCubemap", "layout", "cast", "rl.CubemapLayout"},

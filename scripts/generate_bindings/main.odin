@@ -58,7 +58,7 @@ function _update() end
     fmt.wprintln(w, `import "core:c"`)
     fmt.wprintln(w, `import lua "vendor:lua/5.4"`)
     fmt.wprintln(w, `import rl "vendor:raylib"`)
-    fmt.wprintln(w, `import "core:runtime"`)
+    fmt.wprintln(w, `import "base:runtime"`)
     fmt.wprintln(w, "")
     fmt.wprintln(w, "bind_raylib :: proc(L: ^lua.State) {")
     fmt.wprintln(w, "    lua.newtable(L)")
@@ -267,8 +267,9 @@ func__write_definition :: proc(w: io.Writer, funcDef: Function) {
             fmt.wprintfln(w, "    p_%v := c.int(lua.rawlen(L, %v))", ptr_array.countParam, idx)
             fmt.wprintfln(
                 w,
-                "    p_%v := make([^]rl.Vector2, p_%v, context.temp_allocator)",
+                "    p_%v := make([^]rl.%v, p_%v, context.temp_allocator)",
                 ptr_array.arrayParam,
+                trim_c_type(param.type),
                 ptr_array.countParam,
             )
 

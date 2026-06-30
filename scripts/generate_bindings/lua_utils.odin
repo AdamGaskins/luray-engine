@@ -47,15 +47,7 @@ gencode_value_from_lua__idxstr :: proc(
     } else if type == "void *" {
         value = fmt.tprintf("lua.touserdata(L, %v)", idx)
     } else {
-        type := type
-        if strings.ends_with(type, " *") {
-            cut, _ := strings.substring_to(type, len(type) - 2)
-            type = cut
-        }
-        if strings.starts_with(type, "const ") {
-            cut, _ := strings.substring_from(type, 6)
-            type = cut
-        }
+        type := trim_c_type(type)
         value = fmt.tprintf("fromlua_%v(L, %v)", type, idx)
     }
 
@@ -88,15 +80,7 @@ gencode_push_value_to_lua__string :: proc(type: string, value: string = "result"
     } else if type == "void *" {
         return fmt.tprintf("lua.pushlightuserdata(L, %v)", value)
     } else {
-        type := type
-        if strings.ends_with(type, " *") {
-            cut, _ := strings.substring_to(type, len(type) - 2)
-            type = cut
-        }
-        if strings.starts_with(type, "const ") {
-            cut, _ := strings.substring_from(type, 6)
-            type = cut
-        }
+        type := trim_c_type(type)
         return fmt.tprintf("tolua_%v(L, %v)", type, value)
     }
 }
@@ -130,18 +114,24 @@ c_type_to_lua :: proc(type: string, source: string = "", source_param: string = 
     } else {
         type := type
         if type == "COLOR" do type = "Color"
-        if strings.ends_with(type, " *") {
-            cut, _ := strings.substring_to(type, len(type) - 2)
-            type = cut
-        }
-        if strings.starts_with(type, "const ") {
-            cut, _ := strings.substring_from(type, 6)
-            type = cut
-        }
+        type = trim_c_type(type)
         _, is_ptr_array := funcparam__is_ptr_array(source, source_param)
         if is_ptr_array do type = fmt.tprintf("%v[]", type)
         // struct or other type
         return fmt.tprintf("Raylib.%v", type)
     }
+}
+
+trim_c_type :: proc(type: string) -> string {
+    type := type
+    if strings.ends_with(type, " *") {
+        cut, _ := strings.substring_to(type, len(type) - 2)
+        type = cut
+    }
+    if strings.starts_with(type, "const ") {
+        cut, _ := strings.substring_from(type, 6)
+        type = cut
+    }
+    return type
 }
 
