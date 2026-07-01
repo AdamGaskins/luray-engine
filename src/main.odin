@@ -8,22 +8,28 @@ import lua "vendor:lua/5.4"
 import rl "vendor:raylib"
 
 main :: proc() {
-    mainFile := "main.lua"
+    mainPath := "main.lua"
     if len(os.args) > 1 {
-        mainFile = os.args[1]
+        mainPath = os.args[1]
     }
-    mainDir := filepath.dir(mainFile)
+    mainFileName := filepath.base(mainPath)
+    mainDir := filepath.dir(mainPath)
     os.set_working_directory(mainDir)
-
-    fmt.printfln("Running %v", mainFile)
 
     state := lua.L_newstate()
     lua.L_openlibs(state)
     bind_raylib(state)
 
-    luaFileName, err := strings.clone_to_cstring(filepath.base(mainFile))
-    defer delete(luaFileName)
-    if lua.L_dofile(state, luaFileName) != 0 {
+    if !os.exists(mainFileName) {
+        fmt.eprintfln("Source file not found: %v", mainPath)
+        fmt.eprintfln("")
+        fmt.eprintfln("Usage: executable [path/to/main.lua]")
+        return
+    }
+
+    mainFileName_c, err := strings.clone_to_cstring(filepath.base(mainFileName))
+    defer delete(mainFileName_c)
+    if lua.L_dofile(state, mainFileName_c) != 0 {
         err := lua.tostring(state, -1)
         fmt.eprintln("Lua error:", err)
         lua.pop(state, 1)

@@ -71,8 +71,8 @@ function _update() end
     fmt.wprintln(w, "")
 
     fmt.println("")
-    write_builder_to_file(&sb, "bindings.odin")
-    fmt.println("Wrote bindings to bindings.odin")
+    write_builder_to_file(&sb, "src/bindings.odin")
+    fmt.println("Wrote bindings to src/bindings.odin")
 
     write_builder_to_file(&sb_docs, "meta/raylib.lua")
     fmt.println("Wrote lua stubs to meta/raylib.lua")
