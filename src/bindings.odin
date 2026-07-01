@@ -1925,6 +1925,9 @@ bind_raylib :: proc(L: ^lua.State) {
     lua.pushcfunction(L, lua_UnloadRenderTexture)
     lua.setfield(L, -2, "UnloadRenderTexture")
 
+    lua.pushcfunction(L, lua_GenTextureMipmaps)
+    lua.setfield(L, -2, "GenTextureMipmaps")
+
     lua.pushcfunction(L, lua_SetTextureFilter)
     lua.setfield(L, -2, "SetTextureFilter")
 
@@ -2003,6 +2006,9 @@ bind_raylib :: proc(L: ^lua.State) {
     lua.pushcfunction(L, lua_IsFontValid)
     lua.setfield(L, -2, "IsFontValid")
 
+    lua.pushcfunction(L, lua_UnloadFontData)
+    lua.setfield(L, -2, "UnloadFontData")
+
     lua.pushcfunction(L, lua_UnloadFont)
     lua.setfield(L, -2, "UnloadFont")
 
@@ -2045,12 +2051,6 @@ bind_raylib :: proc(L: ^lua.State) {
     lua.pushcfunction(L, lua_GetCodepointCount)
     lua.setfield(L, -2, "GetCodepointCount")
 
-    lua.pushcfunction(L, lua_TextIsEqual)
-    lua.setfield(L, -2, "TextIsEqual")
-
-    lua.pushcfunction(L, lua_TextLength)
-    lua.setfield(L, -2, "TextLength")
-
     lua.pushcfunction(L, lua_TextSubtext)
     lua.setfield(L, -2, "TextSubtext")
 
@@ -2089,6 +2089,9 @@ bind_raylib :: proc(L: ^lua.State) {
 
     lua.pushcfunction(L, lua_DrawTriangle3D)
     lua.setfield(L, -2, "DrawTriangle3D")
+
+    lua.pushcfunction(L, lua_DrawTriangleStrip3D)
+    lua.setfield(L, -2, "DrawTriangleStrip3D")
 
     lua.pushcfunction(L, lua_DrawCube)
     lua.setfield(L, -2, "DrawCube")
@@ -2192,8 +2195,26 @@ bind_raylib :: proc(L: ^lua.State) {
     lua.pushcfunction(L, lua_IsWaveValid)
     lua.setfield(L, -2, "IsWaveValid")
 
+    lua.pushcfunction(L, lua_LoadSound)
+    lua.setfield(L, -2, "LoadSound")
+
+    lua.pushcfunction(L, lua_LoadSoundFromWave)
+    lua.setfield(L, -2, "LoadSoundFromWave")
+
+    lua.pushcfunction(L, lua_LoadSoundAlias)
+    lua.setfield(L, -2, "LoadSoundAlias")
+
+    lua.pushcfunction(L, lua_IsSoundValid)
+    lua.setfield(L, -2, "IsSoundValid")
+
     lua.pushcfunction(L, lua_UnloadWave)
     lua.setfield(L, -2, "UnloadWave")
+
+    lua.pushcfunction(L, lua_UnloadSound)
+    lua.setfield(L, -2, "UnloadSound")
+
+    lua.pushcfunction(L, lua_UnloadSoundAlias)
+    lua.setfield(L, -2, "UnloadSoundAlias")
 
     lua.pushcfunction(L, lua_ExportWave)
     lua.setfield(L, -2, "ExportWave")
@@ -2201,8 +2222,113 @@ bind_raylib :: proc(L: ^lua.State) {
     lua.pushcfunction(L, lua_ExportWaveAsCode)
     lua.setfield(L, -2, "ExportWaveAsCode")
 
+    lua.pushcfunction(L, lua_PlaySound)
+    lua.setfield(L, -2, "PlaySound")
+
+    lua.pushcfunction(L, lua_StopSound)
+    lua.setfield(L, -2, "StopSound")
+
+    lua.pushcfunction(L, lua_PauseSound)
+    lua.setfield(L, -2, "PauseSound")
+
+    lua.pushcfunction(L, lua_ResumeSound)
+    lua.setfield(L, -2, "ResumeSound")
+
+    lua.pushcfunction(L, lua_IsSoundPlaying)
+    lua.setfield(L, -2, "IsSoundPlaying")
+
+    lua.pushcfunction(L, lua_SetSoundVolume)
+    lua.setfield(L, -2, "SetSoundVolume")
+
+    lua.pushcfunction(L, lua_SetSoundPitch)
+    lua.setfield(L, -2, "SetSoundPitch")
+
+    lua.pushcfunction(L, lua_SetSoundPan)
+    lua.setfield(L, -2, "SetSoundPan")
+
     lua.pushcfunction(L, lua_WaveCopy)
     lua.setfield(L, -2, "WaveCopy")
+
+    lua.pushcfunction(L, lua_LoadMusicStream)
+    lua.setfield(L, -2, "LoadMusicStream")
+
+    lua.pushcfunction(L, lua_IsMusicValid)
+    lua.setfield(L, -2, "IsMusicValid")
+
+    lua.pushcfunction(L, lua_UnloadMusicStream)
+    lua.setfield(L, -2, "UnloadMusicStream")
+
+    lua.pushcfunction(L, lua_PlayMusicStream)
+    lua.setfield(L, -2, "PlayMusicStream")
+
+    lua.pushcfunction(L, lua_IsMusicStreamPlaying)
+    lua.setfield(L, -2, "IsMusicStreamPlaying")
+
+    lua.pushcfunction(L, lua_UpdateMusicStream)
+    lua.setfield(L, -2, "UpdateMusicStream")
+
+    lua.pushcfunction(L, lua_StopMusicStream)
+    lua.setfield(L, -2, "StopMusicStream")
+
+    lua.pushcfunction(L, lua_PauseMusicStream)
+    lua.setfield(L, -2, "PauseMusicStream")
+
+    lua.pushcfunction(L, lua_ResumeMusicStream)
+    lua.setfield(L, -2, "ResumeMusicStream")
+
+    lua.pushcfunction(L, lua_SeekMusicStream)
+    lua.setfield(L, -2, "SeekMusicStream")
+
+    lua.pushcfunction(L, lua_SetMusicVolume)
+    lua.setfield(L, -2, "SetMusicVolume")
+
+    lua.pushcfunction(L, lua_SetMusicPitch)
+    lua.setfield(L, -2, "SetMusicPitch")
+
+    lua.pushcfunction(L, lua_SetMusicPan)
+    lua.setfield(L, -2, "SetMusicPan")
+
+    lua.pushcfunction(L, lua_GetMusicTimeLength)
+    lua.setfield(L, -2, "GetMusicTimeLength")
+
+    lua.pushcfunction(L, lua_GetMusicTimePlayed)
+    lua.setfield(L, -2, "GetMusicTimePlayed")
+
+    lua.pushcfunction(L, lua_LoadAudioStream)
+    lua.setfield(L, -2, "LoadAudioStream")
+
+    lua.pushcfunction(L, lua_IsAudioStreamValid)
+    lua.setfield(L, -2, "IsAudioStreamValid")
+
+    lua.pushcfunction(L, lua_UnloadAudioStream)
+    lua.setfield(L, -2, "UnloadAudioStream")
+
+    lua.pushcfunction(L, lua_IsAudioStreamProcessed)
+    lua.setfield(L, -2, "IsAudioStreamProcessed")
+
+    lua.pushcfunction(L, lua_PlayAudioStream)
+    lua.setfield(L, -2, "PlayAudioStream")
+
+    lua.pushcfunction(L, lua_PauseAudioStream)
+    lua.setfield(L, -2, "PauseAudioStream")
+
+    lua.pushcfunction(L, lua_ResumeAudioStream)
+    lua.setfield(L, -2, "ResumeAudioStream")
+
+    lua.pushcfunction(L, lua_IsAudioStreamPlaying)
+    lua.setfield(L, -2, "IsAudioStreamPlaying")
+
+    lua.pushcfunction(L, lua_StopAudioStream)
+    lua.setfield(L, -2, "StopAudioStream")
+
+    lua.pushcfunction(L, lua_SetAudioStreamVolume)
+    lua.setfield(L, -2, "SetAudioStreamVolume")
+
+    lua.pushcfunction(L, lua_SetAudioStreamPitch)
+    lua.setfield(L, -2, "SetAudioStreamPitch")
+
+    lua.pushcfunction(L, lua_SetAudioStreamPan)
+    lua.setfield(L, -2, "SetAudioStreamPan")
 
     lua.pushcfunction(L, lua_SetAudioStreamBufferSizeDefault)
     lua.setfield(L, -2, "SetAudioStreamBufferSizeDefault")
@@ -2947,6 +3073,120 @@ fromlua_Wave :: proc "c" (L: ^lua.State, idx: c.int) -> rl.Wave {
         sampleSize = sampleSize,
         channels = channels,
         data = data,
+    }
+}
+
+tolua_AudioStream :: proc "c" (L: ^lua.State, s: rl.AudioStream, idx: c.int = -99) {
+    context = runtime.default_context()
+    idx := idx
+    if idx == -99 {
+        lua.newtable(L)
+        idx = -2
+    }
+    lua.pushlightuserdata(L, s.buffer)
+    lua.setfield(L, idx, "buffer")
+    lua.pushlightuserdata(L, s.processor)
+    lua.setfield(L, idx, "processor")
+    lua.pushinteger(L, lua.Integer(s.sampleRate))
+    lua.setfield(L, idx, "sampleRate")
+    lua.pushinteger(L, lua.Integer(s.sampleSize))
+    lua.setfield(L, idx, "sampleSize")
+    lua.pushinteger(L, lua.Integer(s.channels))
+    lua.setfield(L, idx, "channels")
+}
+
+fromlua_AudioStream :: proc "c" (L: ^lua.State, idx: c.int) -> rl.AudioStream {
+    context = runtime.default_context()
+    lua.getfield(L, idx, "buffer")
+    buffer := lua.touserdata(L, -1)
+    lua.pop(L, 1)
+    lua.getfield(L, idx, "processor")
+    processor := lua.touserdata(L, -1)
+    lua.pop(L, 1)
+    lua.getfield(L, idx, "sampleRate")
+    sampleRate := c.uint(lua.tonumber(L, -1))
+    lua.pop(L, 1)
+    lua.getfield(L, idx, "sampleSize")
+    sampleSize := c.uint(lua.tonumber(L, -1))
+    lua.pop(L, 1)
+    lua.getfield(L, idx, "channels")
+    channels := c.uint(lua.tonumber(L, -1))
+    lua.pop(L, 1)
+    return rl.AudioStream {
+        buffer = buffer,
+        processor = processor,
+        sampleRate = sampleRate,
+        sampleSize = sampleSize,
+        channels = channels,
+    }
+}
+
+tolua_Sound :: proc "c" (L: ^lua.State, s: rl.Sound, idx: c.int = -99) {
+    context = runtime.default_context()
+    idx := idx
+    if idx == -99 {
+        lua.newtable(L)
+        idx = -2
+    }
+    tolua_AudioStream(L, s.stream)
+    lua.setfield(L, idx, "stream")
+    lua.pushinteger(L, lua.Integer(s.frameCount))
+    lua.setfield(L, idx, "frameCount")
+}
+
+fromlua_Sound :: proc "c" (L: ^lua.State, idx: c.int) -> rl.Sound {
+    context = runtime.default_context()
+    lua.getfield(L, idx, "stream")
+    stream := fromlua_AudioStream(L, -1)
+    lua.pop(L, 1)
+    lua.getfield(L, idx, "frameCount")
+    frameCount := c.uint(lua.tonumber(L, -1))
+    lua.pop(L, 1)
+    return rl.Sound{stream = stream, frameCount = frameCount}
+}
+
+tolua_Music :: proc "c" (L: ^lua.State, s: rl.Music, idx: c.int = -99) {
+    context = runtime.default_context()
+    idx := idx
+    if idx == -99 {
+        lua.newtable(L)
+        idx = -2
+    }
+    tolua_AudioStream(L, s.stream)
+    lua.setfield(L, idx, "stream")
+    lua.pushinteger(L, lua.Integer(s.frameCount))
+    lua.setfield(L, idx, "frameCount")
+    lua.pushboolean(L, b32(s.looping))
+    lua.setfield(L, idx, "looping")
+    lua.pushinteger(L, lua.Integer(s.ctxType))
+    lua.setfield(L, idx, "ctxType")
+    lua.pushlightuserdata(L, s.ctxData)
+    lua.setfield(L, idx, "ctxData")
+}
+
+fromlua_Music :: proc "c" (L: ^lua.State, idx: c.int) -> rl.Music {
+    context = runtime.default_context()
+    lua.getfield(L, idx, "stream")
+    stream := fromlua_AudioStream(L, -1)
+    lua.pop(L, 1)
+    lua.getfield(L, idx, "frameCount")
+    frameCount := c.uint(lua.tonumber(L, -1))
+    lua.pop(L, 1)
+    lua.getfield(L, idx, "looping")
+    looping := c.bool(lua.toboolean(L, -1))
+    lua.pop(L, 1)
+    lua.getfield(L, idx, "ctxType")
+    ctxType := c.int(lua.tonumber(L, -1))
+    lua.pop(L, 1)
+    lua.getfield(L, idx, "ctxData")
+    ctxData := lua.touserdata(L, -1)
+    lua.pop(L, 1)
+    return rl.Music {
+        stream = stream,
+        frameCount = frameCount,
+        looping = looping,
+        ctxType = ctxType,
+        ctxData = ctxData,
     }
 }
 
@@ -6258,6 +6498,16 @@ lua_UnloadRenderTexture :: proc "c" (L: ^lua.State) -> c.int {
 }
 
 @(private)
+lua_GenTextureMipmaps :: proc "c" (L: ^lua.State) -> c.int {
+    p_texture := fromlua_Texture2D(L, 1)
+
+    rl.GenTextureMipmaps(&p_texture)
+
+    tolua_Texture2D(L, p_texture, 1)
+    return 0
+}
+
+@(private)
 lua_SetTextureFilter :: proc "c" (L: ^lua.State) -> c.int {
     p_texture := fromlua_Texture2D(L, 1)
     p_filter := cast(rl.TextureFilter)c.int(lua.tonumber(L, 2))
@@ -6547,6 +6797,16 @@ lua_IsFontValid :: proc "c" (L: ^lua.State) -> c.int {
 }
 
 @(private)
+lua_UnloadFontData :: proc "c" (L: ^lua.State) -> c.int {
+    context = runtime.default_context()
+    p_glyphs, p_glyphCount := fromlua_array(L, 1, rl.GlyphInfo, fromlua_GlyphInfo)
+
+    rl.UnloadFontData(p_glyphs, p_glyphCount)
+
+    return 0
+}
+
+@(private)
 lua_UnloadFont :: proc "c" (L: ^lua.State) -> c.int {
     p_font := fromlua_Font(L, 1)
 
@@ -6709,27 +6969,6 @@ lua_GetCodepointCount :: proc "c" (L: ^lua.State) -> c.int {
 }
 
 @(private)
-lua_TextIsEqual :: proc "c" (L: ^lua.State) -> c.int {
-    p_text1 := lua.tostring(L, 1)
-    p_text2 := lua.tostring(L, 2)
-
-    result := rl.TextIsEqual(p_text1, p_text2)
-
-    lua.pushboolean(L, b32(result))
-    return 1
-}
-
-@(private)
-lua_TextLength :: proc "c" (L: ^lua.State) -> c.int {
-    p_text := lua.tostring(L, 1)
-
-    result := rl.TextLength(p_text)
-
-    lua.pushinteger(L, lua.Integer(result))
-    return 1
-}
-
-@(private)
 lua_TextSubtext :: proc "c" (L: ^lua.State) -> c.int {
     p_text := lua.tostring(L, 1)
     p_position := c.int(lua.tonumber(L, 2))
@@ -6864,6 +7103,17 @@ lua_DrawTriangle3D :: proc "c" (L: ^lua.State) -> c.int {
     p_color := fromlua_Color(L, 4)
 
     rl.DrawTriangle3D(p_v1, p_v2, p_v3, p_color)
+
+    return 0
+}
+
+@(private)
+lua_DrawTriangleStrip3D :: proc "c" (L: ^lua.State) -> c.int {
+    context = runtime.default_context()
+    p_points, p_pointCount := fromlua_array(L, 1, rl.Vector3, fromlua_Vector3)
+    p_color := fromlua_Color(L, 2)
+
+    rl.DrawTriangleStrip3D(p_points, p_pointCount, p_color)
 
     return 0
 }
@@ -7278,10 +7528,68 @@ lua_IsWaveValid :: proc "c" (L: ^lua.State) -> c.int {
 }
 
 @(private)
+lua_LoadSound :: proc "c" (L: ^lua.State) -> c.int {
+    p_fileName := lua.tostring(L, 1)
+
+    result := rl.LoadSound(p_fileName)
+
+    tolua_Sound(L, result)
+    return 1
+}
+
+@(private)
+lua_LoadSoundFromWave :: proc "c" (L: ^lua.State) -> c.int {
+    p_wave := fromlua_Wave(L, 1)
+
+    result := rl.LoadSoundFromWave(p_wave)
+
+    tolua_Sound(L, result)
+    return 1
+}
+
+@(private)
+lua_LoadSoundAlias :: proc "c" (L: ^lua.State) -> c.int {
+    p_source := fromlua_Sound(L, 1)
+
+    result := rl.LoadSoundAlias(p_source)
+
+    tolua_Sound(L, result)
+    return 1
+}
+
+@(private)
+lua_IsSoundValid :: proc "c" (L: ^lua.State) -> c.int {
+    p_sound := fromlua_Sound(L, 1)
+
+    result := rl.IsSoundValid(p_sound)
+
+    lua.pushboolean(L, b32(result))
+    return 1
+}
+
+@(private)
 lua_UnloadWave :: proc "c" (L: ^lua.State) -> c.int {
     p_wave := fromlua_Wave(L, 1)
 
     rl.UnloadWave(p_wave)
+
+    return 0
+}
+
+@(private)
+lua_UnloadSound :: proc "c" (L: ^lua.State) -> c.int {
+    p_sound := fromlua_Sound(L, 1)
+
+    rl.UnloadSound(p_sound)
+
+    return 0
+}
+
+@(private)
+lua_UnloadSoundAlias :: proc "c" (L: ^lua.State) -> c.int {
+    p_alias := fromlua_Sound(L, 1)
+
+    rl.UnloadSoundAlias(p_alias)
 
     return 0
 }
@@ -7309,6 +7617,82 @@ lua_ExportWaveAsCode :: proc "c" (L: ^lua.State) -> c.int {
 }
 
 @(private)
+lua_PlaySound :: proc "c" (L: ^lua.State) -> c.int {
+    p_sound := fromlua_Sound(L, 1)
+
+    rl.PlaySound(p_sound)
+
+    return 0
+}
+
+@(private)
+lua_StopSound :: proc "c" (L: ^lua.State) -> c.int {
+    p_sound := fromlua_Sound(L, 1)
+
+    rl.StopSound(p_sound)
+
+    return 0
+}
+
+@(private)
+lua_PauseSound :: proc "c" (L: ^lua.State) -> c.int {
+    p_sound := fromlua_Sound(L, 1)
+
+    rl.PauseSound(p_sound)
+
+    return 0
+}
+
+@(private)
+lua_ResumeSound :: proc "c" (L: ^lua.State) -> c.int {
+    p_sound := fromlua_Sound(L, 1)
+
+    rl.ResumeSound(p_sound)
+
+    return 0
+}
+
+@(private)
+lua_IsSoundPlaying :: proc "c" (L: ^lua.State) -> c.int {
+    p_sound := fromlua_Sound(L, 1)
+
+    result := rl.IsSoundPlaying(p_sound)
+
+    lua.pushboolean(L, b32(result))
+    return 1
+}
+
+@(private)
+lua_SetSoundVolume :: proc "c" (L: ^lua.State) -> c.int {
+    p_sound := fromlua_Sound(L, 1)
+    p_volume := c.float(lua.tonumber(L, 2))
+
+    rl.SetSoundVolume(p_sound, p_volume)
+
+    return 0
+}
+
+@(private)
+lua_SetSoundPitch :: proc "c" (L: ^lua.State) -> c.int {
+    p_sound := fromlua_Sound(L, 1)
+    p_pitch := c.float(lua.tonumber(L, 2))
+
+    rl.SetSoundPitch(p_sound, p_pitch)
+
+    return 0
+}
+
+@(private)
+lua_SetSoundPan :: proc "c" (L: ^lua.State) -> c.int {
+    p_sound := fromlua_Sound(L, 1)
+    p_pan := c.float(lua.tonumber(L, 2))
+
+    rl.SetSoundPan(p_sound, p_pan)
+
+    return 0
+}
+
+@(private)
 lua_WaveCopy :: proc "c" (L: ^lua.State) -> c.int {
     p_wave := fromlua_Wave(L, 1)
 
@@ -7319,6 +7703,267 @@ lua_WaveCopy :: proc "c" (L: ^lua.State) -> c.int {
 }
 
 @(private)
+lua_LoadMusicStream :: proc "c" (L: ^lua.State) -> c.int {
+    p_fileName := lua.tostring(L, 1)
+
+    result := rl.LoadMusicStream(p_fileName)
+
+    tolua_Music(L, result)
+    return 1
+}
+
+@(private)
+lua_IsMusicValid :: proc "c" (L: ^lua.State) -> c.int {
+    p_music := fromlua_Music(L, 1)
+
+    result := rl.IsMusicValid(p_music)
+
+    lua.pushboolean(L, b32(result))
+    return 1
+}
+
+@(private)
+lua_UnloadMusicStream :: proc "c" (L: ^lua.State) -> c.int {
+    p_music := fromlua_Music(L, 1)
+
+    rl.UnloadMusicStream(p_music)
+
+    return 0
+}
+
+@(private)
+lua_PlayMusicStream :: proc "c" (L: ^lua.State) -> c.int {
+    p_music := fromlua_Music(L, 1)
+
+    rl.PlayMusicStream(p_music)
+
+    return 0
+}
+
+@(private)
+lua_IsMusicStreamPlaying :: proc "c" (L: ^lua.State) -> c.int {
+    p_music := fromlua_Music(L, 1)
+
+    result := rl.IsMusicStreamPlaying(p_music)
+
+    lua.pushboolean(L, b32(result))
+    return 1
+}
+
+@(private)
+lua_UpdateMusicStream :: proc "c" (L: ^lua.State) -> c.int {
+    p_music := fromlua_Music(L, 1)
+
+    rl.UpdateMusicStream(p_music)
+
+    return 0
+}
+
+@(private)
+lua_StopMusicStream :: proc "c" (L: ^lua.State) -> c.int {
+    p_music := fromlua_Music(L, 1)
+
+    rl.StopMusicStream(p_music)
+
+    return 0
+}
+
+@(private)
+lua_PauseMusicStream :: proc "c" (L: ^lua.State) -> c.int {
+    p_music := fromlua_Music(L, 1)
+
+    rl.PauseMusicStream(p_music)
+
+    return 0
+}
+
+@(private)
+lua_ResumeMusicStream :: proc "c" (L: ^lua.State) -> c.int {
+    p_music := fromlua_Music(L, 1)
+
+    rl.ResumeMusicStream(p_music)
+
+    return 0
+}
+
+@(private)
+lua_SeekMusicStream :: proc "c" (L: ^lua.State) -> c.int {
+    p_music := fromlua_Music(L, 1)
+    p_position := c.float(lua.tonumber(L, 2))
+
+    rl.SeekMusicStream(p_music, p_position)
+
+    return 0
+}
+
+@(private)
+lua_SetMusicVolume :: proc "c" (L: ^lua.State) -> c.int {
+    p_music := fromlua_Music(L, 1)
+    p_volume := c.float(lua.tonumber(L, 2))
+
+    rl.SetMusicVolume(p_music, p_volume)
+
+    return 0
+}
+
+@(private)
+lua_SetMusicPitch :: proc "c" (L: ^lua.State) -> c.int {
+    p_music := fromlua_Music(L, 1)
+    p_pitch := c.float(lua.tonumber(L, 2))
+
+    rl.SetMusicPitch(p_music, p_pitch)
+
+    return 0
+}
+
+@(private)
+lua_SetMusicPan :: proc "c" (L: ^lua.State) -> c.int {
+    p_music := fromlua_Music(L, 1)
+    p_pan := c.float(lua.tonumber(L, 2))
+
+    rl.SetMusicPan(p_music, p_pan)
+
+    return 0
+}
+
+@(private)
+lua_GetMusicTimeLength :: proc "c" (L: ^lua.State) -> c.int {
+    p_music := fromlua_Music(L, 1)
+
+    result := rl.GetMusicTimeLength(p_music)
+
+    lua.pushnumber(L, lua.Number(result))
+    return 1
+}
+
+@(private)
+lua_GetMusicTimePlayed :: proc "c" (L: ^lua.State) -> c.int {
+    p_music := fromlua_Music(L, 1)
+
+    result := rl.GetMusicTimePlayed(p_music)
+
+    lua.pushnumber(L, lua.Number(result))
+    return 1
+}
+
+@(private)
+lua_LoadAudioStream :: proc "c" (L: ^lua.State) -> c.int {
+    p_sampleRate := c.uint(lua.tonumber(L, 1))
+    p_sampleSize := c.uint(lua.tonumber(L, 2))
+    p_channels := c.uint(lua.tonumber(L, 3))
+
+    result := rl.LoadAudioStream(p_sampleRate, p_sampleSize, p_channels)
+
+    tolua_AudioStream(L, result)
+    return 1
+}
+
+@(private)
+lua_IsAudioStreamValid :: proc "c" (L: ^lua.State) -> c.int {
+    p_stream := fromlua_AudioStream(L, 1)
+
+    result := rl.IsAudioStreamValid(p_stream)
+
+    lua.pushboolean(L, b32(result))
+    return 1
+}
+
+@(private)
+lua_UnloadAudioStream :: proc "c" (L: ^lua.State) -> c.int {
+    p_stream := fromlua_AudioStream(L, 1)
+
+    rl.UnloadAudioStream(p_stream)
+
+    return 0
+}
+
+@(private)
+lua_IsAudioStreamProcessed :: proc "c" (L: ^lua.State) -> c.int {
+    p_stream := fromlua_AudioStream(L, 1)
+
+    result := rl.IsAudioStreamProcessed(p_stream)
+
+    lua.pushboolean(L, b32(result))
+    return 1
+}
+
+@(private)
+lua_PlayAudioStream :: proc "c" (L: ^lua.State) -> c.int {
+    p_stream := fromlua_AudioStream(L, 1)
+
+    rl.PlayAudioStream(p_stream)
+
+    return 0
+}
+
+@(private)
+lua_PauseAudioStream :: proc "c" (L: ^lua.State) -> c.int {
+    p_stream := fromlua_AudioStream(L, 1)
+
+    rl.PauseAudioStream(p_stream)
+
+    return 0
+}
+
+@(private)
+lua_ResumeAudioStream :: proc "c" (L: ^lua.State) -> c.int {
+    p_stream := fromlua_AudioStream(L, 1)
+
+    rl.ResumeAudioStream(p_stream)
+
+    return 0
+}
+
+@(private)
+lua_IsAudioStreamPlaying :: proc "c" (L: ^lua.State) -> c.int {
+    p_stream := fromlua_AudioStream(L, 1)
+
+    result := rl.IsAudioStreamPlaying(p_stream)
+
+    lua.pushboolean(L, b32(result))
+    return 1
+}
+
+@(private)
+lua_StopAudioStream :: proc "c" (L: ^lua.State) -> c.int {
+    p_stream := fromlua_AudioStream(L, 1)
+
+    rl.StopAudioStream(p_stream)
+
+    return 0
+}
+
+@(private)
+lua_SetAudioStreamVolume :: proc "c" (L: ^lua.State) -> c.int {
+    p_stream := fromlua_AudioStream(L, 1)
+    p_volume := c.float(lua.tonumber(L, 2))
+
+    rl.SetAudioStreamVolume(p_stream, p_volume)
+
+    return 0
+}
+
+@(private)
+lua_SetAudioStreamPitch :: proc "c" (L: ^lua.State) -> c.int {
+    p_stream := fromlua_AudioStream(L, 1)
+    p_pitch := c.float(lua.tonumber(L, 2))
+
+    rl.SetAudioStreamPitch(p_stream, p_pitch)
+
+    return 0
+}
+
+@(private)
+lua_SetAudioStreamPan :: proc "c" (L: ^lua.State) -> c.int {
+    p_stream := fromlua_AudioStream(L, 1)
+    p_pan := c.float(lua.tonumber(L, 2))
+
+    rl.SetAudioStreamPan(p_stream, p_pan)
+
+    return 0
+}
+
+@(private)
 lua_SetAudioStreamBufferSizeDefault :: proc "c" (L: ^lua.State) -> c.int {
     p_size := c.int(lua.tonumber(L, 1))
 
@@ -7326,3 +7971,4 @@ lua_SetAudioStreamBufferSizeDefault :: proc "c" (L: ^lua.State) -> c.int {
 
     return 0
 }
+

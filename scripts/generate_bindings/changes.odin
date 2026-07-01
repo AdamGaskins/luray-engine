@@ -1,138 +1,5 @@
 package generate_bindings
 
-implemented_types :: []string {
-    "void",
-    "void *",
-    "const unsigned char *",
-    "unsigned char *",
-    "const char *",
-    "char *",
-    "int",
-    "unsigned int",
-    "long",
-    "float",
-    "double",
-    "bool",
-
-    // structs
-    "Color",
-    "Vector2",
-    "Vector3",
-    "Vector4",
-    "Matrix",
-    "Rectangle",
-    "Camera",
-    "Camera2D",
-    "Camera3D",
-    "Image",
-    "Texture",
-    "Texture2D",
-    "TextureCubemap",
-    "RenderTexture",
-    "RenderTexture2D",
-    "Quaternion",
-    "Ray",
-    "RayCollision",
-    "BoundingBox",
-    "NPatchInfo",
-    "GlyphInfo",
-    "Font",
-    // "Mesh",
-    // "Shader",
-    "MaterialMap",
-    // "Material",
-    "Transform",
-    // "BoneInfo",
-    // "Model",
-    // "ModelAnimation",
-    "Ray",
-    "RayCollision",
-    "Wave",
-    // "AudioStream",
-    // "Sound",
-    // "Music",
-    // "VrDeviceInfo",
-    // "VrStereoConfig",
-    "FilePathList",
-    // "AutomationEvent",
-    // "AutomationEventList",
-
-    //
-    "Image *",
-    "const Vector2 *",
-    "Vector2 *",
-    // "Rectangle *",
-    // "GlyphInfo *",
-    "Camera *",
-}
-
-ignore_functions :: []string {
-    "GetWindowHandle",
-    "MemAlloc",
-    "MemRealloc",
-    "MemFree",
-    "SaveFileData",
-    "LoadFileData",
-    "UnloadFileData",
-    "ExportDataAsCode",
-    "UnloadFileText",
-    // probably don't work
-    "SetPixelColor",
-    "GetPixelColor",
-    // todo
-    "BeginShaderMode",
-    "BeginVrStereoMode",
-    "LoadVrStereoConfig",
-    "LoadVrStereoConfig",
-    "UnloadVrStereoConfig",
-    "LoadShader",
-    "LoadShaderFromMemory",
-    "IsShaderValid",
-    "GetShaderLocation",
-    "GetShaderLocationAttrib",
-    "SetShaderValue",
-    "SetShaderValue",
-    "SetShaderValueV",
-    "SetShaderValueV",
-    "SetShaderValueMatrix",
-    "SetShaderValueTexture",
-    "UnloadShader",
-    "LoadRandomSequence",
-    "UnloadRandomSequence",
-    "TraceLog",
-    "SetTraceLogCallback",
-    "SetLoadFileDataCallback",
-    "SetSaveFileDataCallback",
-    "SetLoadFileTextCallback",
-    "SetSaveFileTextCallback",
-    "CompressData",
-    "DecompressData",
-    "EncodeDataBase64",
-    "DecodeDataBase64",
-    "ComputeCRC32",
-    "ComputeMD5",
-    "ComputeSHA1",
-    "LoadAutomationEventList",
-    "UnloadAutomationEventList",
-    "ExportAutomationEventList",
-    "SetAutomationEventList",
-    "PlayAutomationEvent",
-}
-
-funcs_not_yet_implemented :: []string {
-    "LoadImageRaw",
-    "LoadImageFromMemory",
-    "UnloadUTF8",
-    "TextInsert",
-    "TextCopy",
-    "TextReplace",
-    "LoadWaveFromMemory",
-    "LoadMusicStreamFromMemory",
-    // "GetGestureDetected",
-    "ComputeCRC32",
-    "ColorIsEqual", // deprecated
-}
-
 array_structs :: []string{"Vector2", "Vector3", "Vector4", "Matrix"}
 
 params_modified_in_place :: []string {
@@ -186,6 +53,7 @@ params_modified_in_place :: []string {
     "CheckCollisionLines.collisionPoint",
     "UpdateCamera.camera",
     "UpdateCameraPro.camera",
+    "GenTextureMipmaps.texture",
 }
 
 ParamArrayPointer :: struct {
@@ -200,6 +68,7 @@ param_array_pointers :: []ParamArrayPointer {
     {"DrawLineStrip", "points", "pointCount"},
     {"DrawTriangleFan", "points", "pointCount"},
     {"DrawTriangleStrip", "points", "pointCount"},
+    {"DrawTriangleStrip3D", "points", "pointCount"},
     {"DrawSplineLinear", "points", "pointCount"},
     {"DrawSplineBasis", "points", "pointCount"},
     {"DrawSplineCatmullRom", "points", "pointCount"},
@@ -208,6 +77,9 @@ param_array_pointers :: []ParamArrayPointer {
     {"CheckCollisionPointPoly", "points", "pointCount"},
     {"ImageDrawTriangleFan", "points", "pointCount"},
     {"ImageDrawTriangleStrip", "points", "pointCount"},
+    {"UnloadFontData", "glyphs", "glyphCount"},
+
+    // structs
     {"Font", "recs", "glyphCount"},
     {"Font", "glyphs", "glyphCount"},
 }
@@ -275,11 +147,128 @@ param_type_overrides :: []ParamTypeOverride {
     {"GetGlyphInfo", "codepoint", "cast", "rune"},
     {"GetGlyphAtlasRec", "codepoint", "cast", "rune"},
 
-
     // structs
     {"Texture", "format", "cast", "rl.PixelFormat"},
     {"Image", "format", "cast", "rl.PixelFormat"},
     {"Camera3D", "projection", "cast", "rl.CameraProjection"},
     {"FilePathList", "paths", "transmute", "[^]cstring"},
+}
+
+implemented_types :: []string {
+    "void",
+    "void *",
+    "const unsigned char *",
+    "unsigned char *",
+    "const char *",
+    "char *",
+    "int",
+    "unsigned int",
+    "long",
+    "float",
+    "double",
+    "bool",
+
+    // structs
+    "Color",
+    "Vector2",
+    "Vector3",
+    "Vector4",
+    "Matrix",
+    "Rectangle",
+    "Camera",
+    "Camera2D",
+    "Camera3D",
+    "Image",
+    "Texture",
+    "Texture2D",
+    "TextureCubemap",
+    "RenderTexture",
+    "RenderTexture2D",
+    "Quaternion",
+    "Ray",
+    "RayCollision",
+    "BoundingBox",
+    "NPatchInfo",
+    "GlyphInfo",
+    "Font",
+    // "Mesh",
+    // "Shader",
+    "MaterialMap",
+    // "Material",
+    "Transform",
+    // "BoneInfo",
+    // "Model",
+    // "ModelAnimation",
+    "Ray",
+    "RayCollision",
+    "Wave",
+    "AudioStream",
+    "Sound",
+    "Music",
+    // "VrDeviceInfo",
+    // "VrStereoConfig",
+    "FilePathList",
+    // "AutomationEvent",
+    // "AutomationEventList",
+
+    //
+    "Image *",
+    "Texture2D *",
+    "const Vector2 *",
+    "Vector2 *",
+    "const Vector3 *",
+    "Rectangle *",
+    "GlyphInfo *",
+    "Camera *",
+    "rAudioBuffer *",
+    "rAudioProcessor *",
+}
+
+pointer_types :: []string{"void *", "char **", "rAudioBuffer *", "rAudioProcessor *"}
+
+ignore_functions :: []string {
+    // built in (see auto_free_statements)
+    "UnloadFileText",
+
+    // unneeded
+    "GetWindowHandle",
+    "MemAlloc",
+    "MemRealloc",
+    "MemFree",
+    "TextSplit",
+    "TextJoin",
+    "TextAppend",
+    "TextSplit",
+    "TextCopy",
+    "TextIsEqual",
+    "TextLength",
+    "TextBetween",
+    "TextReplace",
+    "TextReplaceAlloc",
+    "TextReplaceBetween",
+    "TextReplaceBetweenAlloc",
+    "TextInsert",
+    "TextInsertAlloc",
+
+    // probably don't work
+    "SetPixelColor",
+    "GetPixelColor",
+
+    // deprecated
+    "ColorIsEqual",
+}
+
+funcs_not_yet_implemented :: []string {
+    "LoadImageRaw",
+    "LoadImageFromMemory",
+    "UnloadUTF8",
+    "LoadWaveFromMemory",
+    "LoadMusicStreamFromMemory",
+    // "GetGestureDetected",
+    "ComputeCRC32",
+    "SaveFileData",
+    "LoadFileData",
+    "UnloadFileData",
+    "ExportDataAsCode",
 }
 

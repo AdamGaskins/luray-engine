@@ -467,6 +467,24 @@ function _update() end
 ---@field channels integer Number of channels (1-mono, 2-stereo, ...)
 ---@field data any Buffer data pointer
 
+---@class Raylib.AudioStream
+---@field buffer any Pointer to internal data used by the audio system
+---@field processor any Pointer to internal data processor, useful for audio effects
+---@field sampleRate integer Frequency (samples per second)
+---@field sampleSize integer Bit depth (bits per sample): 8, 16, 32 (24 not supported)
+---@field channels integer Number of channels (1-mono, 2-stereo, ...)
+
+---@class Raylib.Sound
+---@field stream Raylib.AudioStream Audio stream
+---@field frameCount integer Total number of frames (considering channels)
+
+---@class Raylib.Music
+---@field stream Raylib.AudioStream Audio stream
+---@field frameCount integer Total number of frames (considering channels)
+---@field looping boolean Music looping enable
+---@field ctxType integer Type of music context (audio filetype)
+---@field ctxData any Audio context data, depends on type
+
 ---@class Raylib.FilePathList
 ---@field capacity integer Filepaths max entries
 ---@field count integer Filepaths entries count
@@ -2170,6 +2188,10 @@ function ray.IsRenderTextureValid(target) end
 ---@param target Raylib.RenderTexture2D
 function ray.UnloadRenderTexture(target) end
 
+---Generate GPU mipmaps for a texture
+---@param texture Raylib.Texture2D
+function ray.GenTextureMipmaps(texture) end
+
 ---Set texture scaling filter mode
 ---@param texture Raylib.Texture2D
 ---@param filter integer
@@ -2330,6 +2352,10 @@ function ray.LoadFontFromImage(image, key, firstChar) end
 ---@return boolean
 function ray.IsFontValid(font) end
 
+---Unload font chars info data (RAM)
+---@param glyphs Raylib.GlyphInfo[]
+function ray.UnloadFontData(glyphs) end
+
 ---Unload font from GPU memory (VRAM)
 ---@param font Raylib.Font
 function ray.UnloadFont(font) end
@@ -2422,17 +2448,6 @@ function ray.GetGlyphAtlasRec(font, codepoint) end
 ---@return integer
 function ray.GetCodepointCount(text) end
 
----Check if two text string are equal
----@param text1 string
----@param text2 string
----@return boolean
-function ray.TextIsEqual(text1, text2) end
-
----Get text length, checks for '\0' ending
----@param text string
----@return integer
-function ray.TextLength(text) end
-
 ---Get a piece of a text string
 ---@param text string
 ---@param position integer
@@ -2506,6 +2521,11 @@ function ray.DrawCircle3D(center, radius, rotationAxis, rotationAngle, color) en
 ---@param v3 Raylib.Vector3
 ---@param color Raylib.Color
 function ray.DrawTriangle3D(v1, v2, v3, color) end
+
+---Draw a triangle strip defined by points
+---@param points Raylib.Vector3[]
+---@param color Raylib.Color
+function ray.DrawTriangleStrip3D(points, color) end
 
 ---Draw cube
 ---@param position Raylib.Vector3
@@ -2740,9 +2760,37 @@ function ray.LoadWave(fileName) end
 ---@return boolean
 function ray.IsWaveValid(wave) end
 
+---Load sound from file
+---@param fileName string
+---@return Raylib.Sound
+function ray.LoadSound(fileName) end
+
+---Load sound from wave data
+---@param wave Raylib.Wave
+---@return Raylib.Sound
+function ray.LoadSoundFromWave(wave) end
+
+---Create a new sound that shares the same sample data as the source sound, does not own the sound data
+---@param source Raylib.Sound
+---@return Raylib.Sound
+function ray.LoadSoundAlias(source) end
+
+---Checks if a sound is valid (data loaded and buffers initialized)
+---@param sound Raylib.Sound
+---@return boolean
+function ray.IsSoundValid(sound) end
+
 ---Unload wave data
 ---@param wave Raylib.Wave
 function ray.UnloadWave(wave) end
+
+---Unload sound
+---@param sound Raylib.Sound
+function ray.UnloadSound(sound) end
+
+---Unload a sound alias (does not deallocate sample data)
+---@param alias Raylib.Sound
+function ray.UnloadSoundAlias(alias) end
 
 ---Export wave data to file, returns true on success
 ---@param wave Raylib.Wave
@@ -2756,10 +2804,172 @@ function ray.ExportWave(wave, fileName) end
 ---@return boolean
 function ray.ExportWaveAsCode(wave, fileName) end
 
+---Play a sound
+---@param sound Raylib.Sound
+function ray.PlaySound(sound) end
+
+---Stop playing a sound
+---@param sound Raylib.Sound
+function ray.StopSound(sound) end
+
+---Pause a sound
+---@param sound Raylib.Sound
+function ray.PauseSound(sound) end
+
+---Resume a paused sound
+---@param sound Raylib.Sound
+function ray.ResumeSound(sound) end
+
+---Check if a sound is currently playing
+---@param sound Raylib.Sound
+---@return boolean
+function ray.IsSoundPlaying(sound) end
+
+---Set volume for a sound (1.0 is max level)
+---@param sound Raylib.Sound
+---@param volume number
+function ray.SetSoundVolume(sound, volume) end
+
+---Set pitch for a sound (1.0 is base level)
+---@param sound Raylib.Sound
+---@param pitch number
+function ray.SetSoundPitch(sound, pitch) end
+
+---Set pan for a sound (0.5 is center)
+---@param sound Raylib.Sound
+---@param pan number
+function ray.SetSoundPan(sound, pan) end
+
 ---Copy a wave to a new wave
 ---@param wave Raylib.Wave
 ---@return Raylib.Wave
 function ray.WaveCopy(wave) end
+
+---Load music stream from file
+---@param fileName string
+---@return Raylib.Music
+function ray.LoadMusicStream(fileName) end
+
+---Checks if a music stream is valid (context and buffers initialized)
+---@param music Raylib.Music
+---@return boolean
+function ray.IsMusicValid(music) end
+
+---Unload music stream
+---@param music Raylib.Music
+function ray.UnloadMusicStream(music) end
+
+---Start music playing
+---@param music Raylib.Music
+function ray.PlayMusicStream(music) end
+
+---Check if music is playing
+---@param music Raylib.Music
+---@return boolean
+function ray.IsMusicStreamPlaying(music) end
+
+---Updates buffers for music streaming
+---@param music Raylib.Music
+function ray.UpdateMusicStream(music) end
+
+---Stop music playing
+---@param music Raylib.Music
+function ray.StopMusicStream(music) end
+
+---Pause music playing
+---@param music Raylib.Music
+function ray.PauseMusicStream(music) end
+
+---Resume playing paused music
+---@param music Raylib.Music
+function ray.ResumeMusicStream(music) end
+
+---Seek music to a position (in seconds)
+---@param music Raylib.Music
+---@param position number
+function ray.SeekMusicStream(music, position) end
+
+---Set volume for music (1.0 is max level)
+---@param music Raylib.Music
+---@param volume number
+function ray.SetMusicVolume(music, volume) end
+
+---Set pitch for a music (1.0 is base level)
+---@param music Raylib.Music
+---@param pitch number
+function ray.SetMusicPitch(music, pitch) end
+
+---Set pan for a music (0.5 is center)
+---@param music Raylib.Music
+---@param pan number
+function ray.SetMusicPan(music, pan) end
+
+---Get music time length (in seconds)
+---@param music Raylib.Music
+---@return number
+function ray.GetMusicTimeLength(music) end
+
+---Get current music time played (in seconds)
+---@param music Raylib.Music
+---@return number
+function ray.GetMusicTimePlayed(music) end
+
+---Load audio stream (to stream raw audio pcm data)
+---@param sampleRate integer
+---@param sampleSize integer
+---@param channels integer
+---@return Raylib.AudioStream
+function ray.LoadAudioStream(sampleRate, sampleSize, channels) end
+
+---Checks if an audio stream is valid (buffers initialized)
+---@param stream Raylib.AudioStream
+---@return boolean
+function ray.IsAudioStreamValid(stream) end
+
+---Unload audio stream and free memory
+---@param stream Raylib.AudioStream
+function ray.UnloadAudioStream(stream) end
+
+---Check if any audio stream buffers requires refill
+---@param stream Raylib.AudioStream
+---@return boolean
+function ray.IsAudioStreamProcessed(stream) end
+
+---Play audio stream
+---@param stream Raylib.AudioStream
+function ray.PlayAudioStream(stream) end
+
+---Pause audio stream
+---@param stream Raylib.AudioStream
+function ray.PauseAudioStream(stream) end
+
+---Resume audio stream
+---@param stream Raylib.AudioStream
+function ray.ResumeAudioStream(stream) end
+
+---Check if audio stream is playing
+---@param stream Raylib.AudioStream
+---@return boolean
+function ray.IsAudioStreamPlaying(stream) end
+
+---Stop audio stream
+---@param stream Raylib.AudioStream
+function ray.StopAudioStream(stream) end
+
+---Set volume for audio stream (1.0 is max level)
+---@param stream Raylib.AudioStream
+---@param volume number
+function ray.SetAudioStreamVolume(stream, volume) end
+
+---Set pitch for audio stream (1.0 is base level)
+---@param stream Raylib.AudioStream
+---@param pitch number
+function ray.SetAudioStreamPitch(stream, pitch) end
+
+---Set pan for audio stream (0.5 is centered)
+---@param stream Raylib.AudioStream
+---@param pan number
+function ray.SetAudioStreamPan(stream, pan) end
 
 ---Default size for new audio streams
 ---@param size integer

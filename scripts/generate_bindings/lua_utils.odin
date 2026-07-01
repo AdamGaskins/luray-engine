@@ -46,7 +46,7 @@ gencode_value_from_lua__idxstr :: proc(
         value = fmt.tprintf("c.double(lua.tonumber(L, %v))", idx)
     } else if type == "bool" {
         value = fmt.tprintf("c.bool(lua.toboolean(L, %v))", idx)
-    } else if type == "void *" || type == "char **" {
+    } else if is_pointer_type(type) {
         value = fmt.tprintf("lua.touserdata(L, %v)", idx)
     } else {
         type := trim_c_type(type)
@@ -94,7 +94,7 @@ gencode_push_value_to_lua__string :: proc(
         value = fmt.tprintf("lua.pushnumber(L, lua.Number(%v))", value)
     } else if type == "bool" {
         value = fmt.tprintf("lua.pushboolean(L, b32(%v))", value)
-    } else if type == "void *" || type == "char **" {
+    } else if is_pointer_type(type) {
         value = fmt.tprintf("lua.pushlightuserdata(L, %v)", value)
     } else {
         type := trim_c_type(type)
@@ -145,7 +145,7 @@ c_type_to_lua :: proc(type: string, source: string = "", source_param: string = 
         value = "number"
     } else if type == "bool" {
         value = "boolean"
-    } else if type == "void *" || type == "char **" {
+    } else if is_pointer_type(type) {
         value = "any"
     } else {
         type := type
@@ -184,6 +184,15 @@ prefix_c_type :: proc(type: string) -> string {
 is_null_terminated_array :: proc(source, source_param: string) -> bool {
     for arry in null_terminated_arrays {
         if arry.source == source && arry.source_param == source_param {
+            return true
+        }
+    }
+    return false
+}
+
+is_pointer_type :: proc(c_type: string) -> bool {
+    for type in pointer_types {
+        if type == c_type {
             return true
         }
     }
