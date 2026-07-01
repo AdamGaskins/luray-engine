@@ -1190,6 +1190,9 @@ bind_raylib :: proc(L: ^lua.State) {
     lua.pushcfunction(L, lua_EndTextureMode)
     lua.setfield(L, -2, "EndTextureMode")
 
+    lua.pushcfunction(L, lua_BeginShaderMode)
+    lua.setfield(L, -2, "BeginShaderMode")
+
     lua.pushcfunction(L, lua_EndShaderMode)
     lua.setfield(L, -2, "EndShaderMode")
 
@@ -1207,6 +1210,36 @@ bind_raylib :: proc(L: ^lua.State) {
 
     lua.pushcfunction(L, lua_EndVrStereoMode)
     lua.setfield(L, -2, "EndVrStereoMode")
+
+    lua.pushcfunction(L, lua_LoadShader)
+    lua.setfield(L, -2, "LoadShader")
+
+    lua.pushcfunction(L, lua_LoadShaderFromMemory)
+    lua.setfield(L, -2, "LoadShaderFromMemory")
+
+    lua.pushcfunction(L, lua_IsShaderValid)
+    lua.setfield(L, -2, "IsShaderValid")
+
+    lua.pushcfunction(L, lua_GetShaderLocation)
+    lua.setfield(L, -2, "GetShaderLocation")
+
+    lua.pushcfunction(L, lua_GetShaderLocationAttrib)
+    lua.setfield(L, -2, "GetShaderLocationAttrib")
+
+    lua.pushcfunction(L, lua_SetShaderValue)
+    lua.setfield(L, -2, "SetShaderValue")
+
+    lua.pushcfunction(L, lua_SetShaderValueV)
+    lua.setfield(L, -2, "SetShaderValueV")
+
+    lua.pushcfunction(L, lua_SetShaderValueMatrix)
+    lua.setfield(L, -2, "SetShaderValueMatrix")
+
+    lua.pushcfunction(L, lua_SetShaderValueTexture)
+    lua.setfield(L, -2, "SetShaderValueTexture")
+
+    lua.pushcfunction(L, lua_UnloadShader)
+    lua.setfield(L, -2, "UnloadShader")
 
     lua.pushcfunction(L, lua_GetScreenToWorldRay)
     lua.setfield(L, -2, "GetScreenToWorldRay")
@@ -1925,6 +1958,12 @@ bind_raylib :: proc(L: ^lua.State) {
     lua.pushcfunction(L, lua_UnloadRenderTexture)
     lua.setfield(L, -2, "UnloadRenderTexture")
 
+    lua.pushcfunction(L, lua_UpdateTexture)
+    lua.setfield(L, -2, "UpdateTexture")
+
+    lua.pushcfunction(L, lua_UpdateTextureRec)
+    lua.setfield(L, -2, "UpdateTextureRec")
+
     lua.pushcfunction(L, lua_GenTextureMipmaps)
     lua.setfield(L, -2, "GenTextureMipmaps")
 
@@ -2207,6 +2246,9 @@ bind_raylib :: proc(L: ^lua.State) {
     lua.pushcfunction(L, lua_IsSoundValid)
     lua.setfield(L, -2, "IsSoundValid")
 
+    lua.pushcfunction(L, lua_UpdateSound)
+    lua.setfield(L, -2, "UpdateSound")
+
     lua.pushcfunction(L, lua_UnloadWave)
     lua.setfield(L, -2, "UnloadWave")
 
@@ -2303,6 +2345,9 @@ bind_raylib :: proc(L: ^lua.State) {
     lua.pushcfunction(L, lua_UnloadAudioStream)
     lua.setfield(L, -2, "UnloadAudioStream")
 
+    lua.pushcfunction(L, lua_UpdateAudioStream)
+    lua.setfield(L, -2, "UpdateAudioStream")
+
     lua.pushcfunction(L, lua_IsAudioStreamProcessed)
     lua.setfield(L, -2, "IsAudioStreamProcessed")
 
@@ -2337,6 +2382,22 @@ bind_raylib :: proc(L: ^lua.State) {
     lua.setglobal(L, "ray")
 }
 
+tolua_int :: proc "c" (L: ^lua.State, s: c.int, idx: c.int = -99) {
+    lua.pushinteger(L, lua.Integer(s))
+}
+fromlua_int :: proc "c" (L: ^lua.State, idx: c.int) -> c.int {
+    p_retval := c.int(lua.tonumber(L, idx))
+    return p_retval
+}
+
+tolua_float :: proc "c" (L: ^lua.State, s: c.float, idx: c.int = -99) {
+    lua.pushnumber(L, lua.Number(s))
+}
+fromlua_float :: proc "c" (L: ^lua.State, idx: c.int) -> c.float {
+    p_retval := c.float(lua.tonumber(L, idx))
+    return p_retval
+}
+
 tolua_Vector2 :: proc "c" (L: ^lua.State, s: rl.Vector2, idx: c.int = -99) {
     context = runtime.default_context()
     idx := idx
@@ -2353,12 +2414,12 @@ tolua_Vector2 :: proc "c" (L: ^lua.State, s: rl.Vector2, idx: c.int = -99) {
 fromlua_Vector2 :: proc "c" (L: ^lua.State, idx: c.int) -> rl.Vector2 {
     context = runtime.default_context()
     lua.getfield(L, idx, "x")
-    x := c.float(lua.tonumber(L, -1))
+    p_x := c.float(lua.tonumber(L, -1))
     lua.pop(L, 1)
     lua.getfield(L, idx, "y")
-    y := c.float(lua.tonumber(L, -1))
+    p_y := c.float(lua.tonumber(L, -1))
     lua.pop(L, 1)
-    return rl.Vector2{x, y}
+    return rl.Vector2{p_x, p_y}
 }
 
 tolua_Vector3 :: proc "c" (L: ^lua.State, s: rl.Vector3, idx: c.int = -99) {
@@ -2379,15 +2440,15 @@ tolua_Vector3 :: proc "c" (L: ^lua.State, s: rl.Vector3, idx: c.int = -99) {
 fromlua_Vector3 :: proc "c" (L: ^lua.State, idx: c.int) -> rl.Vector3 {
     context = runtime.default_context()
     lua.getfield(L, idx, "x")
-    x := c.float(lua.tonumber(L, -1))
+    p_x := c.float(lua.tonumber(L, -1))
     lua.pop(L, 1)
     lua.getfield(L, idx, "y")
-    y := c.float(lua.tonumber(L, -1))
+    p_y := c.float(lua.tonumber(L, -1))
     lua.pop(L, 1)
     lua.getfield(L, idx, "z")
-    z := c.float(lua.tonumber(L, -1))
+    p_z := c.float(lua.tonumber(L, -1))
     lua.pop(L, 1)
-    return rl.Vector3{x, y, z}
+    return rl.Vector3{p_x, p_y, p_z}
 }
 
 tolua_Vector4 :: proc "c" (L: ^lua.State, s: rl.Vector4, idx: c.int = -99) {
@@ -2410,18 +2471,18 @@ tolua_Vector4 :: proc "c" (L: ^lua.State, s: rl.Vector4, idx: c.int = -99) {
 fromlua_Vector4 :: proc "c" (L: ^lua.State, idx: c.int) -> rl.Vector4 {
     context = runtime.default_context()
     lua.getfield(L, idx, "x")
-    x := c.float(lua.tonumber(L, -1))
+    p_x := c.float(lua.tonumber(L, -1))
     lua.pop(L, 1)
     lua.getfield(L, idx, "y")
-    y := c.float(lua.tonumber(L, -1))
+    p_y := c.float(lua.tonumber(L, -1))
     lua.pop(L, 1)
     lua.getfield(L, idx, "z")
-    z := c.float(lua.tonumber(L, -1))
+    p_z := c.float(lua.tonumber(L, -1))
     lua.pop(L, 1)
     lua.getfield(L, idx, "w")
-    w := c.float(lua.tonumber(L, -1))
+    p_w := c.float(lua.tonumber(L, -1))
     lua.pop(L, 1)
-    return rl.Vector4{x, y, z, w}
+    return rl.Vector4{p_x, p_y, p_z, p_w}
 }
 
 tolua_Matrix :: proc "c" (L: ^lua.State, s: rl.Matrix, idx: c.int = -99) {
@@ -2468,54 +2529,71 @@ tolua_Matrix :: proc "c" (L: ^lua.State, s: rl.Matrix, idx: c.int = -99) {
 fromlua_Matrix :: proc "c" (L: ^lua.State, idx: c.int) -> rl.Matrix {
     context = runtime.default_context()
     lua.getfield(L, idx, "m0")
-    m0 := c.float(lua.tonumber(L, -1))
+    p_m0 := c.float(lua.tonumber(L, -1))
     lua.pop(L, 1)
     lua.getfield(L, idx, "m4")
-    m4 := c.float(lua.tonumber(L, -1))
+    p_m4 := c.float(lua.tonumber(L, -1))
     lua.pop(L, 1)
     lua.getfield(L, idx, "m8")
-    m8 := c.float(lua.tonumber(L, -1))
+    p_m8 := c.float(lua.tonumber(L, -1))
     lua.pop(L, 1)
     lua.getfield(L, idx, "m12")
-    m12 := c.float(lua.tonumber(L, -1))
+    p_m12 := c.float(lua.tonumber(L, -1))
     lua.pop(L, 1)
     lua.getfield(L, idx, "m1")
-    m1 := c.float(lua.tonumber(L, -1))
+    p_m1 := c.float(lua.tonumber(L, -1))
     lua.pop(L, 1)
     lua.getfield(L, idx, "m5")
-    m5 := c.float(lua.tonumber(L, -1))
+    p_m5 := c.float(lua.tonumber(L, -1))
     lua.pop(L, 1)
     lua.getfield(L, idx, "m9")
-    m9 := c.float(lua.tonumber(L, -1))
+    p_m9 := c.float(lua.tonumber(L, -1))
     lua.pop(L, 1)
     lua.getfield(L, idx, "m13")
-    m13 := c.float(lua.tonumber(L, -1))
+    p_m13 := c.float(lua.tonumber(L, -1))
     lua.pop(L, 1)
     lua.getfield(L, idx, "m2")
-    m2 := c.float(lua.tonumber(L, -1))
+    p_m2 := c.float(lua.tonumber(L, -1))
     lua.pop(L, 1)
     lua.getfield(L, idx, "m6")
-    m6 := c.float(lua.tonumber(L, -1))
+    p_m6 := c.float(lua.tonumber(L, -1))
     lua.pop(L, 1)
     lua.getfield(L, idx, "m10")
-    m10 := c.float(lua.tonumber(L, -1))
+    p_m10 := c.float(lua.tonumber(L, -1))
     lua.pop(L, 1)
     lua.getfield(L, idx, "m14")
-    m14 := c.float(lua.tonumber(L, -1))
+    p_m14 := c.float(lua.tonumber(L, -1))
     lua.pop(L, 1)
     lua.getfield(L, idx, "m3")
-    m3 := c.float(lua.tonumber(L, -1))
+    p_m3 := c.float(lua.tonumber(L, -1))
     lua.pop(L, 1)
     lua.getfield(L, idx, "m7")
-    m7 := c.float(lua.tonumber(L, -1))
+    p_m7 := c.float(lua.tonumber(L, -1))
     lua.pop(L, 1)
     lua.getfield(L, idx, "m11")
-    m11 := c.float(lua.tonumber(L, -1))
+    p_m11 := c.float(lua.tonumber(L, -1))
     lua.pop(L, 1)
     lua.getfield(L, idx, "m15")
-    m15 := c.float(lua.tonumber(L, -1))
+    p_m15 := c.float(lua.tonumber(L, -1))
     lua.pop(L, 1)
-    return rl.Matrix{m0, m4, m8, m12, m1, m5, m9, m13, m2, m6, m10, m14, m3, m7, m11, m15}
+    return rl.Matrix {
+        p_m0,
+        p_m4,
+        p_m8,
+        p_m12,
+        p_m1,
+        p_m5,
+        p_m9,
+        p_m13,
+        p_m2,
+        p_m6,
+        p_m10,
+        p_m14,
+        p_m3,
+        p_m7,
+        p_m11,
+        p_m15,
+    }
 }
 
 tolua_Rectangle :: proc "c" (L: ^lua.State, s: rl.Rectangle, idx: c.int = -99) {
@@ -2538,18 +2616,18 @@ tolua_Rectangle :: proc "c" (L: ^lua.State, s: rl.Rectangle, idx: c.int = -99) {
 fromlua_Rectangle :: proc "c" (L: ^lua.State, idx: c.int) -> rl.Rectangle {
     context = runtime.default_context()
     lua.getfield(L, idx, "x")
-    x := c.float(lua.tonumber(L, -1))
+    p_x := c.float(lua.tonumber(L, -1))
     lua.pop(L, 1)
     lua.getfield(L, idx, "y")
-    y := c.float(lua.tonumber(L, -1))
+    p_y := c.float(lua.tonumber(L, -1))
     lua.pop(L, 1)
     lua.getfield(L, idx, "width")
-    width := c.float(lua.tonumber(L, -1))
+    p_width := c.float(lua.tonumber(L, -1))
     lua.pop(L, 1)
     lua.getfield(L, idx, "height")
-    height := c.float(lua.tonumber(L, -1))
+    p_height := c.float(lua.tonumber(L, -1))
     lua.pop(L, 1)
-    return rl.Rectangle{x = x, y = y, width = width, height = height}
+    return rl.Rectangle{x = p_x, y = p_y, width = p_width, height = p_height}
 }
 
 tolua_Image :: proc "c" (L: ^lua.State, s: rl.Image, idx: c.int = -99) {
@@ -2567,33 +2645,33 @@ tolua_Image :: proc "c" (L: ^lua.State, s: rl.Image, idx: c.int = -99) {
     lua.setfield(L, idx, "height")
     lua.pushinteger(L, lua.Integer(s.mipmaps))
     lua.setfield(L, idx, "mipmaps")
-    lua.pushinteger(L, lua.Integer(s.format))
+    lua.pushinteger(L, lua.Integer(cast(rl.PixelFormat)s.format))
     lua.setfield(L, idx, "format")
 }
 
 fromlua_Image :: proc "c" (L: ^lua.State, idx: c.int) -> rl.Image {
     context = runtime.default_context()
     lua.getfield(L, idx, "data")
-    data := lua.touserdata(L, -1)
+    p_data := lua.touserdata(L, -1)
     lua.pop(L, 1)
     lua.getfield(L, idx, "width")
-    width := c.int(lua.tonumber(L, -1))
+    p_width := c.int(lua.tonumber(L, -1))
     lua.pop(L, 1)
     lua.getfield(L, idx, "height")
-    height := c.int(lua.tonumber(L, -1))
+    p_height := c.int(lua.tonumber(L, -1))
     lua.pop(L, 1)
     lua.getfield(L, idx, "mipmaps")
-    mipmaps := c.int(lua.tonumber(L, -1))
+    p_mipmaps := c.int(lua.tonumber(L, -1))
     lua.pop(L, 1)
     lua.getfield(L, idx, "format")
-    format := cast(rl.PixelFormat)c.int(lua.tonumber(L, -1))
+    p_format := cast(rl.PixelFormat)c.int(lua.tonumber(L, -1))
     lua.pop(L, 1)
     return rl.Image {
-        data = data,
-        width = width,
-        height = height,
-        mipmaps = mipmaps,
-        format = format,
+        data = p_data,
+        width = p_width,
+        height = p_height,
+        mipmaps = p_mipmaps,
+        format = p_format,
     }
 }
 
@@ -2612,28 +2690,34 @@ tolua_Texture :: proc "c" (L: ^lua.State, s: rl.Texture, idx: c.int = -99) {
     lua.setfield(L, idx, "height")
     lua.pushinteger(L, lua.Integer(s.mipmaps))
     lua.setfield(L, idx, "mipmaps")
-    lua.pushinteger(L, lua.Integer(s.format))
+    lua.pushinteger(L, lua.Integer(cast(rl.PixelFormat)s.format))
     lua.setfield(L, idx, "format")
 }
 
 fromlua_Texture :: proc "c" (L: ^lua.State, idx: c.int) -> rl.Texture {
     context = runtime.default_context()
     lua.getfield(L, idx, "id")
-    id := c.uint(lua.tonumber(L, -1))
+    p_id := c.uint(lua.tonumber(L, -1))
     lua.pop(L, 1)
     lua.getfield(L, idx, "width")
-    width := c.int(lua.tonumber(L, -1))
+    p_width := c.int(lua.tonumber(L, -1))
     lua.pop(L, 1)
     lua.getfield(L, idx, "height")
-    height := c.int(lua.tonumber(L, -1))
+    p_height := c.int(lua.tonumber(L, -1))
     lua.pop(L, 1)
     lua.getfield(L, idx, "mipmaps")
-    mipmaps := c.int(lua.tonumber(L, -1))
+    p_mipmaps := c.int(lua.tonumber(L, -1))
     lua.pop(L, 1)
     lua.getfield(L, idx, "format")
-    format := cast(rl.PixelFormat)c.int(lua.tonumber(L, -1))
+    p_format := cast(rl.PixelFormat)c.int(lua.tonumber(L, -1))
     lua.pop(L, 1)
-    return rl.Texture{id = id, width = width, height = height, mipmaps = mipmaps, format = format}
+    return rl.Texture {
+        id = p_id,
+        width = p_width,
+        height = p_height,
+        mipmaps = p_mipmaps,
+        format = p_format,
+    }
 }
 
 tolua_RenderTexture :: proc "c" (L: ^lua.State, s: rl.RenderTexture, idx: c.int = -99) {
@@ -2654,15 +2738,15 @@ tolua_RenderTexture :: proc "c" (L: ^lua.State, s: rl.RenderTexture, idx: c.int 
 fromlua_RenderTexture :: proc "c" (L: ^lua.State, idx: c.int) -> rl.RenderTexture {
     context = runtime.default_context()
     lua.getfield(L, idx, "id")
-    id := c.uint(lua.tonumber(L, -1))
+    p_id := c.uint(lua.tonumber(L, -1))
     lua.pop(L, 1)
     lua.getfield(L, idx, "texture")
-    texture := fromlua_Texture(L, -1)
+    p_texture := fromlua_Texture(L, -1)
     lua.pop(L, 1)
     lua.getfield(L, idx, "depth")
-    depth := fromlua_Texture(L, -1)
+    p_depth := fromlua_Texture(L, -1)
     lua.pop(L, 1)
-    return rl.RenderTexture{id = id, texture = texture, depth = depth}
+    return rl.RenderTexture{id = p_id, texture = p_texture, depth = p_depth}
 }
 
 tolua_NPatchInfo :: proc "c" (L: ^lua.State, s: rl.NPatchInfo, idx: c.int = -99) {
@@ -2682,37 +2766,37 @@ tolua_NPatchInfo :: proc "c" (L: ^lua.State, s: rl.NPatchInfo, idx: c.int = -99)
     lua.setfield(L, idx, "right")
     lua.pushinteger(L, lua.Integer(s.bottom))
     lua.setfield(L, idx, "bottom")
-    lua.pushinteger(L, lua.Integer(s.layout))
+    lua.pushinteger(L, lua.Integer(cast(rl.NPatchLayout)s.layout))
     lua.setfield(L, idx, "layout")
 }
 
 fromlua_NPatchInfo :: proc "c" (L: ^lua.State, idx: c.int) -> rl.NPatchInfo {
     context = runtime.default_context()
     lua.getfield(L, idx, "source")
-    source := fromlua_Rectangle(L, -1)
+    p_source := fromlua_Rectangle(L, -1)
     lua.pop(L, 1)
     lua.getfield(L, idx, "left")
-    left := c.int(lua.tonumber(L, -1))
+    p_left := c.int(lua.tonumber(L, -1))
     lua.pop(L, 1)
     lua.getfield(L, idx, "top")
-    top := c.int(lua.tonumber(L, -1))
+    p_top := c.int(lua.tonumber(L, -1))
     lua.pop(L, 1)
     lua.getfield(L, idx, "right")
-    right := c.int(lua.tonumber(L, -1))
+    p_right := c.int(lua.tonumber(L, -1))
     lua.pop(L, 1)
     lua.getfield(L, idx, "bottom")
-    bottom := c.int(lua.tonumber(L, -1))
+    p_bottom := c.int(lua.tonumber(L, -1))
     lua.pop(L, 1)
     lua.getfield(L, idx, "layout")
-    layout := cast(rl.NPatchLayout)c.int(lua.tonumber(L, -1))
+    p_layout := cast(rl.NPatchLayout)c.int(lua.tonumber(L, -1))
     lua.pop(L, 1)
     return rl.NPatchInfo {
-        source = source,
-        left = left,
-        top = top,
-        right = right,
-        bottom = bottom,
-        layout = layout,
+        source = p_source,
+        left = p_left,
+        top = p_top,
+        right = p_right,
+        bottom = p_bottom,
+        layout = p_layout,
     }
 }
 
@@ -2723,7 +2807,7 @@ tolua_GlyphInfo :: proc "c" (L: ^lua.State, s: rl.GlyphInfo, idx: c.int = -99) {
         lua.newtable(L)
         idx = -2
     }
-    lua.pushinteger(L, lua.Integer(s.value))
+    lua.pushinteger(L, lua.Integer(cast(rune)s.value))
     lua.setfield(L, idx, "value")
     lua.pushinteger(L, lua.Integer(s.offsetX))
     lua.setfield(L, idx, "offsetX")
@@ -2738,26 +2822,26 @@ tolua_GlyphInfo :: proc "c" (L: ^lua.State, s: rl.GlyphInfo, idx: c.int = -99) {
 fromlua_GlyphInfo :: proc "c" (L: ^lua.State, idx: c.int) -> rl.GlyphInfo {
     context = runtime.default_context()
     lua.getfield(L, idx, "value")
-    value := cast(rune)c.int(lua.tonumber(L, -1))
+    p_value := cast(rune)c.int(lua.tonumber(L, -1))
     lua.pop(L, 1)
     lua.getfield(L, idx, "offsetX")
-    offsetX := c.int(lua.tonumber(L, -1))
+    p_offsetX := c.int(lua.tonumber(L, -1))
     lua.pop(L, 1)
     lua.getfield(L, idx, "offsetY")
-    offsetY := c.int(lua.tonumber(L, -1))
+    p_offsetY := c.int(lua.tonumber(L, -1))
     lua.pop(L, 1)
     lua.getfield(L, idx, "advanceX")
-    advanceX := c.int(lua.tonumber(L, -1))
+    p_advanceX := c.int(lua.tonumber(L, -1))
     lua.pop(L, 1)
     lua.getfield(L, idx, "image")
-    image := fromlua_Image(L, -1)
+    p_image := fromlua_Image(L, -1)
     lua.pop(L, 1)
     return rl.GlyphInfo {
-        value = value,
-        offsetX = offsetX,
-        offsetY = offsetY,
-        advanceX = advanceX,
-        image = image,
+        value = p_value,
+        offsetX = p_offsetX,
+        offsetY = p_offsetY,
+        advanceX = p_advanceX,
+        image = p_image,
     }
 }
 
@@ -2785,30 +2869,30 @@ tolua_Font :: proc "c" (L: ^lua.State, s: rl.Font, idx: c.int = -99) {
 fromlua_Font :: proc "c" (L: ^lua.State, idx: c.int) -> rl.Font {
     context = runtime.default_context()
     lua.getfield(L, idx, "baseSize")
-    baseSize := c.int(lua.tonumber(L, -1))
+    p_baseSize := c.int(lua.tonumber(L, -1))
     lua.pop(L, 1)
     lua.getfield(L, idx, "glyphCount")
-    glyphCount := c.int(lua.tonumber(L, -1))
+    p_glyphCount := c.int(lua.tonumber(L, -1))
     lua.pop(L, 1)
     lua.getfield(L, idx, "glyphPadding")
-    glyphPadding := c.int(lua.tonumber(L, -1))
+    p_glyphPadding := c.int(lua.tonumber(L, -1))
     lua.pop(L, 1)
     lua.getfield(L, idx, "texture")
-    texture := fromlua_Texture2D(L, -1)
+    p_texture := fromlua_Texture2D(L, -1)
     lua.pop(L, 1)
     lua.getfield(L, idx, "recs")
-    recs, _ := fromlua_array(L, -1, rl.Rectangle, fromlua_Rectangle)
+    p_recs, p_recs_count := fromlua_array(L, -1, rl.Rectangle, fromlua_Rectangle)
     lua.pop(L, 1)
     lua.getfield(L, idx, "glyphs")
-    glyphs, _ := fromlua_array(L, -1, rl.GlyphInfo, fromlua_GlyphInfo)
+    p_glyphs, p_glyphs_count := fromlua_array(L, -1, rl.GlyphInfo, fromlua_GlyphInfo)
     lua.pop(L, 1)
     return rl.Font {
-        baseSize = baseSize,
-        glyphCount = glyphCount,
-        glyphPadding = glyphPadding,
-        texture = texture,
-        recs = recs,
-        glyphs = glyphs,
+        baseSize = p_baseSize,
+        glyphCount = p_glyphCount,
+        glyphPadding = p_glyphPadding,
+        texture = p_texture,
+        recs = p_recs,
+        glyphs = p_glyphs,
     }
 }
 
@@ -2827,33 +2911,33 @@ tolua_Camera3D :: proc "c" (L: ^lua.State, s: rl.Camera3D, idx: c.int = -99) {
     lua.setfield(L, idx, "up")
     lua.pushnumber(L, lua.Number(s.fovy))
     lua.setfield(L, idx, "fovy")
-    lua.pushinteger(L, lua.Integer(s.projection))
+    lua.pushinteger(L, lua.Integer(cast(rl.CameraProjection)s.projection))
     lua.setfield(L, idx, "projection")
 }
 
 fromlua_Camera3D :: proc "c" (L: ^lua.State, idx: c.int) -> rl.Camera3D {
     context = runtime.default_context()
     lua.getfield(L, idx, "position")
-    position := fromlua_Vector3(L, -1)
+    p_position := fromlua_Vector3(L, -1)
     lua.pop(L, 1)
     lua.getfield(L, idx, "target")
-    target := fromlua_Vector3(L, -1)
+    p_target := fromlua_Vector3(L, -1)
     lua.pop(L, 1)
     lua.getfield(L, idx, "up")
-    up := fromlua_Vector3(L, -1)
+    p_up := fromlua_Vector3(L, -1)
     lua.pop(L, 1)
     lua.getfield(L, idx, "fovy")
-    fovy := c.float(lua.tonumber(L, -1))
+    p_fovy := c.float(lua.tonumber(L, -1))
     lua.pop(L, 1)
     lua.getfield(L, idx, "projection")
-    projection := cast(rl.CameraProjection)c.int(lua.tonumber(L, -1))
+    p_projection := cast(rl.CameraProjection)c.int(lua.tonumber(L, -1))
     lua.pop(L, 1)
     return rl.Camera3D {
-        position = position,
-        target = target,
-        up = up,
-        fovy = fovy,
-        projection = projection,
+        position = p_position,
+        target = p_target,
+        up = p_up,
+        fovy = p_fovy,
+        projection = p_projection,
     }
 }
 
@@ -2877,18 +2961,42 @@ tolua_Camera2D :: proc "c" (L: ^lua.State, s: rl.Camera2D, idx: c.int = -99) {
 fromlua_Camera2D :: proc "c" (L: ^lua.State, idx: c.int) -> rl.Camera2D {
     context = runtime.default_context()
     lua.getfield(L, idx, "offset")
-    offset := fromlua_Vector2(L, -1)
+    p_offset := fromlua_Vector2(L, -1)
     lua.pop(L, 1)
     lua.getfield(L, idx, "target")
-    target := fromlua_Vector2(L, -1)
+    p_target := fromlua_Vector2(L, -1)
     lua.pop(L, 1)
     lua.getfield(L, idx, "rotation")
-    rotation := c.float(lua.tonumber(L, -1))
+    p_rotation := c.float(lua.tonumber(L, -1))
     lua.pop(L, 1)
     lua.getfield(L, idx, "zoom")
-    zoom := c.float(lua.tonumber(L, -1))
+    p_zoom := c.float(lua.tonumber(L, -1))
     lua.pop(L, 1)
-    return rl.Camera2D{offset = offset, target = target, rotation = rotation, zoom = zoom}
+    return rl.Camera2D{offset = p_offset, target = p_target, rotation = p_rotation, zoom = p_zoom}
+}
+
+tolua_Shader :: proc "c" (L: ^lua.State, s: rl.Shader, idx: c.int = -99) {
+    context = runtime.default_context()
+    idx := idx
+    if idx == -99 {
+        lua.newtable(L)
+        idx = -2
+    }
+    lua.pushinteger(L, lua.Integer(s.id))
+    lua.setfield(L, idx, "id")
+    lua.pushlightuserdata(L, cast([^]c.int)s.locs)
+    lua.setfield(L, idx, "locs")
+}
+
+fromlua_Shader :: proc "c" (L: ^lua.State, idx: c.int) -> rl.Shader {
+    context = runtime.default_context()
+    lua.getfield(L, idx, "id")
+    p_id := c.uint(lua.tonumber(L, -1))
+    lua.pop(L, 1)
+    lua.getfield(L, idx, "locs")
+    p_locs := cast([^]c.int)lua.touserdata(L, -1)
+    lua.pop(L, 1)
+    return rl.Shader{id = p_id, locs = p_locs}
 }
 
 tolua_MaterialMap :: proc "c" (L: ^lua.State, s: rl.MaterialMap, idx: c.int = -99) {
@@ -2909,15 +3017,15 @@ tolua_MaterialMap :: proc "c" (L: ^lua.State, s: rl.MaterialMap, idx: c.int = -9
 fromlua_MaterialMap :: proc "c" (L: ^lua.State, idx: c.int) -> rl.MaterialMap {
     context = runtime.default_context()
     lua.getfield(L, idx, "texture")
-    texture := fromlua_Texture2D(L, -1)
+    p_texture := fromlua_Texture2D(L, -1)
     lua.pop(L, 1)
     lua.getfield(L, idx, "color")
-    color := fromlua_Color(L, -1)
+    p_color := fromlua_Color(L, -1)
     lua.pop(L, 1)
     lua.getfield(L, idx, "value")
-    value := c.float(lua.tonumber(L, -1))
+    p_value := c.float(lua.tonumber(L, -1))
     lua.pop(L, 1)
-    return rl.MaterialMap{texture = texture, color = color, value = value}
+    return rl.MaterialMap{texture = p_texture, color = p_color, value = p_value}
 }
 
 tolua_Transform :: proc "c" (L: ^lua.State, s: rl.Transform, idx: c.int = -99) {
@@ -2938,15 +3046,15 @@ tolua_Transform :: proc "c" (L: ^lua.State, s: rl.Transform, idx: c.int = -99) {
 fromlua_Transform :: proc "c" (L: ^lua.State, idx: c.int) -> rl.Transform {
     context = runtime.default_context()
     lua.getfield(L, idx, "translation")
-    translation := fromlua_Vector3(L, -1)
+    p_translation := fromlua_Vector3(L, -1)
     lua.pop(L, 1)
     lua.getfield(L, idx, "rotation")
-    rotation := fromlua_Quaternion(L, -1)
+    p_rotation := fromlua_Quaternion(L, -1)
     lua.pop(L, 1)
     lua.getfield(L, idx, "scale")
-    scale := fromlua_Vector3(L, -1)
+    p_scale := fromlua_Vector3(L, -1)
     lua.pop(L, 1)
-    return rl.Transform{translation = translation, rotation = rotation, scale = scale}
+    return rl.Transform{translation = p_translation, rotation = p_rotation, scale = p_scale}
 }
 
 tolua_Ray :: proc "c" (L: ^lua.State, s: rl.Ray, idx: c.int = -99) {
@@ -2965,12 +3073,12 @@ tolua_Ray :: proc "c" (L: ^lua.State, s: rl.Ray, idx: c.int = -99) {
 fromlua_Ray :: proc "c" (L: ^lua.State, idx: c.int) -> rl.Ray {
     context = runtime.default_context()
     lua.getfield(L, idx, "position")
-    position := fromlua_Vector3(L, -1)
+    p_position := fromlua_Vector3(L, -1)
     lua.pop(L, 1)
     lua.getfield(L, idx, "direction")
-    direction := fromlua_Vector3(L, -1)
+    p_direction := fromlua_Vector3(L, -1)
     lua.pop(L, 1)
-    return rl.Ray{position = position, direction = direction}
+    return rl.Ray{position = p_position, direction = p_direction}
 }
 
 tolua_RayCollision :: proc "c" (L: ^lua.State, s: rl.RayCollision, idx: c.int = -99) {
@@ -2993,18 +3101,18 @@ tolua_RayCollision :: proc "c" (L: ^lua.State, s: rl.RayCollision, idx: c.int = 
 fromlua_RayCollision :: proc "c" (L: ^lua.State, idx: c.int) -> rl.RayCollision {
     context = runtime.default_context()
     lua.getfield(L, idx, "hit")
-    hit := c.bool(lua.toboolean(L, -1))
+    p_hit := c.bool(lua.toboolean(L, -1))
     lua.pop(L, 1)
     lua.getfield(L, idx, "distance")
-    distance := c.float(lua.tonumber(L, -1))
+    p_distance := c.float(lua.tonumber(L, -1))
     lua.pop(L, 1)
     lua.getfield(L, idx, "point")
-    point := fromlua_Vector3(L, -1)
+    p_point := fromlua_Vector3(L, -1)
     lua.pop(L, 1)
     lua.getfield(L, idx, "normal")
-    normal := fromlua_Vector3(L, -1)
+    p_normal := fromlua_Vector3(L, -1)
     lua.pop(L, 1)
-    return rl.RayCollision{hit = hit, distance = distance, point = point, normal = normal}
+    return rl.RayCollision{hit = p_hit, distance = p_distance, point = p_point, normal = p_normal}
 }
 
 tolua_BoundingBox :: proc "c" (L: ^lua.State, s: rl.BoundingBox, idx: c.int = -99) {
@@ -3023,12 +3131,12 @@ tolua_BoundingBox :: proc "c" (L: ^lua.State, s: rl.BoundingBox, idx: c.int = -9
 fromlua_BoundingBox :: proc "c" (L: ^lua.State, idx: c.int) -> rl.BoundingBox {
     context = runtime.default_context()
     lua.getfield(L, idx, "min")
-    min := fromlua_Vector3(L, -1)
+    p_min := fromlua_Vector3(L, -1)
     lua.pop(L, 1)
     lua.getfield(L, idx, "max")
-    max := fromlua_Vector3(L, -1)
+    p_max := fromlua_Vector3(L, -1)
     lua.pop(L, 1)
-    return rl.BoundingBox{min = min, max = max}
+    return rl.BoundingBox{min = p_min, max = p_max}
 }
 
 tolua_Wave :: proc "c" (L: ^lua.State, s: rl.Wave, idx: c.int = -99) {
@@ -3053,26 +3161,26 @@ tolua_Wave :: proc "c" (L: ^lua.State, s: rl.Wave, idx: c.int = -99) {
 fromlua_Wave :: proc "c" (L: ^lua.State, idx: c.int) -> rl.Wave {
     context = runtime.default_context()
     lua.getfield(L, idx, "frameCount")
-    frameCount := c.uint(lua.tonumber(L, -1))
+    p_frameCount := c.uint(lua.tonumber(L, -1))
     lua.pop(L, 1)
     lua.getfield(L, idx, "sampleRate")
-    sampleRate := c.uint(lua.tonumber(L, -1))
+    p_sampleRate := c.uint(lua.tonumber(L, -1))
     lua.pop(L, 1)
     lua.getfield(L, idx, "sampleSize")
-    sampleSize := c.uint(lua.tonumber(L, -1))
+    p_sampleSize := c.uint(lua.tonumber(L, -1))
     lua.pop(L, 1)
     lua.getfield(L, idx, "channels")
-    channels := c.uint(lua.tonumber(L, -1))
+    p_channels := c.uint(lua.tonumber(L, -1))
     lua.pop(L, 1)
     lua.getfield(L, idx, "data")
-    data := lua.touserdata(L, -1)
+    p_data := lua.touserdata(L, -1)
     lua.pop(L, 1)
     return rl.Wave {
-        frameCount = frameCount,
-        sampleRate = sampleRate,
-        sampleSize = sampleSize,
-        channels = channels,
-        data = data,
+        frameCount = p_frameCount,
+        sampleRate = p_sampleRate,
+        sampleSize = p_sampleSize,
+        channels = p_channels,
+        data = p_data,
     }
 }
 
@@ -3098,26 +3206,26 @@ tolua_AudioStream :: proc "c" (L: ^lua.State, s: rl.AudioStream, idx: c.int = -9
 fromlua_AudioStream :: proc "c" (L: ^lua.State, idx: c.int) -> rl.AudioStream {
     context = runtime.default_context()
     lua.getfield(L, idx, "buffer")
-    buffer := lua.touserdata(L, -1)
+    p_buffer := lua.touserdata(L, -1)
     lua.pop(L, 1)
     lua.getfield(L, idx, "processor")
-    processor := lua.touserdata(L, -1)
+    p_processor := lua.touserdata(L, -1)
     lua.pop(L, 1)
     lua.getfield(L, idx, "sampleRate")
-    sampleRate := c.uint(lua.tonumber(L, -1))
+    p_sampleRate := c.uint(lua.tonumber(L, -1))
     lua.pop(L, 1)
     lua.getfield(L, idx, "sampleSize")
-    sampleSize := c.uint(lua.tonumber(L, -1))
+    p_sampleSize := c.uint(lua.tonumber(L, -1))
     lua.pop(L, 1)
     lua.getfield(L, idx, "channels")
-    channels := c.uint(lua.tonumber(L, -1))
+    p_channels := c.uint(lua.tonumber(L, -1))
     lua.pop(L, 1)
     return rl.AudioStream {
-        buffer = buffer,
-        processor = processor,
-        sampleRate = sampleRate,
-        sampleSize = sampleSize,
-        channels = channels,
+        buffer = p_buffer,
+        processor = p_processor,
+        sampleRate = p_sampleRate,
+        sampleSize = p_sampleSize,
+        channels = p_channels,
     }
 }
 
@@ -3137,12 +3245,12 @@ tolua_Sound :: proc "c" (L: ^lua.State, s: rl.Sound, idx: c.int = -99) {
 fromlua_Sound :: proc "c" (L: ^lua.State, idx: c.int) -> rl.Sound {
     context = runtime.default_context()
     lua.getfield(L, idx, "stream")
-    stream := fromlua_AudioStream(L, -1)
+    p_stream := fromlua_AudioStream(L, -1)
     lua.pop(L, 1)
     lua.getfield(L, idx, "frameCount")
-    frameCount := c.uint(lua.tonumber(L, -1))
+    p_frameCount := c.uint(lua.tonumber(L, -1))
     lua.pop(L, 1)
-    return rl.Sound{stream = stream, frameCount = frameCount}
+    return rl.Sound{stream = p_stream, frameCount = p_frameCount}
 }
 
 tolua_Music :: proc "c" (L: ^lua.State, s: rl.Music, idx: c.int = -99) {
@@ -3167,26 +3275,26 @@ tolua_Music :: proc "c" (L: ^lua.State, s: rl.Music, idx: c.int = -99) {
 fromlua_Music :: proc "c" (L: ^lua.State, idx: c.int) -> rl.Music {
     context = runtime.default_context()
     lua.getfield(L, idx, "stream")
-    stream := fromlua_AudioStream(L, -1)
+    p_stream := fromlua_AudioStream(L, -1)
     lua.pop(L, 1)
     lua.getfield(L, idx, "frameCount")
-    frameCount := c.uint(lua.tonumber(L, -1))
+    p_frameCount := c.uint(lua.tonumber(L, -1))
     lua.pop(L, 1)
     lua.getfield(L, idx, "looping")
-    looping := c.bool(lua.toboolean(L, -1))
+    p_looping := c.bool(lua.toboolean(L, -1))
     lua.pop(L, 1)
     lua.getfield(L, idx, "ctxType")
-    ctxType := c.int(lua.tonumber(L, -1))
+    p_ctxType := c.int(lua.tonumber(L, -1))
     lua.pop(L, 1)
     lua.getfield(L, idx, "ctxData")
-    ctxData := lua.touserdata(L, -1)
+    p_ctxData := lua.touserdata(L, -1)
     lua.pop(L, 1)
     return rl.Music {
-        stream = stream,
-        frameCount = frameCount,
-        looping = looping,
-        ctxType = ctxType,
-        ctxData = ctxData,
+        stream = p_stream,
+        frameCount = p_frameCount,
+        looping = p_looping,
+        ctxType = p_ctxType,
+        ctxData = p_ctxData,
     }
 }
 
@@ -3201,22 +3309,22 @@ tolua_FilePathList :: proc "c" (L: ^lua.State, s: rl.FilePathList, idx: c.int = 
     lua.setfield(L, idx, "capacity")
     lua.pushinteger(L, lua.Integer(s.count))
     lua.setfield(L, idx, "count")
-    lua.pushlightuserdata(L, s.paths)
+    lua.pushlightuserdata(L, transmute([^]cstring)s.paths)
     lua.setfield(L, idx, "paths")
 }
 
 fromlua_FilePathList :: proc "c" (L: ^lua.State, idx: c.int) -> rl.FilePathList {
     context = runtime.default_context()
     lua.getfield(L, idx, "capacity")
-    capacity := c.uint(lua.tonumber(L, -1))
+    p_capacity := c.uint(lua.tonumber(L, -1))
     lua.pop(L, 1)
     lua.getfield(L, idx, "count")
-    count := c.uint(lua.tonumber(L, -1))
+    p_count := c.uint(lua.tonumber(L, -1))
     lua.pop(L, 1)
     lua.getfield(L, idx, "paths")
-    paths := transmute([^]cstring)lua.touserdata(L, -1)
+    p_paths := transmute([^]cstring)lua.touserdata(L, -1)
     lua.pop(L, 1)
-    return rl.FilePathList{capacity = capacity, count = count, paths = paths}
+    return rl.FilePathList{capacity = p_capacity, count = p_count, paths = p_paths}
 }
 
 tolua_Quaternion :: proc "c" (L: ^lua.State, s: rl.Quaternion, idx: c.int = -99) {
@@ -3416,9 +3524,9 @@ lua_SetWindowIcon :: proc "c" (L: ^lua.State) -> c.int {
 @(private)
 lua_SetWindowIcons :: proc "c" (L: ^lua.State) -> c.int {
     context = runtime.default_context()
-    p_images, p_count := fromlua_array(L, 1, rl.Image, fromlua_Image)
+    p_images, p_images_count := fromlua_array(L, 1, rl.Image, fromlua_Image)
 
-    rl.SetWindowIcons(p_images, p_count)
+    rl.SetWindowIcons(p_images, p_images_count)
 
     return 0
 }
@@ -3786,6 +3894,15 @@ lua_EndTextureMode :: proc "c" (L: ^lua.State) -> c.int {
 }
 
 @(private)
+lua_BeginShaderMode :: proc "c" (L: ^lua.State) -> c.int {
+    p_shader := fromlua_Shader(L, 1)
+
+    rl.BeginShaderMode(p_shader)
+
+    return 0
+}
+
+@(private)
 lua_EndShaderMode :: proc "c" (L: ^lua.State) -> c.int {
     rl.EndShaderMode()
 
@@ -3830,6 +3947,116 @@ lua_EndScissorMode :: proc "c" (L: ^lua.State) -> c.int {
 @(private)
 lua_EndVrStereoMode :: proc "c" (L: ^lua.State) -> c.int {
     rl.EndVrStereoMode()
+
+    return 0
+}
+
+@(private)
+lua_LoadShader :: proc "c" (L: ^lua.State) -> c.int {
+    p_vsFileName := lua.tostring(L, 1)
+    p_fsFileName := lua.tostring(L, 2)
+
+    result := rl.LoadShader(p_vsFileName, p_fsFileName)
+
+    tolua_Shader(L, result)
+    return 1
+}
+
+@(private)
+lua_LoadShaderFromMemory :: proc "c" (L: ^lua.State) -> c.int {
+    p_vsCode := lua.tostring(L, 1)
+    p_fsCode := lua.tostring(L, 2)
+
+    result := rl.LoadShaderFromMemory(p_vsCode, p_fsCode)
+
+    tolua_Shader(L, result)
+    return 1
+}
+
+@(private)
+lua_IsShaderValid :: proc "c" (L: ^lua.State) -> c.int {
+    p_shader := fromlua_Shader(L, 1)
+
+    result := rl.IsShaderValid(p_shader)
+
+    lua.pushboolean(L, b32(result))
+    return 1
+}
+
+@(private)
+lua_GetShaderLocation :: proc "c" (L: ^lua.State) -> c.int {
+    p_shader := fromlua_Shader(L, 1)
+    p_uniformName := lua.tostring(L, 2)
+
+    result := rl.GetShaderLocation(p_shader, p_uniformName)
+
+    lua.pushinteger(L, lua.Integer(result))
+    return 1
+}
+
+@(private)
+lua_GetShaderLocationAttrib :: proc "c" (L: ^lua.State) -> c.int {
+    p_shader := fromlua_Shader(L, 1)
+    p_attribName := lua.tostring(L, 2)
+
+    result := rl.GetShaderLocationAttrib(p_shader, p_attribName)
+
+    lua.pushinteger(L, lua.Integer(result))
+    return 1
+}
+
+@(private)
+lua_SetShaderValue :: proc "c" (L: ^lua.State) -> c.int {
+    p_shader := fromlua_Shader(L, 1)
+    p_locIndex := c.int(lua.tonumber(L, 2))
+    p_uniformType := cast(rl.ShaderUniformDataType)c.int(lua.tonumber(L, 4))
+    p_value := fromlua_shader_value(L, 3, p_uniformType)
+
+    rl.SetShaderValue(p_shader, p_locIndex, &p_value, p_uniformType)
+
+    return 0
+}
+
+@(private)
+lua_SetShaderValueV :: proc "c" (L: ^lua.State) -> c.int {
+    p_shader := fromlua_Shader(L, 1)
+    p_locIndex := c.int(lua.tonumber(L, 2))
+    p_uniformType := cast(rl.ShaderUniformDataType)c.int(lua.tonumber(L, 4))
+    p_value := fromlua_shader_value(L, 3, p_uniformType)
+    p_count := c.int(lua.tonumber(L, 5))
+
+    rl.SetShaderValueV(p_shader, p_locIndex, &p_value, p_uniformType, p_count)
+
+    return 0
+}
+
+@(private)
+lua_SetShaderValueMatrix :: proc "c" (L: ^lua.State) -> c.int {
+    p_shader := fromlua_Shader(L, 1)
+    p_locIndex := c.int(lua.tonumber(L, 2))
+    p_mat := fromlua_Matrix(L, 3)
+
+    rl.SetShaderValueMatrix(p_shader, p_locIndex, p_mat)
+
+    return 0
+}
+
+@(private)
+lua_SetShaderValueTexture :: proc "c" (L: ^lua.State) -> c.int {
+    p_shader := fromlua_Shader(L, 1)
+    p_locIndex := c.int(lua.tonumber(L, 2))
+    p_texture := fromlua_Texture2D(L, 3)
+
+    rl.SetShaderValueTexture(p_shader, p_locIndex, p_texture)
+
+    return 0
+}
+
+@(private)
+lua_UnloadShader :: proc "c" (L: ^lua.State) -> c.int {
+    p_shader := fromlua_Shader(L, 1)
+
+    rl.UnloadShader(p_shader)
 
     return 0
 }
@@ -4832,10 +5059,10 @@ lua_DrawLineEx :: proc "c" (L: ^lua.State) -> c.int {
 @(private)
 lua_DrawLineStrip :: proc "c" (L: ^lua.State) -> c.int {
     context = runtime.default_context()
-    p_points, p_pointCount := fromlua_array(L, 1, rl.Vector2, fromlua_Vector2)
+    p_points, p_points_count := fromlua_array(L, 1, rl.Vector2, fromlua_Vector2)
     p_color := fromlua_Color(L, 2)
 
-    rl.DrawLineStrip(p_points, p_pointCount, p_color)
+    rl.DrawLineStrip(p_points, p_points_count, p_color)
 
     return 0
 }
@@ -5186,10 +5413,10 @@ lua_DrawTriangleLines :: proc "c" (L: ^lua.State) -> c.int {
 @(private)
 lua_DrawTriangleFan :: proc "c" (L: ^lua.State) -> c.int {
     context = runtime.default_context()
-    p_points, p_pointCount := fromlua_array(L, 1, rl.Vector2, fromlua_Vector2)
+    p_points, p_points_count := fromlua_array(L, 1, rl.Vector2, fromlua_Vector2)
     p_color := fromlua_Color(L, 2)
 
-    rl.DrawTriangleFan(p_points, p_pointCount, p_color)
+    rl.DrawTriangleFan(p_points, p_points_count, p_color)
 
     return 0
 }
@@ -5197,10 +5424,10 @@ lua_DrawTriangleFan :: proc "c" (L: ^lua.State) -> c.int {
 @(private)
 lua_DrawTriangleStrip :: proc "c" (L: ^lua.State) -> c.int {
     context = runtime.default_context()
-    p_points, p_pointCount := fromlua_array(L, 1, rl.Vector2, fromlua_Vector2)
+    p_points, p_points_count := fromlua_array(L, 1, rl.Vector2, fromlua_Vector2)
     p_color := fromlua_Color(L, 2)
 
-    rl.DrawTriangleStrip(p_points, p_pointCount, p_color)
+    rl.DrawTriangleStrip(p_points, p_points_count, p_color)
 
     return 0
 }
@@ -5248,11 +5475,11 @@ lua_DrawPolyLinesEx :: proc "c" (L: ^lua.State) -> c.int {
 @(private)
 lua_DrawSplineLinear :: proc "c" (L: ^lua.State) -> c.int {
     context = runtime.default_context()
-    p_points, p_pointCount := fromlua_array(L, 1, rl.Vector2, fromlua_Vector2)
+    p_points, p_points_count := fromlua_array(L, 1, rl.Vector2, fromlua_Vector2)
     p_thick := c.float(lua.tonumber(L, 2))
     p_color := fromlua_Color(L, 3)
 
-    rl.DrawSplineLinear(p_points, p_pointCount, p_thick, p_color)
+    rl.DrawSplineLinear(p_points, p_points_count, p_thick, p_color)
 
     return 0
 }
@@ -5260,11 +5487,11 @@ lua_DrawSplineLinear :: proc "c" (L: ^lua.State) -> c.int {
 @(private)
 lua_DrawSplineBasis :: proc "c" (L: ^lua.State) -> c.int {
     context = runtime.default_context()
-    p_points, p_pointCount := fromlua_array(L, 1, rl.Vector2, fromlua_Vector2)
+    p_points, p_points_count := fromlua_array(L, 1, rl.Vector2, fromlua_Vector2)
     p_thick := c.float(lua.tonumber(L, 2))
     p_color := fromlua_Color(L, 3)
 
-    rl.DrawSplineBasis(p_points, p_pointCount, p_thick, p_color)
+    rl.DrawSplineBasis(p_points, p_points_count, p_thick, p_color)
 
     return 0
 }
@@ -5272,11 +5499,11 @@ lua_DrawSplineBasis :: proc "c" (L: ^lua.State) -> c.int {
 @(private)
 lua_DrawSplineCatmullRom :: proc "c" (L: ^lua.State) -> c.int {
     context = runtime.default_context()
-    p_points, p_pointCount := fromlua_array(L, 1, rl.Vector2, fromlua_Vector2)
+    p_points, p_points_count := fromlua_array(L, 1, rl.Vector2, fromlua_Vector2)
     p_thick := c.float(lua.tonumber(L, 2))
     p_color := fromlua_Color(L, 3)
 
-    rl.DrawSplineCatmullRom(p_points, p_pointCount, p_thick, p_color)
+    rl.DrawSplineCatmullRom(p_points, p_points_count, p_thick, p_color)
 
     return 0
 }
@@ -5284,11 +5511,11 @@ lua_DrawSplineCatmullRom :: proc "c" (L: ^lua.State) -> c.int {
 @(private)
 lua_DrawSplineBezierQuadratic :: proc "c" (L: ^lua.State) -> c.int {
     context = runtime.default_context()
-    p_points, p_pointCount := fromlua_array(L, 1, rl.Vector2, fromlua_Vector2)
+    p_points, p_points_count := fromlua_array(L, 1, rl.Vector2, fromlua_Vector2)
     p_thick := c.float(lua.tonumber(L, 2))
     p_color := fromlua_Color(L, 3)
 
-    rl.DrawSplineBezierQuadratic(p_points, p_pointCount, p_thick, p_color)
+    rl.DrawSplineBezierQuadratic(p_points, p_points_count, p_thick, p_color)
 
     return 0
 }
@@ -5296,11 +5523,11 @@ lua_DrawSplineBezierQuadratic :: proc "c" (L: ^lua.State) -> c.int {
 @(private)
 lua_DrawSplineBezierCubic :: proc "c" (L: ^lua.State) -> c.int {
     context = runtime.default_context()
-    p_points, p_pointCount := fromlua_array(L, 1, rl.Vector2, fromlua_Vector2)
+    p_points, p_points_count := fromlua_array(L, 1, rl.Vector2, fromlua_Vector2)
     p_thick := c.float(lua.tonumber(L, 2))
     p_color := fromlua_Color(L, 3)
 
-    rl.DrawSplineBezierCubic(p_points, p_pointCount, p_thick, p_color)
+    rl.DrawSplineBezierCubic(p_points, p_points_count, p_thick, p_color)
 
     return 0
 }
@@ -5541,9 +5768,9 @@ lua_CheckCollisionPointLine :: proc "c" (L: ^lua.State) -> c.int {
 lua_CheckCollisionPointPoly :: proc "c" (L: ^lua.State) -> c.int {
     p_point := fromlua_Vector2(L, 1)
     context = runtime.default_context()
-    p_points, p_pointCount := fromlua_array(L, 2, rl.Vector2, fromlua_Vector2)
+    p_points, p_points_count := fromlua_array(L, 2, rl.Vector2, fromlua_Vector2)
 
-    result := rl.CheckCollisionPointPoly(p_point, p_points, p_pointCount)
+    result := rl.CheckCollisionPointPoly(p_point, p_points, p_points_count)
 
     lua.pushboolean(L, b32(result))
     return 1
@@ -6350,10 +6577,10 @@ lua_ImageDrawTriangleLines :: proc "c" (L: ^lua.State) -> c.int {
 lua_ImageDrawTriangleFan :: proc "c" (L: ^lua.State) -> c.int {
     p_dst := fromlua_Image(L, 1)
     context = runtime.default_context()
-    p_points, p_pointCount := fromlua_array(L, 2, rl.Vector2, fromlua_Vector2)
+    p_points, p_points_count := fromlua_array(L, 2, rl.Vector2, fromlua_Vector2)
     p_color := fromlua_Color(L, 3)
 
-    rl.ImageDrawTriangleFan(&p_dst, p_points, p_pointCount, p_color)
+    rl.ImageDrawTriangleFan(&p_dst, p_points, p_points_count, p_color)
 
     tolua_Image(L, p_dst, 1)
     return 0
@@ -6363,10 +6590,10 @@ lua_ImageDrawTriangleFan :: proc "c" (L: ^lua.State) -> c.int {
 lua_ImageDrawTriangleStrip :: proc "c" (L: ^lua.State) -> c.int {
     p_dst := fromlua_Image(L, 1)
     context = runtime.default_context()
-    p_points, p_pointCount := fromlua_array(L, 2, rl.Vector2, fromlua_Vector2)
+    p_points, p_points_count := fromlua_array(L, 2, rl.Vector2, fromlua_Vector2)
     p_color := fromlua_Color(L, 3)
 
-    rl.ImageDrawTriangleStrip(&p_dst, p_points, p_pointCount, p_color)
+    rl.ImageDrawTriangleStrip(&p_dst, p_points, p_points_count, p_color)
 
     tolua_Image(L, p_dst, 1)
     return 0
@@ -6493,6 +6720,27 @@ lua_UnloadRenderTexture :: proc "c" (L: ^lua.State) -> c.int {
     p_target := fromlua_RenderTexture2D(L, 1)
 
     rl.UnloadRenderTexture(p_target)
+
+    return 0
+}
+
+@(private)
+lua_UpdateTexture :: proc "c" (L: ^lua.State) -> c.int {
+    p_texture := fromlua_Texture2D(L, 1)
+    p_pixels := lua.touserdata(L, 2)
+
+    rl.UpdateTexture(p_texture, p_pixels)
+
+    return 0
+}
+
+@(private)
+lua_UpdateTextureRec :: proc "c" (L: ^lua.State) -> c.int {
+    p_texture := fromlua_Texture2D(L, 1)
+    p_rec := fromlua_Rectangle(L, 2)
+    p_pixels := lua.touserdata(L, 3)
+
+    rl.UpdateTextureRec(p_texture, p_rec, p_pixels)
 
     return 0
 }
@@ -6799,9 +7047,9 @@ lua_IsFontValid :: proc "c" (L: ^lua.State) -> c.int {
 @(private)
 lua_UnloadFontData :: proc "c" (L: ^lua.State) -> c.int {
     context = runtime.default_context()
-    p_glyphs, p_glyphCount := fromlua_array(L, 1, rl.GlyphInfo, fromlua_GlyphInfo)
+    p_glyphs, p_glyphs_count := fromlua_array(L, 1, rl.GlyphInfo, fromlua_GlyphInfo)
 
-    rl.UnloadFontData(p_glyphs, p_glyphCount)
+    rl.UnloadFontData(p_glyphs, p_glyphs_count)
 
     return 0
 }
@@ -7110,10 +7358,10 @@ lua_DrawTriangle3D :: proc "c" (L: ^lua.State) -> c.int {
 @(private)
 lua_DrawTriangleStrip3D :: proc "c" (L: ^lua.State) -> c.int {
     context = runtime.default_context()
-    p_points, p_pointCount := fromlua_array(L, 1, rl.Vector3, fromlua_Vector3)
+    p_points, p_points_count := fromlua_array(L, 1, rl.Vector3, fromlua_Vector3)
     p_color := fromlua_Color(L, 2)
 
-    rl.DrawTriangleStrip3D(p_points, p_pointCount, p_color)
+    rl.DrawTriangleStrip3D(p_points, p_points_count, p_color)
 
     return 0
 }
@@ -7568,6 +7816,17 @@ lua_IsSoundValid :: proc "c" (L: ^lua.State) -> c.int {
 }
 
 @(private)
+lua_UpdateSound :: proc "c" (L: ^lua.State) -> c.int {
+    p_sound := fromlua_Sound(L, 1)
+    p_data := lua.touserdata(L, 2)
+    p_sampleCount := c.int(lua.tonumber(L, 3))
+
+    rl.UpdateSound(p_sound, p_data, p_sampleCount)
+
+    return 0
+}
+
+@(private)
 lua_UnloadWave :: proc "c" (L: ^lua.State) -> c.int {
     p_wave := fromlua_Wave(L, 1)
 
@@ -7878,6 +8137,17 @@ lua_UnloadAudioStream :: proc "c" (L: ^lua.State) -> c.int {
 }
 
 @(private)
+lua_UpdateAudioStream :: proc "c" (L: ^lua.State) -> c.int {
+    p_stream := fromlua_AudioStream(L, 1)
+    p_data := lua.touserdata(L, 2)
+    p_frameCount := c.int(lua.tonumber(L, 3))
+
+    rl.UpdateAudioStream(p_stream, p_data, p_frameCount)
+
+    return 0
+}
+
+@(private)
 lua_IsAudioStreamProcessed :: proc "c" (L: ^lua.State) -> c.int {
     p_stream := fromlua_AudioStream(L, 1)
 
@@ -7971,3 +8241,4 @@ lua_SetAudioStreamBufferSizeDefault :: proc "c" (L: ^lua.State) -> c.int {
 
     return 0
 }
+

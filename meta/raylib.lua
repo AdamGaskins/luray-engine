@@ -437,6 +437,10 @@ function _destroy() end
 ---@field rotation number Camera rotation in degrees
 ---@field zoom number Camera zoom (scaling), should be 1.0f by default
 
+---@class Raylib.Shader
+---@field id integer Shader program id
+---@field locs any Shader locations array (RL_MAX_SHADER_LOCATIONS)
+
 ---@class Raylib.MaterialMap
 ---@field texture Raylib.Texture2D Material map texture
 ---@field color Raylib.Color Material map color
@@ -749,6 +753,10 @@ function ray.BeginTextureMode(target) end
 ---Ends drawing to render texture
 function ray.EndTextureMode() end
 
+---Begin custom shader drawing
+---@param shader Raylib.Shader
+function ray.BeginShaderMode(shader) end
+
 ---End custom shader drawing (use default shader)
 function ray.EndShaderMode() end
 
@@ -771,6 +779,66 @@ function ray.EndScissorMode() end
 
 ---End stereo rendering (requires VR simulator)
 function ray.EndVrStereoMode() end
+
+---Load shader from files and bind default locations
+---@param vsFileName string
+---@param fsFileName string
+---@return Raylib.Shader
+function ray.LoadShader(vsFileName, fsFileName) end
+
+---Load shader from code strings and bind default locations
+---@param vsCode string
+---@param fsCode string
+---@return Raylib.Shader
+function ray.LoadShaderFromMemory(vsCode, fsCode) end
+
+---Check if a shader is valid (loaded on GPU)
+---@param shader Raylib.Shader
+---@return boolean
+function ray.IsShaderValid(shader) end
+
+---Get shader uniform location
+---@param shader Raylib.Shader
+---@param uniformName string
+---@return integer
+function ray.GetShaderLocation(shader, uniformName) end
+
+---Get shader attribute location
+---@param shader Raylib.Shader
+---@param attribName string
+---@return integer
+function ray.GetShaderLocationAttrib(shader, attribName) end
+
+---Set shader uniform value
+---@param shader Raylib.Shader
+---@param locIndex integer
+---@param value any
+---@param uniformType integer
+function ray.SetShaderValue(shader, locIndex, value, uniformType) end
+
+---Set shader uniform value vector
+---@param shader Raylib.Shader
+---@param locIndex integer
+---@param value any
+---@param uniformType integer
+---@param count integer
+function ray.SetShaderValueV(shader, locIndex, value, uniformType, count) end
+
+---Set shader uniform value (matrix 4x4)
+---@param shader Raylib.Shader
+---@param locIndex integer
+---@param mat Raylib.Matrix
+function ray.SetShaderValueMatrix(shader, locIndex, mat) end
+
+---Set shader uniform value for texture (sampler2d)
+---@param shader Raylib.Shader
+---@param locIndex integer
+---@param texture Raylib.Texture2D
+function ray.SetShaderValueTexture(shader, locIndex, texture) end
+
+---Unload shader from GPU memory (VRAM)
+---@param shader Raylib.Shader
+function ray.UnloadShader(shader) end
 
 ---Get a ray trace from screen position (i.e mouse)
 ---@param position Raylib.Vector2
@@ -2189,6 +2257,17 @@ function ray.IsRenderTextureValid(target) end
 ---@param target Raylib.RenderTexture2D
 function ray.UnloadRenderTexture(target) end
 
+---Update GPU texture with new data
+---@param texture Raylib.Texture2D
+---@param pixels any
+function ray.UpdateTexture(texture, pixels) end
+
+---Update GPU texture rectangle with new data
+---@param texture Raylib.Texture2D
+---@param rec Raylib.Rectangle
+---@param pixels any
+function ray.UpdateTextureRec(texture, rec, pixels) end
+
 ---Generate GPU mipmaps for a texture
 ---@param texture Raylib.Texture2D
 function ray.GenTextureMipmaps(texture) end
@@ -2781,6 +2860,12 @@ function ray.LoadSoundAlias(source) end
 ---@return boolean
 function ray.IsSoundValid(sound) end
 
+---Update sound buffer with new data
+---@param sound Raylib.Sound
+---@param data any
+---@param sampleCount integer
+function ray.UpdateSound(sound, data, sampleCount) end
+
 ---Unload wave data
 ---@param wave Raylib.Wave
 function ray.UnloadWave(wave) end
@@ -2930,6 +3015,12 @@ function ray.IsAudioStreamValid(stream) end
 ---Unload audio stream and free memory
 ---@param stream Raylib.AudioStream
 function ray.UnloadAudioStream(stream) end
+
+---Update audio stream buffers with data
+---@param stream Raylib.AudioStream
+---@param data any
+---@param frameCount integer
+function ray.UpdateAudioStream(stream, data, frameCount) end
 
 ---Check if any audio stream buffers requires refill
 ---@param stream Raylib.AudioStream

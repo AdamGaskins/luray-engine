@@ -1,6 +1,8 @@
 package main
 
+import "base:runtime"
 import "core:c"
+import "core:fmt"
 import lua "vendor:lua/5.4"
 import rl "vendor:raylib"
 
@@ -44,6 +46,27 @@ fromlua_array :: proc(
         lua.pop(L, 1)
     }
     return arr, n
+}
+
+fromlua_shader_value :: proc "c" (
+    L: ^lua.State,
+    idx: c.int,
+    type: rl.ShaderUniformDataType,
+) -> any {
+    context = runtime.default_context()
+    if type == rl.ShaderUniformDataType.FLOAT {
+        return fromlua_float(L, idx)
+    } else if type == rl.ShaderUniformDataType.INT {
+        return fromlua_int(L, idx)
+    } else if type == rl.ShaderUniformDataType.VEC2 {
+        return fromlua_int(L, idx)
+    } else if type == rl.ShaderUniformDataType.VEC3 {
+        return fromlua_int(L, idx)
+    } else if type == rl.ShaderUniformDataType.VEC4 {
+        return fromlua_int(L, idx)
+    }
+    fmt.printfln("Unsupported shader type: %v", type)
+    return 0
 }
 
 tolua_ptr :: proc "c" (L: ^lua.State, pointer: ^$T) {

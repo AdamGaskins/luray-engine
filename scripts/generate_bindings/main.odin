@@ -45,6 +45,7 @@ function _destroy() end
     )
 
 
+    write_primitive_helpers(w_defs)
     write_struct_helpers(w_defs, w_binds, w_docs, api["structs"].(json.Array))
     write_struct_aliases(w_defs, w_binds, w_docs, api["aliases"].(json.Array))
     write_functions(w_defs, w_binds, w_docs, api["functions"].(json.Array))
@@ -259,18 +260,36 @@ func__write_definition :: proc(w: io.Writer, funcDef: Function) {
         ptr_array, is_ptr_array := funcparam__is_ptr_array(funcDef.name, param.name)
         if (isptr) do ptrstr = "&"
 
-        append(&parameterNamesPrefixed, fmt.tprintf("%vp_%v", ptrstr, param.name))
         // ptr_array: ^ParamArrayPointer = nil
-        if is_ptr_array {
-            append(&parameterNamesPrefixed, fmt.tprintf("p_%v", ptr_array.countParam))
-
+        if (funcDef.name == "SetShaderValue" || funcDef.name == "SetShaderValueV") &&
+           param.name == "value" {
+            ptrstr = "&"
+            code, is_multiple := gencode_value_from_lua(
+                "int",
+                idx + 1,
+                funcDef.name,
+                "uniformType",
+            )
+            fmt.wprintfln(w, "    %v", code)
+            fmt.wprintfln(
+                w,
+                "    p_%v := fromlua_shader_value(L, %v, p_uniformType)",
+                param.name,
+                idx,
+            )
+            // TODO: get the value by type in 'code'
+        } else if (funcDef.name == "SetShaderValue" || funcDef.name == "SetShaderValueV") &&
+           param.name == "uniformType" {
+            // skip, handled just above
+        } else if is_ptr_array {
+            // TODO: this branch needs to be replaced with a gencode function
             fmt.wprintfln(w, "    context = runtime.default_context()")
             t := trim_c_type(param.type)
             fmt.wprintfln(
                 w,
-                "    p_%v, p_%v := fromlua_array(L, %v, %v, fromlua_%v)",
+                "    p_%v, p_%v_count := fromlua_array(L, %v, %v, fromlua_%v)",
                 ptr_array.arrayParam,
-                ptr_array.countParam,
+                ptr_array.arrayParam,
                 idx,
                 prefix_c_type(t),
                 t,
@@ -278,12 +297,13 @@ func__write_definition :: proc(w: io.Writer, funcDef: Function) {
 
             idx_offset = idx_offset - 1
         } else {
-            fmt.wprintfln(
-                w,
-                "    p_%v := %v",
-                param.name,
-                gencode_value_from_lua(param.type, idx, funcDef.name, param.name),
-            )
+            code, is_multiple := gencode_value_from_lua(param.type, idx, funcDef.name, param.name)
+            fmt.wprintfln(w, "    %v", code)
+        }
+
+        append(&parameterNamesPrefixed, fmt.tprintf("%vp_%v", ptrstr, param.name))
+        if is_ptr_array {
+            append(&parameterNamesPrefixed, fmt.tprintf("p_%v_count", param.name))
         }
     }
 
@@ -337,36 +357,6 @@ func__write_definition :: proc(w: io.Writer, funcDef: Function) {
     fmt.wprintfln(w, "}")
     fmt.wprintfln(w, "")
 }
-funcparam__is_ptr_array_count :: proc(source: string, source_param: string) -> bool {
-    for p in param_array_pointers {
-        if p.source == source && p.countParam == source_param {
-            return true
-        }
-    }
-    return false
-}
-funcparam__is_ptr_array :: proc(
-    source: string,
-    source_param: string,
-) -> (
-    ParamArrayPointer,
-    bool,
-) {
-    for p in param_array_pointers {
-        if p.source == source && p.arrayParam == source_param {
-            return p, true
-        }
-    }
-    return ParamArrayPointer{}, false
-}
-func__auto_free_statement :: proc(funcName: string) -> (AutoFree, bool) {
-    for p in auto_free_statements {
-        if p.funcName == funcName {
-            return p, true
-        }
-    }
-    return AutoFree{}, false
-}
 
 func__write_docs :: proc(w: io.Writer, funcDef: Function) {
     fmt.wprintfln(w, "---%v", funcDef.description)
@@ -400,6 +390,33 @@ func__write_docs :: proc(w: io.Writer, funcDef: Function) {
     }
     fmt.wprintfln(w, "function ray.%v(%v) end", funcDef.name, luaPNamesStr)
     fmt.wprintfln(w, "")
+}
+
+write_primitive_helpers :: proc(w: io.Writer) {
+    primitives := []string{"int", "float"}
+
+    for primitive in primitives {
+        fmt.wprintfln(
+            w,
+            `tolua_%v :: proc "c" (L: ^lua.State, s: c.%v, idx: c.int = -99) {{`,
+            primitive,
+            primitive,
+        )
+        fmt.wprintfln(w, "    %v", gencode_push_value_to_lua(primitive, "s"))
+        fmt.wprintfln(w, "}}")
+
+        fmt.wprintfln(
+            w,
+            `fromlua_%v :: proc "c" (L: ^lua.State, idx: c.int) -> c.%v {{`,
+            primitive,
+            primitive,
+        )
+        code, _ := gencode_value_from_lua(primitive, "idx", "", "retval")
+        fmt.wprintfln(w, "    %v", code)
+        fmt.wprintfln(w, "    return p_retval")
+        fmt.wprintfln(w, "}}")
+        fmt.wprintfln(w, "")
+    }
 }
 
 write_struct_helpers :: proc(
@@ -472,21 +489,14 @@ write_struct_helpers :: proc(
         fmt.wprintfln(w, "    }}")
         for field, i in fields {
             v := fmt.tprintf("s.%v", field.name)
-            ptr_array, is_ptr_array := funcparam__is_ptr_array(structName, field.name)
-            if is_ptr_array {
-                fmt.wprintfln(
-                    w,
-                    "    tolua_array(L, s.%v, s.%v, tolua_%v)",
-                    field.name,
-                    ptr_array.countParam,
-                    trim_c_type(field.type),
-                )
-            } else {
-                if structName == "Matrix" {
-                    v = fmt.tprintf("s[%v][%v]", i % 4, math.floor(f32(i) / 4))
-                }
-                fmt.wprintfln(w, "    %v", gencode_push_value_to_lua(field.type, v))
+            if structName == "Matrix" {
+                v = fmt.tprintf("s[%v][%v]", i % 4, math.floor(f32(i) / 4))
             }
+            fmt.wprintfln(
+                w,
+                "    %v",
+                gencode_push_value_to_lua(field.type, v, structName, field.name),
+            )
             fmt.wprintfln(w, `    lua.setfield(L, idx, "%v")`, field.name)
         }
         fmt.wprintfln(w, "}")
@@ -503,33 +513,22 @@ write_struct_helpers :: proc(
         for field in fields {
             // source := fmt.tprintf("%v.%v", structName, field.name)
             fmt.wprintfln(w, `    lua.getfield(L, idx, "%v")`, field.name)
-            ptr_array, is_ptr_array := funcparam__is_ptr_array(structName, field.name)
-            if is_ptr_array {
-                t := trim_c_type(field.type)
-                fmt.wprintfln(
-                    w,
-                    "    %v, _ := fromlua_array(L, -1, rl.%v, fromlua_%v)",
-                    field.name,
-                    t,
-                    t,
-                )
-            } else {
-                fmt.wprintfln(
-                    w,
-                    "    %v := %v",
-                    field.name,
-                    gencode_value_from_lua(field.type, -1, structName, field.name),
-                )
-            }
+            fromlua_code, includes_count := gencode_value_from_lua(
+                field.type,
+                -1,
+                structName,
+                field.name,
+            )
+            fmt.wprintfln(w, "    %v", fromlua_code)
             fmt.wprintfln(w, "    lua.pop(L, 1)")
         }
         fmt.wprintfln(w, "    return rl.%v {{", structName)
         _, isArrayStruct := slice.linear_search(array_structs, structName)
         for field in fields {
             if isArrayStruct {
-                fmt.wprintfln(w, "        %v,", field.name)
+                fmt.wprintfln(w, "        p_%v,", field.name)
             } else {
-                fmt.wprintfln(w, "        %v = %v,", field.name, field.name)
+                fmt.wprintfln(w, "        %v = p_%v,", field.name, field.name)
             }
         }
         fmt.wprintfln(w, "    }")

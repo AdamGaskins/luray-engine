@@ -59,6 +59,7 @@ call_lua_global :: proc(state: ^lua.State, name: cstring) {
         err := lua.tostring(state, -1)
         fmt.eprintfln("(%v): %v", name, err)
         lua.pop(state, 1)
+        os.exit(1)
     }
 }
 

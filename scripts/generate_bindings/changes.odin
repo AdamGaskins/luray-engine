@@ -90,11 +90,15 @@ AutoFree :: struct {
 }
 auto_free_statements :: []AutoFree{{"LoadFileText", "rl.UnloadFileText(result)"}}
 
-NullTerminatedArray :: struct {
+FixedLengthArray :: struct {
     source:       string,
     source_param: string,
+    length:       string,
 }
-null_terminated_arrays :: []NullTerminatedArray{}
+fixed_length_arrays :: []FixedLengthArray {
+    // structs
+    // {"Shader", "locs", "32"},
+}
 
 ParamTypeOverride :: struct {
     source:       string,
@@ -146,22 +150,27 @@ param_type_overrides :: []ParamTypeOverride {
     {"GetGlyphIndex", "codepoint", "cast", "rune"},
     {"GetGlyphInfo", "codepoint", "cast", "rune"},
     {"GetGlyphAtlasRec", "codepoint", "cast", "rune"},
+    {"SetShaderValue", "uniformType", "cast", "rl.ShaderUniformDataType"},
+    {"SetShaderValueV", "uniformType", "cast", "rl.ShaderUniformDataType"},
 
     // structs
     {"Texture", "format", "cast", "rl.PixelFormat"},
     {"Image", "format", "cast", "rl.PixelFormat"},
     {"Camera3D", "projection", "cast", "rl.CameraProjection"},
     {"FilePathList", "paths", "transmute", "[^]cstring"},
+    {"Shader", "locs", "cast", "[^]c.int"},
 }
 
 implemented_types :: []string {
     "void",
     "void *",
+    "const void *",
     "const unsigned char *",
     "unsigned char *",
     "const char *",
     "char *",
     "int",
+    "int *",
     "unsigned int",
     "long",
     "float",
@@ -192,7 +201,7 @@ implemented_types :: []string {
     "GlyphInfo",
     "Font",
     // "Mesh",
-    // "Shader",
+    "Shader",
     "MaterialMap",
     // "Material",
     "Transform",
@@ -224,7 +233,23 @@ implemented_types :: []string {
     "rAudioProcessor *",
 }
 
-pointer_types :: []string{"void *", "char **", "rAudioBuffer *", "rAudioProcessor *"}
+PointerParameter :: struct {
+    source:       string,
+    source_param: string,
+}
+// instead of allowing modification by lua, these params
+// should just be kept as behind the scenes pointers
+pointer_parameters :: []PointerParameter {
+    // structs
+    {"Shader", "locs"},
+}
+pointer_types :: []string {
+    "const void *",
+    "void *",
+    "char **",
+    "rAudioBuffer *",
+    "rAudioProcessor *",
+}
 
 ignore_functions :: []string {
     // built in (see auto_free_statements)
@@ -270,5 +295,25 @@ funcs_not_yet_implemented :: []string {
     "LoadFileData",
     "UnloadFileData",
     "ExportDataAsCode",
+
+    // needs int* implemented
+    "LoadRandomSequence",
+    "UnloadRandomSequence",
+    "CompressData",
+    "DecompressData",
+    "EncodeDataBase64",
+    "DecodeDataBase64",
+    "LoadImageAnim",
+    "LoadImageAnimFromMemory",
+    "ExportImageToMemory",
+    "LoadFontEx",
+    "LoadFontFromMemory",
+    "LoadFontData",
+    "LoadCodepoints",
+    "UnloadCodepoints",
+    "GetCodepoint",
+    "GetCodepointNext",
+    "GetCodepointPrevious",
+    "CodepointToUTF8",
 }
 
