@@ -38,23 +38,27 @@ main :: proc() {
 
     defer lua.close(state)
 
-    lua.getglobal(state, "_init")
-    if lua.pcall(state, 0, 0, 0) != 0 {
-        err := lua.tostring(state, -1)
-        fmt.eprintln("Lua error:", err)
-        lua.pop(state, 1)
-    }
-
+    call_lua_global(state, "_init")
 
     for !rl.WindowShouldClose() {
-        lua.getglobal(state, "_update")
-        if lua.pcall(state, 0, 0, 0) != 0 {
-            err := lua.tostring(state, -1)
-            fmt.eprintln("Lua error:", err)
-            lua.pop(state, 1)
-        }
+        call_lua_global(state, "_update")
     }
 
-    rl.CloseWindow()
+    call_lua_global(state, "_destroy")
+
+}
+
+call_lua_global :: proc(state: ^lua.State, name: cstring) {
+    lua.getglobal(state, "debug")
+    lua.getfield(state, -1, "traceback")
+    lua.remove(state, -2)
+    msgh_index := lua.gettop(state)
+
+    lua.getglobal(state, name)
+    if lua.pcall(state, 0, 0, msgh_index) != 0 {
+        err := lua.tostring(state, -1)
+        fmt.eprintfln("(%v): %v", name, err)
+        lua.pop(state, 1)
+    }
 }
 

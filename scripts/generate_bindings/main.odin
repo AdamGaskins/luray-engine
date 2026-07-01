@@ -38,8 +38,9 @@ main :: proc() {
 ---@alias Raylib.Color integer
 
 function _init() end
-
 function _update() end
+function _destroy() end
+
 `,
     )
 

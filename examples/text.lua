@@ -1,5 +1,3 @@
-local character
-
 local screenWidth = 800
 local screenHeight = 450
 
@@ -74,5 +72,11 @@ function _update()
     end
 
     ray.EndDrawing();
-    -- for (int i = 0; i < MAX_FONTS; i++) UnloadFont(fonts[i]);
+end
+
+function _destroy()
+    for i = 1, #fonts do
+        ray.UnloadFont(fonts[i]);
+    end
+    ray.CloseWindow()
 end

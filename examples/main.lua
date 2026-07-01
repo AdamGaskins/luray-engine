@@ -26,3 +26,7 @@ function _update()
 
     ray.EndDrawing()
 end
+
+function _destroy()
+    ray.CloseWindow()
+end

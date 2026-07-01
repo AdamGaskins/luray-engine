@@ -339,8 +339,9 @@ ray = {}
 ---@alias Raylib.Color integer
 
 function _init() end
-
 function _update() end
+function _destroy() end
+
 
 ---@class Raylib.Vector2
 ---@field x number Vector x component
