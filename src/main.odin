@@ -4,6 +4,7 @@ import "core:fmt"
 import "core:os"
 import "core:path/filepath"
 import "core:strings"
+import "core:time"
 import lua "vendor:lua/5.4"
 import rl "vendor:raylib"
 
@@ -16,10 +17,6 @@ main :: proc() {
     mainDir := filepath.dir(mainPath)
     os.set_working_directory(mainDir)
 
-    state := lua.L_newstate()
-    lua.L_openlibs(state)
-    bind_raylib(state)
-
     if !os.exists(mainFileName) {
         fmt.eprintfln("Source file not found: %v", mainPath)
         fmt.eprintfln("")
@@ -27,39 +24,56 @@ main :: proc() {
         return
     }
 
-    mainFileName_c, err := strings.clone_to_cstring(filepath.base(mainFileName))
-    defer delete(mainFileName_c)
-    if lua.L_dofile(state, mainFileName_c) != 0 {
-        err := lua.tostring(state, -1)
-        fmt.eprintln("Lua error:", err)
-        lua.pop(state, 1)
-        return
-    }
-
+    state := lua_create_state()
     defer lua.close(state)
 
-    call_lua_global(state, "_init")
+    lua_load_script(state, mainFileName)
+
+    lua_call(state, "_init")
+
+    lastModified: time.Time
+    {
+        info, err := os.stat(mainFileName, context.allocator)
+        defer os.file_info_delete(info, context.allocator)
+        if err != nil {
+            fmt.eprintfln("Error: %v", err)
+            os.exit(1)
+        }
+
+        lastModified = info.modification_time
+    }
 
     for !rl.WindowShouldClose() {
-        call_lua_global(state, "_update")
+        lua_call(state, "_update")
+
+        info, err := os.stat(mainFileName, context.allocator)
+        if err == nil {
+            if time.diff(info.modification_time, lastModified) < 0 {
+                lua_load_script(state, mainFileName)
+                lastModified = info.modification_time
+            }
+        }
+
+        if is_reload_button_pressed() {
+            lua_call(state, "_destroy")
+            lua_call(state, "_init")
+        }
     }
 
-    call_lua_global(state, "_destroy")
-
+    lua_call(state, "_destroy")
 }
 
-call_lua_global :: proc(state: ^lua.State, name: cstring) {
-    lua.getglobal(state, "debug")
-    lua.getfield(state, -1, "traceback")
-    lua.remove(state, -2)
-    msgh_index := lua.gettop(state)
-
-    lua.getglobal(state, name)
-    if lua.pcall(state, 0, 0, msgh_index) != 0 {
-        err := lua.tostring(state, -1)
-        fmt.eprintfln("(%v): %v", name, err)
-        lua.pop(state, 1)
-        os.exit(1)
+is_reload_button_pressed :: proc() -> bool {
+    if ODIN_OS == .Darwin {
+        return(
+            rl.IsKeyPressed(rl.KeyboardKey.R) &&
+            (rl.IsKeyDown(rl.KeyboardKey.LEFT_SUPER) || rl.IsKeyDown(rl.KeyboardKey.RIGHT_SUPER)) \
+        )
     }
+
+    return(
+        rl.IsKeyPressed(rl.KeyboardKey.R) &&
+        (rl.IsKeyDown(rl.KeyboardKey.LEFT_CONTROL) || rl.IsKeyDown(rl.KeyboardKey.RIGHT_CONTROL)) \
+    )
 }
 
