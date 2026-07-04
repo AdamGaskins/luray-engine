@@ -2,6 +2,9 @@ package engine
 
 import "../engine_lua"
 import "../watcher"
+import "core:fmt"
+import "core:os"
+import "core:path/filepath"
 import lua "vendor:lua/5.4"
 import rl "vendor:raylib"
 
@@ -12,9 +15,17 @@ Engine :: struct {
 }
 
 new :: proc(main_file: string, dev_mode: bool = false) -> Engine {
+	os.set_working_directory(filepath.dir(main_file))
+	main_file_name := filepath.base(main_file)
+
+	if !os.exists(main_file_name) {
+		fmt.eprintfln("Source file not found: %v", main_file_name)
+		os.exit(1)
+	}
+
 	engine := Engine {
 		dev_mode  = dev_mode,
-		main_file = main_file,
+		main_file = main_file_name,
 	}
 
 	if dev_mode {
