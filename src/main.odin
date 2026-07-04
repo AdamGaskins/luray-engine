@@ -3,9 +3,7 @@ package main
 import "core:fmt"
 import "core:os"
 import "core:path/filepath"
-import lua "vendor:lua/5.4"
-import rl "vendor:raylib"
-import "watcher"
+import "engine"
 
 main :: proc() {
 	mainPath := "main.lua"
@@ -23,44 +21,8 @@ main :: proc() {
 		return
 	}
 
-	state := lua_create_state()
-	defer lua.close(state)
-
-	lua_load_script(state, mainFileName)
-
-	lua_call(state, "_init")
-
-	watch := watcher.new()
-	defer watcher.destroy(&watch)
-	watcher.watch(&watch, mainFileName)
-
-	for !rl.WindowShouldClose() {
-		lua_call(state, "_update")
-
-		if watcher.poll(&watch) {
-			lua_load_script(state, mainFileName)
-		}
-
-		if is_reload_button_pressed() {
-			lua_call(state, "_destroy")
-			lua_call(state, "_init")
-		}
-	}
-
-	lua_call(state, "_destroy")
-}
-
-is_reload_button_pressed :: proc() -> bool {
-	if ODIN_OS == .Darwin {
-		return(
-			rl.IsKeyPressed(rl.KeyboardKey.R) &&
-			(rl.IsKeyDown(rl.KeyboardKey.LEFT_SUPER) || rl.IsKeyDown(rl.KeyboardKey.RIGHT_SUPER)) \
-		)
-	}
-
-	return(
-		rl.IsKeyPressed(rl.KeyboardKey.R) &&
-		(rl.IsKeyDown(rl.KeyboardKey.LEFT_CONTROL) || rl.IsKeyDown(rl.KeyboardKey.RIGHT_CONTROL)) \
-	)
+	e := engine.new(mainFileName, true)
+	defer engine.destroy(&e)
+	engine.run(&e)
 }
 

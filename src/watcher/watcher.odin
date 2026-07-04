@@ -4,7 +4,6 @@ import "core:fmt"
 import "core:os"
 import "core:time"
 
-@(private)
 Watcher :: struct {
 	paths: map[string]time.Time,
 }

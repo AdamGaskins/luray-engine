@@ -11,7 +11,7 @@ function _update()
     ray.BeginDrawing()
 
     ray.ClearBackground(ray.RAYWHITE)
-    ray.DrawText("Hello Raylib!", 20, 20, 20, ray.GREEN)
+    ray.DrawText("Hello World", 20, 20, 20, ray.BLACK)
 
     local speed = 10
     if ray.IsKeyDown(ray.KEY_A) then Character.x = Character.x - speed end

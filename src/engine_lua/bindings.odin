@@ -1,4 +1,5 @@
-package main
+#+private package
+package engine_lua
 
 import "base:runtime"
 import "core:c"

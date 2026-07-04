@@ -55,7 +55,8 @@ function _destroy() end
 	w := strings.to_writer(&sb)
 	defer strings.builder_destroy(&sb)
 
-	fmt.wprintln(w, "package main")
+	fmt.wprintln(w, "#+private package")
+	fmt.wprintln(w, "package lua")
 	fmt.wprintln(w, "")
 	fmt.wprintln(w, `import "core:c"`)
 	fmt.wprintln(w, `import lua "vendor:lua/5.4"`)
@@ -73,8 +74,8 @@ function _destroy() end
 	fmt.wprintln(w, "")
 
 	fmt.println("")
-	write_builder_to_file(&sb, "src/bindings.odin")
-	fmt.println("Wrote bindings to src/bindings.odin")
+	write_builder_to_file(&sb, "src/lua/bindings.odin")
+	fmt.println("Wrote bindings to src/lua/bindings.odin")
 
 	write_builder_to_file(&sb_docs, "meta/raylib.lua")
 	fmt.println("Wrote lua stubs to meta/raylib.lua")

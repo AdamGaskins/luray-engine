@@ -1,4 +1,4 @@
-package main
+package engine_lua
 
 import "base:runtime"
 import "core:c"
@@ -6,16 +6,19 @@ import "core:fmt"
 import lua "vendor:lua/5.4"
 import rl "vendor:raylib"
 
+@(private)
 tolua_Color :: proc "c" (L: ^lua.State, color: rl.Color) {
 	packed := (u32(color.r) << 24) | (u32(color.g) << 16) | (u32(color.b) << 8) | u32(color.a)
 	lua.pushinteger(L, lua.Integer(packed))
 }
 
+@(private)
 fromlua_Color :: proc "c" (L: ^lua.State, idx: c.int) -> rl.Color {
 	packed := u32(lua.tointeger(L, idx))
 	return rl.Color{u8(packed >> 24), u8(packed >> 16), u8(packed >> 8), u8(packed)}
 }
 
+@(private)
 tolua_array :: proc(
 	L: ^lua.State,
 	arr: [^]$T,
@@ -29,6 +32,7 @@ tolua_array :: proc(
 	}
 }
 
+@(private)
 fromlua_array :: proc(
 	L: ^lua.State,
 	idx: c.int,
@@ -48,6 +52,7 @@ fromlua_array :: proc(
 	return arr, n
 }
 
+@(private)
 fromlua_shader_value :: proc "c" (
 	L: ^lua.State,
 	idx: c.int,
@@ -69,11 +74,13 @@ fromlua_shader_value :: proc "c" (
 	return 0
 }
 
+@(private)
 tolua_ptr :: proc "c" (L: ^lua.State, pointer: ^$T) {
 	ptr := cast(^T)lua.newuserdatauv(L, size_of(rl.Image), 0)
 	ptr^ = img
 }
 
+@(private)
 fromlua_ptr :: proc "c" (L: ^lua.State, idx: c.int, $T: typeid) -> ^T {
 	// TODO: type check?
 	return cast(^T)lua.touserdata(L, idx)
