@@ -3,9 +3,9 @@ package main
 import "core:fmt"
 import "core:os"
 import "core:path/filepath"
-import "core:time"
 import lua "vendor:lua/5.4"
 import rl "vendor:raylib"
+import "watcher"
 
 main :: proc() {
 	mainPath := "main.lua"
@@ -30,27 +30,15 @@ main :: proc() {
 
 	lua_call(state, "_init")
 
-	lastModified: time.Time
-	{
-		info, err := os.stat(mainFileName, context.allocator)
-		defer os.file_info_delete(info, context.allocator)
-		if err != nil {
-			fmt.eprintfln("Error: %v", err)
-			os.exit(1)
-		}
-
-		lastModified = info.modification_time
-	}
+	watch := watcher.new()
+	defer watcher.destroy(&watch)
+	watcher.watch(&watch, mainFileName)
 
 	for !rl.WindowShouldClose() {
 		lua_call(state, "_update")
 
-		info, err := os.stat(mainFileName, context.allocator)
-		if err == nil {
-			if time.diff(info.modification_time, lastModified) < 0 {
-				lua_load_script(state, mainFileName)
-				lastModified = info.modification_time
-			}
+		if watcher.poll(&watch) {
+			lua_load_script(state, mainFileName)
 		}
 
 		if is_reload_button_pressed() {
