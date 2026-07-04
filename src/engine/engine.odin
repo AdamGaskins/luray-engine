@@ -45,6 +45,7 @@ run :: proc(e: ^Engine) {
 	state := engine_lua.create_state()
 	defer lua.close(state)
 	engine_lua.load_script(state, e.main_file)
+	rl.SetTraceLogLevel(rl.TraceLogLevel.NONE)
 	engine_lua.call(state, "_init")
 
 	if e.dev_mode {
