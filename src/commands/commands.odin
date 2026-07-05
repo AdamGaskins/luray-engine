@@ -10,7 +10,7 @@ Command :: struct {
 	execute:     proc(args: []string),
 }
 
-Commands :: []Command{Command_Run, Command_Dev}
+Commands :: []Command{Command_Run, Command_Dev, Command_Init}
 
 find_command :: proc(name: string) -> (Command, bool) {
 	for c in Commands {
