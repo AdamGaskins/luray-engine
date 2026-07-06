@@ -1,3 +1,4 @@
 raylua
 generate_bindings
 src.bin
+luatest/

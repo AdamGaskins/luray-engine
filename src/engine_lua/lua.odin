@@ -22,6 +22,18 @@ load_script :: proc(state: ^lua.State, luaFile: string) {
 	}
 }
 
+clear_user_modules :: proc(state: ^lua.State, modules: []string) {
+	lua.L_getsubtable(state, lua.REGISTRYINDEX, lua.LOADED_TABLE)
+	loaded_idx := lua.gettop(state)
+
+	for module in modules {
+		cname := strings.clone_to_cstring(module, context.allocator)
+		defer delete(cname)
+		lua.pushnil(state)
+		lua.setfield(state, loaded_idx, cname) // package.loaded[name] = nil
+	}
+}
+
 call :: proc(state: ^lua.State, name: cstring) {
 	lua.getglobal(state, "debug")
 	lua.getfield(state, -1, "traceback")

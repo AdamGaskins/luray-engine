@@ -1,7 +1,8 @@
 package watcher
 
-import "core:fmt"
 import "core:os"
+import "core:path/filepath"
+import "core:strings"
 import "core:time"
 
 Watcher :: struct {
@@ -13,54 +14,40 @@ new :: proc() -> Watcher {
 		paths = make(map[string]time.Time),
 	}
 
+	poll(&w)
+
 	return w
 }
 
 destroy :: proc(watcher: ^Watcher) {
+	for p, _ in watcher.paths {
+		delete(p)
+	}
 	delete(watcher.paths)
 }
 
-watch :: proc(watcher: ^Watcher, path: string) -> bool {
-	if path in watcher.paths {
-		return true
-	}
+poll :: proc(watcher: ^Watcher) -> []string {
+	updated: [dynamic]string
 
-	last_modified, ok := get_last_modified(path)
-	if !ok {
-		fmt.eprintfln("Failed to watch %v: %v", path)
-		return false
-	}
-
-	watcher.paths[path] = last_modified
-	return true
-}
-
-poll :: proc(watcher: ^Watcher) -> bool {
-	updated := false
-
-	for path, last_modified in watcher.paths {
-		new_last_modified, ok := get_last_modified(path)
-		if !ok {
+	dir, _ := os.get_working_directory(context.allocator)
+	defer delete(dir)
+	walker := filepath.walker_create(dir)
+	defer filepath.walker_destroy(&walker)
+	for info in filepath.walker_walk(&walker) {
+		if info.type != os.File_Type.Regular {
 			continue
 		}
+		path := strings.clone(strings.trim_prefix(info.fullpath, dir)[1:], context.allocator)
 
-		if time.diff(last_modified, new_last_modified) > 0 {
-			updated = true
-			watcher.paths[path] = new_last_modified
+		if path not_in watcher.paths {
+			append(&updated, path)
+			watcher.paths[path] = info.modification_time
+		} else if time.diff(watcher.paths[path], info.modification_time) > 0 {
+			append(&updated, path)
+			watcher.paths[path] = info.modification_time
 		}
 	}
 
-	return updated
-}
-
-@(private)
-get_last_modified :: proc(path: string) -> (time.Time, bool) {
-	info, err := os.stat(path, context.allocator)
-	defer os.file_info_delete(info, context.allocator)
-	if err != nil {
-		return time.Time{}, false
-	}
-
-	return info.modification_time, true
+	return updated[:]
 }
 

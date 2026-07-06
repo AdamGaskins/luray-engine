@@ -4,28 +4,27 @@ import "../engine_lua"
 import "../watcher"
 import "core:fmt"
 import "core:os"
-import "core:path/filepath"
+import "core:strings"
 import lua "vendor:lua/5.4"
 import rl "vendor:raylib"
 
 Engine :: struct {
-	dev_mode:  bool,
-	main_file: string,
-	watch:     watcher.Watcher,
+	dev_mode: bool,
+	watch:    watcher.Watcher,
 }
 
-new :: proc(main_file: string, dev_mode: bool = false) -> Engine {
-	os.set_working_directory(filepath.dir(main_file))
-	main_file_name := filepath.base(main_file)
+MAIN_FILE :: "main.lua"
 
-	if !os.exists(main_file_name) {
-		fmt.eprintfln("Source file not found: %v", main_file_name)
+new :: proc(main_dir: string, dev_mode: bool = false) -> Engine {
+	os.set_working_directory(main_dir)
+
+	if !os.exists(MAIN_FILE) {
+		fmt.eprintfln("main.lua not found in %v", main_dir)
 		os.exit(1)
 	}
 
 	engine := Engine {
-		dev_mode  = dev_mode,
-		main_file = main_file_name,
+		dev_mode = dev_mode,
 	}
 
 	if dev_mode {
@@ -44,19 +43,21 @@ destroy :: proc(e: ^Engine) {
 run :: proc(e: ^Engine) {
 	state := engine_lua.create_state()
 	defer lua.close(state)
-	engine_lua.load_script(state, e.main_file)
+	engine_lua.load_script(state, MAIN_FILE)
 	rl.SetTraceLogLevel(rl.TraceLogLevel.NONE)
 	engine_lua.call(state, "_init")
-
-	if e.dev_mode {
-		watcher.watch(&e.watch, e.main_file)
-	}
 
 	for !rl.WindowShouldClose() {
 		engine_lua.call(state, "_update")
 
-		if e.dev_mode && watcher.poll(&e.watch) {
-			engine_lua.load_script(state, e.main_file)
+		if e.dev_mode {
+			updated_files := watcher.poll(&e.watch)
+			if len(updated_files) > 0 {
+				modules := modules_from_files(updated_files)
+				fmt.printfln("Updated files: %v", modules)
+				engine_lua.clear_user_modules(state, modules)
+				engine_lua.load_script(state, MAIN_FILE)
+			}
 		}
 
 		if is_reload_button_pressed() {
@@ -66,6 +67,22 @@ run :: proc(e: ^Engine) {
 	}
 
 	engine_lua.call(state, "_destroy")
+}
+
+@(private)
+modules_from_files :: proc(files: []string) -> []string {
+	modules: [dynamic]string
+
+	for file in files {
+		if !strings.ends_with(file, ".lua") {
+			continue
+		}
+
+		module_name := strings.trim_suffix(file, ".lua")
+		append(&modules, module_name)
+	}
+
+	return modules[:]
 }
 
 @(private)
