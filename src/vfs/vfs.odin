@@ -11,6 +11,7 @@ Vfs :: struct {
 	data:      rawptr,
 	get_files: proc(vfsdata: rawptr) -> []VFile,
 	get_file:  proc(vfsdata: rawptr, path: string) -> ([]byte, bool),
+	destroy:   proc(vfsdata: rawptr),
 }
 
 destroy_vfs_file :: proc(vfile: ^VFile) {

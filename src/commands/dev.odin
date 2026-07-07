@@ -16,8 +16,9 @@ Command_Dev :: Command {
 
 		e: engine.Engine
 		path, _ := os.get_absolute_path(options.main_dir, context.allocator)
+		defer delete(path)
 		fs := vfs.make_vfs_local(path)
-		defer vfs.destroy_vfs_local(&fs)
+		defer fs.destroy(fs.data)
 
 		fmt.println("Starting engine with hot reload")
 

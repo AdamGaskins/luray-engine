@@ -22,10 +22,7 @@ local_get_files :: proc(vfsdata: rawptr) -> []VFile {
 			continue
 		}
 
-		path := strings.clone(
-			strings.trim_prefix(info.fullpath, data.base_path)[1:],
-			context.allocator,
-		)
+		path := strings.clone(strings.trim_prefix(info.fullpath, data.base_path)[1:])
 
 		append(&files, VFile{path = path, last_modified = info.modification_time})
 	}
@@ -57,12 +54,18 @@ local_get_file :: proc(vfsdata: rawptr, path: string) -> ([]byte, bool) {
 make_vfs_local :: proc(base_path: string) -> Vfs {
 	data := new(Vfs_Local_Data)
 	data.base_path, _ = os.get_absolute_path(base_path, context.allocator)
-	return Vfs{data = data, get_file = local_get_file, get_files = local_get_files}
+	return Vfs {
+		data = data,
+		get_file = local_get_file,
+		get_files = local_get_files,
+		destroy = destroy_vfs_local,
+	}
 }
 
-destroy_vfs_local :: proc(vfs: ^Vfs) {
-	data := cast(^Vfs_Local_Data)vfs.data
+@(private)
+destroy_vfs_local :: proc(vfsdata: rawptr) {
+	data := cast(^Vfs_Local_Data)vfsdata
 	delete(data.base_path)
-	free(vfs.data)
+	free(vfsdata)
 }
 

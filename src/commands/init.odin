@@ -14,7 +14,8 @@ Command_Init :: Command {
 		options := parse_flags(Init_Flags, Command_Init, args)
 
 		copy_file(options, ".luarc.json", #load("../../.luarc.json"))
-		copy_file(options, "main.lua", #load("../../templates/main.lua"))
+		copy_file(options, "main.lua", #load("../../template/main.lua"))
+		copy_file(options, ".gitignore", #load("../../template/.gitignore"))
 		copy_file(options, "meta/raylib.lua", #load("../../meta/raylib.lua"))
 	},
 }
