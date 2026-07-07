@@ -9,16 +9,16 @@ import rl "vendor:raylib"
 bind_raylib :: proc(L: ^lua.State) {
 	lua.newtable(L)
 
-	lua.pushinteger(L, lua.Integer(5))
+	lua.pushinteger(L, lua.Integer(6))
 	lua.setfield(L, -2, "RAYLIB_VERSION_MAJOR")
 
-	lua.pushinteger(L, lua.Integer(5))
+	lua.pushinteger(L, lua.Integer(0))
 	lua.setfield(L, -2, "RAYLIB_VERSION_MINOR")
 
 	lua.pushinteger(L, lua.Integer(0))
 	lua.setfield(L, -2, "RAYLIB_VERSION_PATCH")
 
-	lua.pushstring(L, "5.5")
+	lua.pushstring(L, "6.0")
 	lua.setfield(L, -2, "RAYLIB_VERSION")
 
 	lua.pushnumber(L, lua.Number(3.141592653589793))
@@ -748,7 +748,10 @@ bind_raylib :: proc(L: ^lua.State) {
 	lua.setfield(L, -2, "SHADER_LOC_VERTEX_BONEWEIGHTS")
 
 	lua.pushinteger(L, lua.Integer(28))
-	lua.setfield(L, -2, "SHADER_LOC_BONE_MATRICES")
+	lua.setfield(L, -2, "SHADER_LOC_MATRIX_BONETRANSFORMS")
+
+	lua.pushinteger(L, lua.Integer(29))
+	lua.setfield(L, -2, "SHADER_LOC_VERTEX_INSTANCETRANSFORM")
 
 	lua.pushinteger(L, lua.Integer(0))
 	lua.setfield(L, -2, "SHADER_UNIFORM_FLOAT")
@@ -775,6 +778,18 @@ bind_raylib :: proc(L: ^lua.State) {
 	lua.setfield(L, -2, "SHADER_UNIFORM_IVEC4")
 
 	lua.pushinteger(L, lua.Integer(8))
+	lua.setfield(L, -2, "SHADER_UNIFORM_UINT")
+
+	lua.pushinteger(L, lua.Integer(9))
+	lua.setfield(L, -2, "SHADER_UNIFORM_UIVEC2")
+
+	lua.pushinteger(L, lua.Integer(10))
+	lua.setfield(L, -2, "SHADER_UNIFORM_UIVEC3")
+
+	lua.pushinteger(L, lua.Integer(11))
+	lua.setfield(L, -2, "SHADER_UNIFORM_UIVEC4")
+
+	lua.pushinteger(L, lua.Integer(12))
 	lua.setfield(L, -2, "SHADER_UNIFORM_SAMPLER2D")
 
 	lua.pushinteger(L, lua.Integer(0))
@@ -1311,6 +1326,24 @@ bind_raylib :: proc(L: ^lua.State) {
 	lua.pushcfunction(L, lua_SaveFileText)
 	lua.setfield(L, -2, "SaveFileText")
 
+	lua.pushcfunction(L, lua_FileRename)
+	lua.setfield(L, -2, "FileRename")
+
+	lua.pushcfunction(L, lua_FileRemove)
+	lua.setfield(L, -2, "FileRemove")
+
+	lua.pushcfunction(L, lua_FileCopy)
+	lua.setfield(L, -2, "FileCopy")
+
+	lua.pushcfunction(L, lua_FileMove)
+	lua.setfield(L, -2, "FileMove")
+
+	lua.pushcfunction(L, lua_FileTextReplace)
+	lua.setfield(L, -2, "FileTextReplace")
+
+	lua.pushcfunction(L, lua_FileTextFindIndex)
+	lua.setfield(L, -2, "FileTextFindIndex")
+
 	lua.pushcfunction(L, lua_FileExists)
 	lua.setfield(L, -2, "FileExists")
 
@@ -1322,6 +1355,9 @@ bind_raylib :: proc(L: ^lua.State) {
 
 	lua.pushcfunction(L, lua_GetFileLength)
 	lua.setfield(L, -2, "GetFileLength")
+
+	lua.pushcfunction(L, lua_GetFileModTime)
+	lua.setfield(L, -2, "GetFileModTime")
 
 	lua.pushcfunction(L, lua_GetFileExtension)
 	lua.setfield(L, -2, "GetFileExtension")
@@ -1374,9 +1410,6 @@ bind_raylib :: proc(L: ^lua.State) {
 	lua.pushcfunction(L, lua_UnloadDroppedFiles)
 	lua.setfield(L, -2, "UnloadDroppedFiles")
 
-	lua.pushcfunction(L, lua_GetFileModTime)
-	lua.setfield(L, -2, "GetFileModTime")
-
 	lua.pushcfunction(L, lua_SetAutomationEventBaseFrame)
 	lua.setfield(L, -2, "SetAutomationEventBaseFrame")
 
@@ -1406,6 +1439,9 @@ bind_raylib :: proc(L: ^lua.State) {
 
 	lua.pushcfunction(L, lua_GetCharPressed)
 	lua.setfield(L, -2, "GetCharPressed")
+
+	lua.pushcfunction(L, lua_GetKeyName)
+	lua.setfield(L, -2, "GetKeyName")
 
 	lua.pushcfunction(L, lua_SetExitKey)
 	lua.setfield(L, -2, "SetExitKey")
@@ -1560,20 +1596,23 @@ bind_raylib :: proc(L: ^lua.State) {
 	lua.pushcfunction(L, lua_DrawLineBezier)
 	lua.setfield(L, -2, "DrawLineBezier")
 
+	lua.pushcfunction(L, lua_DrawLineDashed)
+	lua.setfield(L, -2, "DrawLineDashed")
+
 	lua.pushcfunction(L, lua_DrawCircle)
 	lua.setfield(L, -2, "DrawCircle")
+
+	lua.pushcfunction(L, lua_DrawCircleV)
+	lua.setfield(L, -2, "DrawCircleV")
+
+	lua.pushcfunction(L, lua_DrawCircleGradient)
+	lua.setfield(L, -2, "DrawCircleGradient")
 
 	lua.pushcfunction(L, lua_DrawCircleSector)
 	lua.setfield(L, -2, "DrawCircleSector")
 
 	lua.pushcfunction(L, lua_DrawCircleSectorLines)
 	lua.setfield(L, -2, "DrawCircleSectorLines")
-
-	lua.pushcfunction(L, lua_DrawCircleGradient)
-	lua.setfield(L, -2, "DrawCircleGradient")
-
-	lua.pushcfunction(L, lua_DrawCircleV)
-	lua.setfield(L, -2, "DrawCircleV")
 
 	lua.pushcfunction(L, lua_DrawCircleLines)
 	lua.setfield(L, -2, "DrawCircleLines")
@@ -1584,8 +1623,14 @@ bind_raylib :: proc(L: ^lua.State) {
 	lua.pushcfunction(L, lua_DrawEllipse)
 	lua.setfield(L, -2, "DrawEllipse")
 
+	lua.pushcfunction(L, lua_DrawEllipseV)
+	lua.setfield(L, -2, "DrawEllipseV")
+
 	lua.pushcfunction(L, lua_DrawEllipseLines)
 	lua.setfield(L, -2, "DrawEllipseLines")
+
+	lua.pushcfunction(L, lua_DrawEllipseLinesV)
+	lua.setfield(L, -2, "DrawEllipseLinesV")
 
 	lua.pushcfunction(L, lua_DrawRing)
 	lua.setfield(L, -2, "DrawRing")
@@ -2093,6 +2138,9 @@ bind_raylib :: proc(L: ^lua.State) {
 
 	lua.pushcfunction(L, lua_TextSubtext)
 	lua.setfield(L, -2, "TextSubtext")
+
+	lua.pushcfunction(L, lua_TextRemoveSpaces)
+	lua.setfield(L, -2, "TextRemoveSpaces")
 
 	lua.pushcfunction(L, lua_TextFindIndex)
 	lua.setfield(L, -2, "TextFindIndex")
@@ -3306,8 +3354,6 @@ tolua_FilePathList :: proc "c" (L: ^lua.State, s: rl.FilePathList, idx: c.int = 
 		lua.newtable(L)
 		idx = -2
 	}
-	lua.pushinteger(L, lua.Integer(s.capacity))
-	lua.setfield(L, idx, "capacity")
 	lua.pushinteger(L, lua.Integer(s.count))
 	lua.setfield(L, idx, "count")
 	lua.pushlightuserdata(L, s.paths)
@@ -3316,16 +3362,13 @@ tolua_FilePathList :: proc "c" (L: ^lua.State, s: rl.FilePathList, idx: c.int = 
 
 fromlua_FilePathList :: proc "c" (L: ^lua.State, idx: c.int) -> rl.FilePathList {
 	context = runtime.default_context()
-	lua.getfield(L, idx, "capacity")
-	p_capacity := c.uint(lua.tonumber(L, -1))
-	lua.pop(L, 1)
 	lua.getfield(L, idx, "count")
 	p_count := c.uint(lua.tonumber(L, -1))
 	lua.pop(L, 1)
 	lua.getfield(L, idx, "paths")
 	p_paths := cast([^]cstring)lua.touserdata(L, -1)
 	lua.pop(L, 1)
-	return rl.FilePathList{capacity = p_capacity, count = p_count, paths = p_paths}
+	return rl.FilePathList{count = p_count, paths = p_paths}
 }
 
 tolua_Quaternion :: proc "c" (L: ^lua.State, s: rl.Quaternion, idx: c.int = -99) {
@@ -4287,6 +4330,72 @@ lua_SaveFileText :: proc "c" (L: ^lua.State) -> c.int {
 }
 
 @(private)
+lua_FileRename :: proc "c" (L: ^lua.State) -> c.int {
+	p_fileName := lua.tostring(L, 1)
+	p_fileRename := lua.tostring(L, 2)
+
+	result := rl.FileRename(p_fileName, p_fileRename)
+
+	lua.pushinteger(L, lua.Integer(result))
+	return 1
+}
+
+@(private)
+lua_FileRemove :: proc "c" (L: ^lua.State) -> c.int {
+	p_fileName := lua.tostring(L, 1)
+
+	result := rl.FileRemove(p_fileName)
+
+	lua.pushinteger(L, lua.Integer(result))
+	return 1
+}
+
+@(private)
+lua_FileCopy :: proc "c" (L: ^lua.State) -> c.int {
+	p_srcPath := lua.tostring(L, 1)
+	p_dstPath := lua.tostring(L, 2)
+
+	result := rl.FileCopy(p_srcPath, p_dstPath)
+
+	lua.pushinteger(L, lua.Integer(result))
+	return 1
+}
+
+@(private)
+lua_FileMove :: proc "c" (L: ^lua.State) -> c.int {
+	p_srcPath := lua.tostring(L, 1)
+	p_dstPath := lua.tostring(L, 2)
+
+	result := rl.FileMove(p_srcPath, p_dstPath)
+
+	lua.pushinteger(L, lua.Integer(result))
+	return 1
+}
+
+@(private)
+lua_FileTextReplace :: proc "c" (L: ^lua.State) -> c.int {
+	p_fileName := lua.tostring(L, 1)
+	p_search := lua.tostring(L, 2)
+	p_replacement := lua.tostring(L, 3)
+
+	result := rl.FileTextReplace(p_fileName, p_search, p_replacement)
+
+	lua.pushinteger(L, lua.Integer(result))
+	return 1
+}
+
+@(private)
+lua_FileTextFindIndex :: proc "c" (L: ^lua.State) -> c.int {
+	p_fileName := lua.tostring(L, 1)
+	p_search := lua.tostring(L, 2)
+
+	result := rl.FileTextFindIndex(p_fileName, p_search)
+
+	lua.pushinteger(L, lua.Integer(result))
+	return 1
+}
+
+@(private)
 lua_FileExists :: proc "c" (L: ^lua.State) -> c.int {
 	p_fileName := lua.tostring(L, 1)
 
@@ -4322,6 +4431,16 @@ lua_GetFileLength :: proc "c" (L: ^lua.State) -> c.int {
 	p_fileName := lua.tostring(L, 1)
 
 	result := rl.GetFileLength(p_fileName)
+
+	lua.pushinteger(L, lua.Integer(result))
+	return 1
+}
+
+@(private)
+lua_GetFileModTime :: proc "c" (L: ^lua.State) -> c.int {
+	p_fileName := lua.tostring(L, 1)
+
+	result := rl.GetFileModTime(p_fileName)
 
 	lua.pushinteger(L, lua.Integer(result))
 	return 1
@@ -4405,9 +4524,9 @@ lua_MakeDirectory :: proc "c" (L: ^lua.State) -> c.int {
 
 @(private)
 lua_ChangeDirectory :: proc "c" (L: ^lua.State) -> c.int {
-	p_dir := lua.tostring(L, 1)
+	p_dirPath := lua.tostring(L, 1)
 
-	result := rl.ChangeDirectory(p_dir)
+	result := rl.ChangeDirectory(p_dirPath)
 
 	lua.pushboolean(L, b32(result))
 	return 1
@@ -4487,16 +4606,6 @@ lua_UnloadDroppedFiles :: proc "c" (L: ^lua.State) -> c.int {
 	rl.UnloadDroppedFiles(p_files)
 
 	return 0
-}
-
-@(private)
-lua_GetFileModTime :: proc "c" (L: ^lua.State) -> c.int {
-	p_fileName := lua.tostring(L, 1)
-
-	result := rl.GetFileModTime(p_fileName)
-
-	lua.pushinteger(L, lua.Integer(result))
-	return 1
 }
 
 @(private)
@@ -4585,6 +4694,16 @@ lua_GetCharPressed :: proc "c" (L: ^lua.State) -> c.int {
 	result := rl.GetCharPressed()
 
 	lua.pushinteger(L, lua.Integer(result))
+	return 1
+}
+
+@(private)
+lua_GetKeyName :: proc "c" (L: ^lua.State) -> c.int {
+	p_key := cast(rl.KeyboardKey)c.int(lua.tonumber(L, 1))
+
+	result := rl.GetKeyName(p_key)
+
+	lua.pushstring(L, result)
 	return 1
 }
 
@@ -5081,6 +5200,19 @@ lua_DrawLineBezier :: proc "c" (L: ^lua.State) -> c.int {
 }
 
 @(private)
+lua_DrawLineDashed :: proc "c" (L: ^lua.State) -> c.int {
+	p_startPos := fromlua_Vector2(L, 1)
+	p_endPos := fromlua_Vector2(L, 2)
+	p_dashSize := c.int(lua.tonumber(L, 3))
+	p_spaceSize := c.int(lua.tonumber(L, 4))
+	p_color := fromlua_Color(L, 5)
+
+	rl.DrawLineDashed(p_startPos, p_endPos, p_dashSize, p_spaceSize, p_color)
+
+	return 0
+}
+
+@(private)
 lua_DrawCircle :: proc "c" (L: ^lua.State) -> c.int {
 	p_centerX := c.int(lua.tonumber(L, 1))
 	p_centerY := c.int(lua.tonumber(L, 2))
@@ -5088,6 +5220,29 @@ lua_DrawCircle :: proc "c" (L: ^lua.State) -> c.int {
 	p_color := fromlua_Color(L, 4)
 
 	rl.DrawCircle(p_centerX, p_centerY, p_radius, p_color)
+
+	return 0
+}
+
+@(private)
+lua_DrawCircleV :: proc "c" (L: ^lua.State) -> c.int {
+	p_center := fromlua_Vector2(L, 1)
+	p_radius := c.float(lua.tonumber(L, 2))
+	p_color := fromlua_Color(L, 3)
+
+	rl.DrawCircleV(p_center, p_radius, p_color)
+
+	return 0
+}
+
+@(private)
+lua_DrawCircleGradient :: proc "c" (L: ^lua.State) -> c.int {
+	p_center := fromlua_Vector2(L, 1)
+	p_radius := c.float(lua.tonumber(L, 2))
+	p_inner := fromlua_Color(L, 3)
+	p_outer := fromlua_Color(L, 4)
+
+	rl.DrawCircleGradient(p_center, p_radius, p_inner, p_outer)
 
 	return 0
 }
@@ -5116,30 +5271,6 @@ lua_DrawCircleSectorLines :: proc "c" (L: ^lua.State) -> c.int {
 	p_color := fromlua_Color(L, 6)
 
 	rl.DrawCircleSectorLines(p_center, p_radius, p_startAngle, p_endAngle, p_segments, p_color)
-
-	return 0
-}
-
-@(private)
-lua_DrawCircleGradient :: proc "c" (L: ^lua.State) -> c.int {
-	p_centerX := c.int(lua.tonumber(L, 1))
-	p_centerY := c.int(lua.tonumber(L, 2))
-	p_radius := c.float(lua.tonumber(L, 3))
-	p_inner := fromlua_Color(L, 4)
-	p_outer := fromlua_Color(L, 5)
-
-	rl.DrawCircleGradient(p_centerX, p_centerY, p_radius, p_inner, p_outer)
-
-	return 0
-}
-
-@(private)
-lua_DrawCircleV :: proc "c" (L: ^lua.State) -> c.int {
-	p_center := fromlua_Vector2(L, 1)
-	p_radius := c.float(lua.tonumber(L, 2))
-	p_color := fromlua_Color(L, 3)
-
-	rl.DrawCircleV(p_center, p_radius, p_color)
 
 	return 0
 }
@@ -5181,6 +5312,18 @@ lua_DrawEllipse :: proc "c" (L: ^lua.State) -> c.int {
 }
 
 @(private)
+lua_DrawEllipseV :: proc "c" (L: ^lua.State) -> c.int {
+	p_center := fromlua_Vector2(L, 1)
+	p_radiusH := c.float(lua.tonumber(L, 2))
+	p_radiusV := c.float(lua.tonumber(L, 3))
+	p_color := fromlua_Color(L, 4)
+
+	rl.DrawEllipseV(p_center, p_radiusH, p_radiusV, p_color)
+
+	return 0
+}
+
+@(private)
 lua_DrawEllipseLines :: proc "c" (L: ^lua.State) -> c.int {
 	p_centerX := c.int(lua.tonumber(L, 1))
 	p_centerY := c.int(lua.tonumber(L, 2))
@@ -5189,6 +5332,18 @@ lua_DrawEllipseLines :: proc "c" (L: ^lua.State) -> c.int {
 	p_color := fromlua_Color(L, 5)
 
 	rl.DrawEllipseLines(p_centerX, p_centerY, p_radiusH, p_radiusV, p_color)
+
+	return 0
+}
+
+@(private)
+lua_DrawEllipseLinesV :: proc "c" (L: ^lua.State) -> c.int {
+	p_center := fromlua_Vector2(L, 1)
+	p_radiusH := c.float(lua.tonumber(L, 2))
+	p_radiusV := c.float(lua.tonumber(L, 3))
+	p_color := fromlua_Color(L, 4)
+
+	rl.DrawEllipseLinesV(p_center, p_radiusH, p_radiusV, p_color)
 
 	return 0
 }
@@ -5318,10 +5473,10 @@ lua_DrawRectangleGradientEx :: proc "c" (L: ^lua.State) -> c.int {
 	p_rec := fromlua_Rectangle(L, 1)
 	p_topLeft := fromlua_Color(L, 2)
 	p_bottomLeft := fromlua_Color(L, 3)
-	p_topRight := fromlua_Color(L, 4)
-	p_bottomRight := fromlua_Color(L, 5)
+	p_bottomRight := fromlua_Color(L, 4)
+	p_topRight := fromlua_Color(L, 5)
 
-	rl.DrawRectangleGradientEx(p_rec, p_topLeft, p_bottomLeft, p_topRight, p_bottomRight)
+	rl.DrawRectangleGradientEx(p_rec, p_topLeft, p_bottomLeft, p_bottomRight, p_topRight)
 
 	return 0
 }
@@ -7230,11 +7385,21 @@ lua_TextSubtext :: proc "c" (L: ^lua.State) -> c.int {
 }
 
 @(private)
+lua_TextRemoveSpaces :: proc "c" (L: ^lua.State) -> c.int {
+	p_text := lua.tostring(L, 1)
+
+	result := rl.TextRemoveSpaces(p_text)
+
+	lua.pushstring(L, result)
+	return 1
+}
+
+@(private)
 lua_TextFindIndex :: proc "c" (L: ^lua.State) -> c.int {
 	p_text := lua.tostring(L, 1)
-	p_find := lua.tostring(L, 2)
+	p_search := lua.tostring(L, 2)
 
-	result := rl.TextFindIndex(p_text, p_find)
+	result := rl.TextFindIndex(p_text, p_search)
 
 	lua.pushinteger(L, lua.Integer(result))
 	return 1
@@ -8242,4 +8407,3 @@ lua_SetAudioStreamBufferSizeDefault :: proc "c" (L: ^lua.State) -> c.int {
 
 	return 0
 }
-

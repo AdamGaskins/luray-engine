@@ -3,10 +3,10 @@
 -- Declarations only; this file is never executed by the runtime.
 
 ---@class Raylib.Raylib
----@field RAYLIB_VERSION_MAJOR integer 5
----@field RAYLIB_VERSION_MINOR integer 5
+---@field RAYLIB_VERSION_MAJOR integer 6
+---@field RAYLIB_VERSION_MINOR integer 0
 ---@field RAYLIB_VERSION_PATCH integer 0
----@field RAYLIB_VERSION string 5.5
+---@field RAYLIB_VERSION string 6.0
 ---@field PI number 3.141592653589793
 ---@field LIGHTGRAY Raylib.Color 
 ---@field GRAY Raylib.Color 
@@ -249,7 +249,8 @@
 ---@field SHADER_LOC_MAP_BRDF integer 25
 ---@field SHADER_LOC_VERTEX_BONEIDS integer 26
 ---@field SHADER_LOC_VERTEX_BONEWEIGHTS integer 27
----@field SHADER_LOC_BONE_MATRICES integer 28
+---@field SHADER_LOC_MATRIX_BONETRANSFORMS integer 28
+---@field SHADER_LOC_VERTEX_INSTANCETRANSFORM integer 29
 ---@field SHADER_UNIFORM_FLOAT integer 0
 ---@field SHADER_UNIFORM_VEC2 integer 1
 ---@field SHADER_UNIFORM_VEC3 integer 2
@@ -258,7 +259,11 @@
 ---@field SHADER_UNIFORM_IVEC2 integer 5
 ---@field SHADER_UNIFORM_IVEC3 integer 6
 ---@field SHADER_UNIFORM_IVEC4 integer 7
----@field SHADER_UNIFORM_SAMPLER2D integer 8
+---@field SHADER_UNIFORM_UINT integer 8
+---@field SHADER_UNIFORM_UIVEC2 integer 9
+---@field SHADER_UNIFORM_UIVEC3 integer 10
+---@field SHADER_UNIFORM_UIVEC4 integer 11
+---@field SHADER_UNIFORM_SAMPLER2D integer 12
 ---@field SHADER_ATTRIB_FLOAT integer 0
 ---@field SHADER_ATTRIB_VEC2 integer 1
 ---@field SHADER_ATTRIB_VEC3 integer 2
@@ -428,14 +433,14 @@ function _destroy() end
 ---@field position Raylib.Vector3 Camera position
 ---@field target Raylib.Vector3 Camera target it looks-at
 ---@field up Raylib.Vector3 Camera up vector (rotation over its axis)
----@field fovy number Camera field-of-view aperture in Y (degrees) in perspective, used as near plane width in orthographic
+---@field fovy number Camera field-of-view aperture in Y (degrees) in perspective, used as near plane height in world units in orthographic
 ---@field projection integer Camera projection: CAMERA_PERSPECTIVE or CAMERA_ORTHOGRAPHIC
 
 ---@class Raylib.Camera2D
----@field offset Raylib.Vector2 Camera offset (displacement from target)
----@field target Raylib.Vector2 Camera target (rotation and zoom origin)
----@field rotation number Camera rotation in degrees
----@field zoom number Camera zoom (scaling), should be 1.0f by default
+---@field offset Raylib.Vector2 Camera offset (screen space offset from window origin)
+---@field target Raylib.Vector2 Camera target (world space target point that is mapped to screen space offset)
+---@field rotation number Camera rotation in degrees (pivots around target)
+---@field zoom number Camera zoom (scaling around target), must not be set to 0, set to 1.0f for no scale
 
 ---@class Raylib.Shader
 ---@field id integer Shader program id
@@ -491,7 +496,6 @@ function _destroy() end
 ---@field ctxData any Audio context data, depends on type
 
 ---@class Raylib.FilePathList
----@field capacity integer Filepaths max entries
 ---@field count integer Filepaths entries count
 ---@field paths any Filepaths entries
 
@@ -571,7 +575,7 @@ function ray.MaximizeWindow() end
 ---Set window state: minimized, if resizable
 function ray.MinimizeWindow() end
 
----Set window state: not minimized/maximized
+---Restore window from being minimized/maximized
 function ray.RestoreWindow() end
 
 ---Set icon for window (single image, RGBA 32bit)
@@ -830,7 +834,7 @@ function ray.SetShaderValueV(shader, locIndex, value, uniformType, count) end
 ---@param mat Raylib.Matrix
 function ray.SetShaderValueMatrix(shader, locIndex, mat) end
 
----Set shader uniform value for texture (sampler2d)
+---Set shader uniform value and bind the texture (sampler2d)
 ---@param shader Raylib.Shader
 ---@param locIndex integer
 ---@param texture Raylib.Texture2D
@@ -953,6 +957,42 @@ function ray.LoadFileText(fileName) end
 ---@return boolean
 function ray.SaveFileText(fileName, text) end
 
+---Rename file (if exists)
+---@param fileName string
+---@param fileRename string
+---@return integer
+function ray.FileRename(fileName, fileRename) end
+
+---Remove file (if exists)
+---@param fileName string
+---@return integer
+function ray.FileRemove(fileName) end
+
+---Copy file from one path to another, dstPath created if it doesn't exist
+---@param srcPath string
+---@param dstPath string
+---@return integer
+function ray.FileCopy(srcPath, dstPath) end
+
+---Move file from one directory to another, dstPath created if it doesn't exist
+---@param srcPath string
+---@param dstPath string
+---@return integer
+function ray.FileMove(srcPath, dstPath) end
+
+---Replace text in an existing file
+---@param fileName string
+---@param search string
+---@param replacement string
+---@return integer
+function ray.FileTextReplace(fileName, search, replacement) end
+
+---Find text in existing file
+---@param fileName string
+---@param search string
+---@return integer
+function ray.FileTextFindIndex(fileName, search) end
+
 ---Check if file exists
 ---@param fileName string
 ---@return boolean
@@ -963,7 +1003,7 @@ function ray.FileExists(fileName) end
 ---@return boolean
 function ray.DirectoryExists(dirPath) end
 
----Check file extension (including point: .png, .wav)
+---Check file extension (recommended include point: .png, .wav)
 ---@param fileName string
 ---@param ext string
 ---@return boolean
@@ -973,6 +1013,11 @@ function ray.IsFileExtension(fileName, ext) end
 ---@param fileName string
 ---@return integer
 function ray.GetFileLength(fileName) end
+
+---Get file modification time (last write time)
+---@param fileName string
+---@return integer
+function ray.GetFileModTime(fileName) end
 
 ---Get pointer to extension for a filename string (includes dot: '.png')
 ---@param fileName string
@@ -1013,9 +1058,9 @@ function ray.GetApplicationDirectory() end
 function ray.MakeDirectory(dirPath) end
 
 ---Change working directory, return true on success
----@param dir string
+---@param dirPath string
 ---@return boolean
-function ray.ChangeDirectory(dir) end
+function ray.ChangeDirectory(dirPath) end
 
 ---Check if a given path is a file or a directory
 ---@param path string
@@ -1027,12 +1072,12 @@ function ray.IsPathFile(path) end
 ---@return boolean
 function ray.IsFileNameValid(fileName) end
 
----Load directory filepaths
+---Load directory filepaths, files and directories, no subdirs scan
 ---@param dirPath string
 ---@return Raylib.FilePathList
 function ray.LoadDirectoryFiles(dirPath) end
 
----Load directory filepaths with extension filtering and recursive directory scan. Use 'DIR' in the filter string to include directories in the result
+---Load directory filepaths with extension filtering and subdir scan; some filters available: "*.*", "FILES*", "DIRS*"
 ---@param basePath string
 ---@param filter string
 ---@param scanSubdirs boolean
@@ -1054,11 +1099,6 @@ function ray.LoadDroppedFiles() end
 ---Unload dropped filepaths
 ---@param files Raylib.FilePathList
 function ray.UnloadDroppedFiles(files) end
-
----Get file modification time (last write time)
----@param fileName string
----@return integer
-function ray.GetFileModTime(fileName) end
 
 ---Set automation event internal base frame to start recording
 ---@param frame integer
@@ -1103,6 +1143,11 @@ function ray.GetKeyPressed() end
 ---@return integer
 function ray.GetCharPressed() end
 
+---Get name of a QWERTY key on the current keyboard layout (eg returns string 'q' for KEY_A on an AZERTY keyboard)
+---@param key integer
+---@return string
+function ray.GetKeyName(key) end
+
 ---Set a custom key to exit program (default is ESC)
 ---@param key integer
 function ray.SetExitKey(key) end
@@ -1145,12 +1190,12 @@ function ray.IsGamepadButtonUp(gamepad, button) end
 ---@return integer
 function ray.GetGamepadButtonPressed() end
 
----Get gamepad axis count for a gamepad
+---Get axis count for a gamepad
 ---@param gamepad integer
 ---@return integer
 function ray.GetGamepadAxisCount(gamepad) end
 
----Get axis movement value for a gamepad axis
+---Get movement value for a gamepad axis
 ---@param gamepad integer
 ---@param axis integer
 ---@return number
@@ -1355,12 +1400,33 @@ function ray.DrawLineStrip(points, color) end
 ---@param color Raylib.Color
 function ray.DrawLineBezier(startPos, endPos, thick, color) end
 
+---Draw a dashed line
+---@param startPos Raylib.Vector2
+---@param endPos Raylib.Vector2
+---@param dashSize integer
+---@param spaceSize integer
+---@param color Raylib.Color
+function ray.DrawLineDashed(startPos, endPos, dashSize, spaceSize, color) end
+
 ---Draw a color-filled circle
 ---@param centerX integer
 ---@param centerY integer
 ---@param radius number
 ---@param color Raylib.Color
 function ray.DrawCircle(centerX, centerY, radius, color) end
+
+---Draw a color-filled circle (Vector version)
+---@param center Raylib.Vector2
+---@param radius number
+---@param color Raylib.Color
+function ray.DrawCircleV(center, radius, color) end
+
+---Draw a gradient-filled circle
+---@param center Raylib.Vector2
+---@param radius number
+---@param inner Raylib.Color
+---@param outer Raylib.Color
+function ray.DrawCircleGradient(center, radius, inner, outer) end
 
 ---Draw a piece of a circle
 ---@param center Raylib.Vector2
@@ -1379,20 +1445,6 @@ function ray.DrawCircleSector(center, radius, startAngle, endAngle, segments, co
 ---@param segments integer
 ---@param color Raylib.Color
 function ray.DrawCircleSectorLines(center, radius, startAngle, endAngle, segments, color) end
-
----Draw a gradient-filled circle
----@param centerX integer
----@param centerY integer
----@param radius number
----@param inner Raylib.Color
----@param outer Raylib.Color
-function ray.DrawCircleGradient(centerX, centerY, radius, inner, outer) end
-
----Draw a color-filled circle (Vector version)
----@param center Raylib.Vector2
----@param radius number
----@param color Raylib.Color
-function ray.DrawCircleV(center, radius, color) end
 
 ---Draw circle outline
 ---@param centerX integer
@@ -1415,6 +1467,13 @@ function ray.DrawCircleLinesV(center, radius, color) end
 ---@param color Raylib.Color
 function ray.DrawEllipse(centerX, centerY, radiusH, radiusV, color) end
 
+---Draw ellipse (Vector version)
+---@param center Raylib.Vector2
+---@param radiusH number
+---@param radiusV number
+---@param color Raylib.Color
+function ray.DrawEllipseV(center, radiusH, radiusV, color) end
+
 ---Draw ellipse outline
 ---@param centerX integer
 ---@param centerY integer
@@ -1422,6 +1481,13 @@ function ray.DrawEllipse(centerX, centerY, radiusH, radiusV, color) end
 ---@param radiusV number
 ---@param color Raylib.Color
 function ray.DrawEllipseLines(centerX, centerY, radiusH, radiusV, color) end
+
+---Draw ellipse outline (Vector version)
+---@param center Raylib.Vector2
+---@param radiusH number
+---@param radiusV number
+---@param color Raylib.Color
+function ray.DrawEllipseLinesV(center, radiusH, radiusV, color) end
 
 ---Draw ring
 ---@param center Raylib.Vector2
@@ -1491,9 +1557,9 @@ function ray.DrawRectangleGradientH(posX, posY, width, height, left, right) end
 ---@param rec Raylib.Rectangle
 ---@param topLeft Raylib.Color
 ---@param bottomLeft Raylib.Color
----@param topRight Raylib.Color
 ---@param bottomRight Raylib.Color
-function ray.DrawRectangleGradientEx(rec, topLeft, bottomLeft, topRight, bottomRight) end
+---@param topRight Raylib.Color
+function ray.DrawRectangleGradientEx(rec, topLeft, bottomLeft, bottomRight, topRight) end
 
 ---Draw rectangle outline
 ---@param posX integer
@@ -2257,12 +2323,12 @@ function ray.IsRenderTextureValid(target) end
 ---@param target Raylib.RenderTexture2D
 function ray.UnloadRenderTexture(target) end
 
----Update GPU texture with new data
+---Update GPU texture with new data (pixels should be able to fill texture)
 ---@param texture Raylib.Texture2D
 ---@param pixels any
 function ray.UpdateTexture(texture, pixels) end
 
----Update GPU texture rectangle with new data
+---Update GPU texture rectangle with new data (pixels and rec should fit in texture)
 ---@param texture Raylib.Texture2D
 ---@param rec Raylib.Rectangle
 ---@param pixels any
@@ -2535,11 +2601,16 @@ function ray.GetCodepointCount(text) end
 ---@return string
 function ray.TextSubtext(text, position, length) end
 
----Find first text occurrence within a string
+---Remove text spaces, concat words
 ---@param text string
----@param find string
+---@return string
+function ray.TextRemoveSpaces(text) end
+
+---Find first text occurrence within a string, -1 if not found
+---@param text string
+---@param search string
 ---@return integer
-function ray.TextFindIndex(text, find) end
+function ray.TextFindIndex(text, search) end
 
 ---Get upper case version of provided string
 ---@param text string
@@ -2566,12 +2637,12 @@ function ray.TextToSnake(text) end
 ---@return string
 function ray.TextToCamel(text) end
 
----Get integer value from text (negative values not supported)
+---Get integer value from text
 ---@param text string
 ---@return integer
 function ray.TextToInteger(text) end
 
----Get float value from text (negative values not supported)
+---Get float value from text
 ---@param text string
 ---@return number
 function ray.TextToFloat(text) end
@@ -2860,7 +2931,7 @@ function ray.LoadSoundAlias(source) end
 ---@return boolean
 function ray.IsSoundValid(sound) end
 
----Update sound buffer with new data
+---Update sound buffer with new data (default data format: 32 bit float, stereo)
 ---@param sound Raylib.Sound
 ---@param data any
 ---@param sampleCount integer
@@ -2921,7 +2992,7 @@ function ray.SetSoundVolume(sound, volume) end
 ---@param pitch number
 function ray.SetSoundPitch(sound, pitch) end
 
----Set pan for a sound (0.5 is center)
+---Set pan for a sound (-1.0 left, 0.0 center, 1.0 right)
 ---@param sound Raylib.Sound
 ---@param pan number
 function ray.SetSoundPan(sound, pan) end
@@ -2985,7 +3056,7 @@ function ray.SetMusicVolume(music, volume) end
 ---@param pitch number
 function ray.SetMusicPitch(music, pitch) end
 
----Set pan for a music (0.5 is center)
+---Set pan for a music (-1.0 left, 0.0 center, 1.0 right)
 ---@param music Raylib.Music
 ---@param pan number
 function ray.SetMusicPan(music, pan) end
@@ -3058,7 +3129,7 @@ function ray.SetAudioStreamVolume(stream, volume) end
 ---@param pitch number
 function ray.SetAudioStreamPitch(stream, pitch) end
 
----Set pan for audio stream (0.5 is centered)
+---Set pan for audio stream (-1.0 to 1.0 range, 0.0 is centered)
 ---@param stream Raylib.AudioStream
 ---@param pan number
 function ray.SetAudioStreamPan(stream, pan) end

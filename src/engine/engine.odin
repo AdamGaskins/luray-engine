@@ -49,7 +49,7 @@ run :: proc(e: ^Engine) {
 	engine_lua.load_script(state, script)
 	delete(script)
 
-	rl.SetTraceLogLevel(rl.TraceLogLevel.NONE)
+	// rl.SetTraceLogLevel(rl.TraceLogLevel.NONE)
 	engine_lua.call(state, "_init")
 
 	for !rl.WindowShouldClose() {

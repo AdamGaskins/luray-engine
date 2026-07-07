@@ -56,7 +56,7 @@ function _destroy() end
 	defer strings.builder_destroy(&sb)
 
 	fmt.wprintln(w, "#+private package")
-	fmt.wprintln(w, "package lua")
+	fmt.wprintln(w, "package engine_lua")
 	fmt.wprintln(w, "")
 	fmt.wprintln(w, `import "core:c"`)
 	fmt.wprintln(w, `import lua "vendor:lua/5.4"`)
@@ -74,8 +74,8 @@ function _destroy() end
 	fmt.wprintln(w, "")
 
 	fmt.println("")
-	write_builder_to_file(&sb, "src/lua/bindings.odin")
-	fmt.println("Wrote bindings to src/lua/bindings.odin")
+	write_builder_to_file(&sb, "src/engine_lua/bindings.odin")
+	fmt.println("Wrote bindings to src/engine_lua/bindings.odin")
 
 	write_builder_to_file(&sb_docs, "meta/raylib.lua")
 	fmt.println("Wrote lua stubs to meta/raylib.lua")
@@ -540,6 +540,10 @@ write_struct_aliases :: proc(
 
 		name := v["name"].(json.String)
 		type := v["type"].(json.String)
+
+		if strings.has_prefix(name, "*") {
+			continue
+		}
 
 		_, found := slice.linear_search(implemented_types, type)
 		if !found {
