@@ -50,15 +50,36 @@ Command_Export :: Command {
 			fmt.eprintfln("Failed to create directory %v: %v", export_path, err)
 		}
 
-		export_name, _ := filepath.join([]string{export_path, "game.bundle"})
-		defer delete(export_name)
+		// BUNDLE
+		{
+			export_name, _ := filepath.join([]string{export_path, "game.bundle"})
+			defer delete(export_name)
 
-		err = bundle.write_to_file(b, export_name)
-		if err != nil {
-			fmt.eprintfln("Error writing to %v: %v", export_name, err)
-		} else {
-			fmt.printfln("Wrote bundle to %v", export_name)
+			err = bundle.write_to_file(b, export_name)
+			if err != nil {
+				fmt.eprintfln("Error writing to %v: %v", export_name, err)
+			} else {
+				fmt.printfln("Wrote bundle to %v", export_name)
+			}
 		}
+
+		// MAC
+		{
+			export_name, _ := filepath.join([]string{export_path, "game-macos"})
+			defer delete(export_name)
+
+			ok := bundle.fuse(
+				b,
+				"/Users/adam/lang/games/odin-test/builds/macos-arm64/raylua",
+				export_name,
+			)
+			if !ok {
+				fmt.eprintfln("Error writing mac build to %v", export_name)
+			} else {
+				fmt.printfln("Wrote mac build to %v", export_name)
+			}
+		}
+
 	},
 }
 

@@ -23,6 +23,8 @@
 
 package bundle
 
+import "core:bytes"
+import "core:encoding/endian"
 import "core:fmt"
 import "core:io"
 import "core:mem/virtual"
@@ -72,10 +74,10 @@ serialize :: proc(b: Bundle, w: io.Writer) -> os.Error {
 	if err != nil {return err}
 
 	for name, data in b.files {
-		_, err = write_len_and_bytes(w, transmute([]byte)name)
+		_, err = write_len_and_bytes(w, u32, transmute([]byte)name)
 		if err != nil {return err}
 
-		_, err = write_len_and_bytes(w, data)
+		_, err = write_len_and_bytes(w, u64, data)
 		if err != nil {return err}
 	}
 
@@ -127,15 +129,75 @@ deserialize :: proc(r: io.Reader) -> (Bundle, bool) {
 
 	file_count := read_u32(r)
 	for _ in 0 ..< file_count {
-		name_bytes, _ := read_len_and_bytes(r)
+		name_bytes, _ := read_len_and_bytes(r, u32)
 		defer delete(name_bytes)
 
-		data_bytes, _ := read_len_and_bytes(r)
+		data_bytes, _ := read_len_and_bytes(r, u64)
 		defer delete(data_bytes)
 
 		add_file(&b, string(name_bytes), data_bytes)
 	}
 
 	return b, true
+}
+
+fuse :: proc(b: Bundle, binary_path: string, dst_path: string) -> bool {
+	os.copy_file(dst_path, binary_path)
+
+	file, err := os.open(dst_path, os.File_Flags{.Append, .Write})
+	if err != nil {
+		fmt.eprintfln("Failed to open for appending %v", err)
+		return false
+	}
+	defer os.close(file)
+
+	binary_size_begin, _ := os.file_size(file)
+
+	w := os.to_writer(file)
+	_ = serialize(b, w)
+
+	binary_size_end, _ := os.file_size(file)
+	bundle_size := binary_size_end - binary_size_begin
+
+	write_u64(w, cast(u64)bundle_size)
+	io.write_full(w, EXE_MAGIC[:])
+	return true
+}
+
+load_from_current_exe :: proc() -> (Bundle, bool) {
+	exe_path, _ := os.get_executable_path(context.allocator)
+	defer delete(exe_path)
+
+	file, _ := os.open(exe_path)
+	defer os.close(file)
+
+	size, _ := os.file_size(file)
+
+	if size < 16 {
+		return Bundle{}, false
+	}
+
+	_, _ = os.seek(file, -16, .End)
+	footer: [16]byte
+	_, _ = os.read_full(file, footer[:])
+
+	if !bytes.equal(footer[8:16], EXE_MAGIC[:]) {
+		return Bundle{}, false
+	}
+
+	bundle_size, _ := endian.get_u64(footer[:8], .Little)
+	if bundle_size > u64(size - 16) {
+		return Bundle{}, false
+	}
+
+	offset := -(16 + bundle_size)
+	_, _ = os.seek(file, cast(i64)offset, .End)
+	buf := make([]byte, bundle_size)
+	defer delete(buf)
+	_, _ = os.read_full(file, buf)
+
+	reader: bytes.Reader
+	bytes.reader_init(&reader, buf)
+	return deserialize(bytes.reader_to_stream(&reader))
 }
 
