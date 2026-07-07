@@ -1,9 +1,9 @@
 package engine
 
 import "../engine_lua"
+import "../vfs"
 import "../watcher"
 import "core:fmt"
-import "core:os"
 import "core:strings"
 import lua "vendor:lua/5.4"
 import rl "vendor:raylib"
@@ -11,24 +11,19 @@ import rl "vendor:raylib"
 Engine :: struct {
 	dev_mode: bool,
 	watch:    watcher.Watcher,
+	vfs:      vfs.Vfs,
 }
 
 MAIN_FILE :: "main.lua"
 
-new :: proc(main_dir: string, dev_mode: bool = false) -> Engine {
-	os.set_working_directory(main_dir)
-
-	if !os.exists(MAIN_FILE) {
-		fmt.eprintfln("main.lua not found in %v", main_dir)
-		os.exit(1)
-	}
-
+create :: proc(fs: vfs.Vfs, dev_mode: bool = false) -> Engine {
 	engine := Engine {
 		dev_mode = dev_mode,
+		vfs      = fs,
 	}
 
 	if dev_mode {
-		engine.watch = watcher.new()
+		engine.watch = watcher.create(fs)
 	}
 
 	return engine
@@ -41,9 +36,19 @@ destroy :: proc(e: ^Engine) {
 }
 
 run :: proc(e: ^Engine) {
+	script, ok := e.vfs.get_file(e.vfs.data, MAIN_FILE)
+	if !ok {
+		fmt.eprintln("Failed to open main.lua")
+		return
+	}
+
 	state := engine_lua.create_state()
 	defer lua.close(state)
-	engine_lua.load_script(state, MAIN_FILE)
+	engine_lua.install_vfs_require(state, e.vfs)
+
+	engine_lua.load_script(state, script)
+	delete(script)
+
 	rl.SetTraceLogLevel(rl.TraceLogLevel.NONE)
 	engine_lua.call(state, "_init")
 
@@ -52,11 +57,19 @@ run :: proc(e: ^Engine) {
 
 		if e.dev_mode {
 			updated_files := watcher.poll(&e.watch)
+			// No need to delete the strings inside
+			defer delete(updated_files)
 			if len(updated_files) > 0 {
 				modules := modules_from_files(updated_files)
+				defer free_modules(&modules)
 				fmt.printfln("Updated files: %v", modules)
 				engine_lua.clear_user_modules(state, modules)
-				engine_lua.load_script(state, MAIN_FILE)
+
+				script, ok = e.vfs.get_file(e.vfs.data, MAIN_FILE)
+				defer delete(script)
+				if ok {
+					engine_lua.load_script(state, script)
+				}
 			}
 		}
 
@@ -79,10 +92,18 @@ modules_from_files :: proc(files: []string) -> []string {
 		}
 
 		module_name := strings.trim_suffix(file, ".lua")
+		module_name, _ = strings.replace_all(module_name, "/", ".")
 		append(&modules, module_name)
 	}
 
 	return modules[:]
+}
+
+@(private)
+free_modules :: proc(modules: ^[]string) {
+	for module in modules {
+		delete(module)
+	}
 }
 
 @(private)

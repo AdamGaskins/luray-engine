@@ -1,7 +1,9 @@
 package commands
 
 import "../engine"
+import "../vfs"
 import "core:fmt"
+import "core:os"
 
 Dev_Flags :: struct {
 	main_dir: string `args:"pos=0,required" usage:"Path to directory containing main.lua"`,
@@ -13,8 +15,13 @@ Command_Dev :: Command {
 		options := parse_flags(Dev_Flags, Command_Dev, args)
 
 		e: engine.Engine
-		e = engine.new(options.main_dir, true)
-		fmt.println("Starting engine with hotreload")
+		path, _ := os.get_absolute_path(options.main_dir, context.allocator)
+		fs := vfs.make_vfs_local(path)
+		defer vfs.destroy_vfs_local(&fs)
+
+		fmt.println("Starting engine with hot reload")
+
+		e = engine.create(fs, true)
 		defer engine.destroy(&e)
 		engine.run(&e)
 	},
