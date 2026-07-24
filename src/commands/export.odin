@@ -52,6 +52,7 @@ Command_Export :: Command {
 
 		// BUNDLE
 		{
+			fmt.println("== BUNDLE ==")
 			export_name, _ := filepath.join([]string{export_path, "game.bundle"})
 			defer delete(export_name)
 
@@ -61,16 +62,18 @@ Command_Export :: Command {
 			} else {
 				fmt.printfln("Wrote bundle to %v", export_name)
 			}
+			fmt.println()
 		}
 
 		// MAC
 		{
+			fmt.println("== MAC ==")
 			export_name, _ := filepath.join([]string{export_path, "game-macos"})
 			defer delete(export_name)
 
 			ok := bundle.fuse(
 				b,
-				"/Users/adam/lang/games/odin-test/builds/macos-arm64/raylua",
+				"/Users/adam/lang/games/odin-test/build/macos-arm64/raylua",
 				export_name,
 			)
 			if !ok {
@@ -78,6 +81,36 @@ Command_Export :: Command {
 			} else {
 				fmt.printfln("Wrote mac build to %v", export_name)
 			}
+			fmt.println()
+		}
+
+		// WEB
+		{
+			fmt.println("== WEB ==")
+			export_web_path, _ := filepath.join([]string{export_path, "game-web"})
+			defer delete(export_web_path)
+
+			err = os.copy_directory_all(
+				export_web_path,
+				"/Users/adam/lang/games/odin-test/build/web",
+			)
+			if err != nil {
+				fmt.eprintfln("Failed to copy web assets: %v", err)
+			}
+
+			bundle_export_name, _ := filepath.join([]string{export_web_path, "game.bundle"})
+			defer delete(bundle_export_name)
+			err = bundle.write_to_file(b, bundle_export_name)
+			if err != nil {
+				fmt.eprintfln("Error writing to %v: %v", bundle_export_name, err)
+			}
+			fmt.printfln("Wrote web build to %v", export_web_path)
+			fmt.printfln("Test with one of the following:")
+			fmt.printfln("\tpython3 -m http.server 8000 --directory '%v'", export_web_path)
+			fmt.printfln("\tnpx http-server '%v' -p 8000", export_web_path)
+			fmt.printfln("\tphp -S localhost:8000 -t '%v'", export_web_path)
+			fmt.printfln("\tsimple-http-server '%v' --index", export_web_path)
+			fmt.println()
 		}
 
 	},
