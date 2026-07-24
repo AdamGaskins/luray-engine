@@ -19,16 +19,24 @@ e: engine.Engine
 @(private = "file")
 fs: vfs.Vfs
 
+// Allows the JS to write the `game.bundle` bytes into a pointer.
+// This is emscripten's malloc.
 @(export)
-engine_start :: proc "c" () -> bool {
+web_alloc :: proc "c" (size: c.int) -> rawptr {
+	return malloc(c.size_t(size))
+}
+
+@(export)
+engine_start :: proc "c" (bundle_data: [^]byte, bundle_len: c.int) -> bool {
 	context = runtime.default_context()
 	context.allocator = emscripten_allocator()
 	init_global_temporary_allocator(1 * mem.Megabyte)
 	default_context = context
 
 	r: bytes.Reader
-	bytes.reader_init(&r, #load("../../luatest/exports/game.bundle"))
+	bytes.reader_init(&r, bundle_data[:bundle_len])
 	b, ok := bundle.deserialize(bytes.reader_to_stream(&r))
+	defer free(bundle_data)
 	if !ok {
 		return false
 	}

@@ -19,7 +19,8 @@
         background-color: black;
       }
       canvas.game_canvas {
-        border: 0px none;
+        outline: 0 none;
+        border: 0 none;
         background-color: black;
         padding-left: 0;
         padding-right: 0;
@@ -65,13 +66,22 @@
         },
         // This happens a bit after `instantiateWasm`, when everything is
         // done setting up. At that point we can run code.
-        onRuntimeInitialized: () => {
+        onRuntimeInitialized: async () => {
           var e = wasmExports;
 
           // Calls any procedure marked with @init
           e._start();
 
-          e.engine_start();
+          const bundleBytes = new Uint8Array(
+            await (await fetch("game.bundle")).arrayBuffer(),
+          );
+
+          const dataPtr = e.web_alloc(bundleBytes.length);
+          new Uint8Array(e.memory.buffer, dataPtr, bundleBytes.length).set(
+            bundleBytes,
+          );
+
+          e.engine_start(dataPtr, bundleBytes.length);
 
           function send_resize() {
             var canvas = document.getElementById("canvas");

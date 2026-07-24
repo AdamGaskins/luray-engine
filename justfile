@@ -22,6 +22,7 @@ build-web:
         lib/wasm/liblua5.4.a \
         --shell-file src/main_web/index_template.html \
         -s USE_GLFW=3 -s WARN_ON_UNDEFINED_SYMBOLS=0 -s ALLOW_MEMORY_GROWTH=1
+    trash build/web/game.obj
 
 run-web: build-web
     simple-http-server --nocache --index build/web
