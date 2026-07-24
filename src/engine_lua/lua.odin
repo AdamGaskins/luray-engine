@@ -1,12 +1,11 @@
 package engine_lua
 
+import lua "../vendor/lua"
 import "../vfs"
 import "base:runtime"
 import "core:c"
 import "core:fmt"
-import "core:os"
 import "core:strings"
-import lua "vendor:lua/5.4"
 
 create_state :: proc() -> ^lua.State {
 	state := lua.L_newstate()
@@ -38,7 +37,7 @@ clear_user_modules :: proc(state: ^lua.State, modules: []string) {
 	}
 }
 
-call :: proc(state: ^lua.State, name: cstring) {
+call :: proc(state: ^lua.State, name: cstring) -> bool {
 	lua.getglobal(state, "debug")
 	lua.getfield(state, -1, "traceback")
 	lua.remove(state, -2)
@@ -49,8 +48,10 @@ call :: proc(state: ^lua.State, name: cstring) {
 		err := lua.tostring(state, -1)
 		fmt.eprintfln("(%v): %v", name, err)
 		lua.pop(state, 1)
-		os.exit(1)
+		return false
 	}
+
+	return true
 }
 
 // ugly, I know :(

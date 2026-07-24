@@ -1,3 +1,4 @@
+#+build darwin, linux, windows
 package main
 
 import "./bundle"
@@ -9,11 +10,12 @@ import "core:fmt"
 main :: proc() {
 	b, ok := bundle.load_from_current_exe()
 
-	if !ok {
-		commands.execute_command_or_exit()
-		return
+	when ODIN_OS != .JS {
+		if !ok {
+			commands.execute_command_or_exit()
+			return
+		}
 	}
-
 
 	fs := vfs.make_vfs_memory_from_bundle(&b)
 	defer fs.destroy(fs.data)

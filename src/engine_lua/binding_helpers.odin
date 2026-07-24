@@ -1,9 +1,9 @@
 package engine_lua
 
+import lua "../vendor/lua"
 import "base:runtime"
 import "core:c"
 import "core:fmt"
-import lua "vendor:lua/5.4"
 import rl "vendor:raylib"
 
 @(private)

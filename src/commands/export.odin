@@ -1,4 +1,4 @@
-
+#+build darwin, linux, windows
 package commands
 
 import "../bundle"

@@ -1,28 +1,37 @@
 run +ARGS:
     odin run ./src -out:raylua -- {{ARGS}}
 
-build: build-mac
+build: build-mac-arm
+
+clean:
+    trash build
 
 generate-bindings:
     odin run scripts/generate_bindings && odinfmt src/engine_lua/bindings.odin -w
 
 build-mac-arm:
-    mkdir -p builds/macos-arm
-    odin build src -out:builds/macos-arm/raylua -target:darwin_arm64 -extra-linker-flags:"-Wl,-force_load,./lib/liblua5.4.a -Wl,-dead_strip_dylibs"
-    
-build-mac-x86:
-    mkdir -p builds/macos-x86
-    odin build src -out:builds/macos-x86/raylua -target:darwin_amd64 -extra-linker-flags:"-Wl,-force_load,./lib/liblua5.4.a -Wl,-dead_strip_dylibs"
+    mkdir -p build/macos-arm
+    odin build src -out:build/macos-arm/raylua -target:darwin_arm64 -extra-linker-flags:"-Wl,-force_load,./lib/liblua5.4.a -Wl,-dead_strip_dylibs"
 
-build-linux-arm:
-    mkdir -p builds/linux-arm
-    odin build src -out:builds/linux-arm/raylua -target:linux_arm64 -extra-linker-flags:"-Wl,-force_load,./lib/liblua5.4.a -Wl,-dead_strip_dylibs"
+build-web:
+    mkdir -p build/web
+    odin build src/main_web -target:js_wasm32 -build-mode:obj -o:speed -define:RAYLIB_WASM_LIB=env.o -out:build/web/game
+    cp "$(odin root)/core/sys/wasm/js/odin.js" build/web/odin.js
+    emcc -o build/web/index.html build/web/game.obj \
+        "$(odin root)/vendor/raylib/wasm/libraylib.web.a" \
+        lib/wasm/liblua5.4.a \
+        --shell-file src/main_web/index_template.html \
+        -s USE_GLFW=3 -s WARN_ON_UNDEFINED_SYMBOLS=0 -s ALLOW_MEMORY_GROWTH=1
 
-build-linux-x86:
-    mkdir -p builds/linux-x86
-    odin build src -out:builds/linux-x86/raylua -target:linux_amd64 -extra-linker-flags:"-Wl,-force_load,./lib/liblua5.4.a -Wl,-dead_strip_dylibs"
+run-web: build-web
+    simple-http-server --nocache --index build/web
 
-build-windows-x86:
-    mkdir -p builds/windows-x86
-    odin build src -out:builds/windows-x86/raylua -target:windows_amd64 -extra-linker-flags:"-Wl,-force_load,./lib/liblua5.4.a -Wl,-dead_strip_dylibs"
+_compile-lua-web lua_path:
+    mkdir -p lib/wasm
+    cd {{lua_path}}/src && emcc -O2 -DLUA_USE_POSIX -c lapi.c lauxlib.c lbaselib.c lcode.c lcorolib.c \
+      lctype.c ldblib.c ldebug.c ldo.c ldump.c lfunc.c lgc.c linit.c liolib.c \
+      llex.c lmathlib.c lmem.c loadlib.c lobject.c lopcodes.c loslib.c lparser.c \
+      lstate.c lstring.c lstrlib.c ltable.c ltablib.c ltm.c lundump.c lutf8lib.c \
+      lvm.c lzio.c
+    emar rcs lib/wasm/liblua5.4.a {{lua_path}}/src/*.o
 

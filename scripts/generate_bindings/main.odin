@@ -59,7 +59,7 @@ function _destroy() end
 	fmt.wprintln(w, "package engine_lua")
 	fmt.wprintln(w, "")
 	fmt.wprintln(w, `import "core:c"`)
-	fmt.wprintln(w, `import lua "vendor:lua/5.4"`)
+	fmt.wprintln(w, `import lua "../vendor/lua"`)
 	fmt.wprintln(w, `import rl "vendor:raylib"`)
 	fmt.wprintln(w, `import "base:runtime"`)
 	fmt.wprintln(w, "")

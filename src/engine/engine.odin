@@ -1,17 +1,18 @@
 package engine
 
 import "../engine_lua"
+import lua "../vendor/lua"
 import "../vfs"
 import "../watcher"
 import "core:fmt"
 import "core:strings"
-import lua "vendor:lua/5.4"
 import rl "vendor:raylib"
 
 Engine :: struct {
 	dev_mode: bool,
 	watch:    watcher.Watcher,
 	vfs:      vfs.Vfs,
+	state:    ^lua.State,
 }
 
 MAIN_FILE :: "main.lua"
@@ -36,13 +37,22 @@ destroy :: proc(e: ^Engine) {
 }
 
 run :: proc(e: ^Engine) {
+	game_init(e)
+
+	for game_step(e) {}
+
+	game_teardown(e)
+}
+
+game_init :: proc(e: ^Engine) -> bool {
 	script, ok := e.vfs.get_file(e.vfs.data, MAIN_FILE)
 	if !ok {
 		fmt.eprintln("Failed to open main.lua")
-		return
+		return false
 	}
 
 	state := engine_lua.create_state()
+	e.state = state
 	defer lua.close(state)
 	engine_lua.install_vfs_require(state, e.vfs)
 
@@ -50,36 +60,40 @@ run :: proc(e: ^Engine) {
 	delete(script)
 
 	// rl.SetTraceLogLevel(rl.TraceLogLevel.NONE)
-	engine_lua.call(state, "_init")
+	return engine_lua.call(state, "_init")
+}
 
-	for !rl.WindowShouldClose() {
-		engine_lua.call(state, "_update")
+game_step :: proc(e: ^Engine) -> bool {
+	engine_lua.call(e.state, "_update")
 
-		if e.dev_mode {
-			updated_files := watcher.poll(&e.watch)
-			// No need to delete the strings inside
-			defer delete(updated_files)
-			if len(updated_files) > 0 {
-				modules := modules_from_files(updated_files)
-				defer free_modules(&modules)
-				fmt.printfln("Updated files: %v", modules)
-				engine_lua.clear_user_modules(state, modules)
+	if e.dev_mode {
+		updated_files := watcher.poll(&e.watch)
+		// No need to delete the strings inside
+		defer delete(updated_files)
+		if len(updated_files) > 0 {
+			modules := modules_from_files(updated_files)
+			defer free_modules(&modules)
+			fmt.printfln("Updated files: %v", modules)
+			engine_lua.clear_user_modules(e.state, modules)
 
-				script, ok = e.vfs.get_file(e.vfs.data, MAIN_FILE)
-				defer delete(script)
-				if ok {
-					engine_lua.load_script(state, script)
-				}
+			script, ok := e.vfs.get_file(e.vfs.data, MAIN_FILE)
+			defer delete(script)
+			if ok {
+				engine_lua.load_script(e.state, script)
 			}
-		}
-
-		if is_reload_button_pressed() {
-			engine_lua.call(state, "_destroy")
-			engine_lua.call(state, "_init")
 		}
 	}
 
-	engine_lua.call(state, "_destroy")
+	if is_reload_button_pressed() {
+		engine_lua.call(e.state, "_destroy")
+		engine_lua.call(e.state, "_init")
+	}
+
+	return !rl.WindowShouldClose()
+}
+
+game_teardown :: proc(e: ^Engine) {
+	engine_lua.call(e.state, "_destroy")
 }
 
 @(private)

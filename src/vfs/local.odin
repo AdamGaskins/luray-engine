@@ -1,8 +1,9 @@
+#+build darwin, linux, windows
 package vfs
-
 import "core:os"
 import "core:path/filepath"
 import "core:strings"
+
 @(private)
 Vfs_Local_Data :: struct {
 	base_path: string,
