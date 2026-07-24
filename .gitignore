@@ -3,3 +3,4 @@ generate_bindings
 src.bin
 luatest/
 build/
+docs/
