@@ -53,7 +53,6 @@ game_init :: proc(e: ^Engine) -> bool {
 
 	state := engine_lua.create_state()
 	e.state = state
-	defer lua.close(state)
 	engine_lua.install_vfs_require(state, e.vfs)
 
 	engine_lua.load_script(state, script)
@@ -89,11 +88,16 @@ game_step :: proc(e: ^Engine) -> bool {
 		engine_lua.call(e.state, "_init")
 	}
 
-	return !rl.WindowShouldClose()
+	when ODIN_OS == .JS {
+		return true
+	} else {
+		return !rl.WindowShouldClose()
+	}
 }
 
 game_teardown :: proc(e: ^Engine) {
 	engine_lua.call(e.state, "_destroy")
+	lua.close(e.state)
 }
 
 @(private)

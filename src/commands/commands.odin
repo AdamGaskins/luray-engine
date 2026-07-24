@@ -55,7 +55,7 @@ parse_flags :: proc($T: typeid, c: Command, args: []string) -> T {
 	options: T
 	err := flags.parse(&options, args, .Unix)
 	if err != nil {
-		program := fmt.tprintf("%v %v", "raylua", args[0])
+		program := fmt.tprintf("%v %v", "raylua", c.command)
 		flags.write_usage(os.to_stream(os.stderr), T, program, .Unix)
 		flags.print_errors(T, err, program, .Unix)
 		os.exit(1)

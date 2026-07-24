@@ -25,7 +25,6 @@ package bundle
 
 import "core:fmt"
 import "core:io"
-import "core:mem/virtual"
 import "core:slice"
 import "core:strings"
 
@@ -38,7 +37,6 @@ VERSION: u32 = 1
 
 Bundle :: struct {
 	files: map[string][]u8,
-	arena: virtual.Arena,
 }
 
 create :: proc() -> Bundle {
@@ -48,16 +46,17 @@ create :: proc() -> Bundle {
 }
 
 add_file :: proc(b: ^Bundle, name: string, data: []u8) {
-	allocator := virtual.arena_allocator(&b.arena)
-
-	name_copy := strings.clone(name, allocator)
-	data_copy := slice.clone(data, allocator)
+	name_copy := strings.clone(name)
+	data_copy := slice.clone(data)
 	b.files[name_copy] = data_copy
 }
 
 destroy :: proc(b: ^Bundle) {
+	for name, data in b.files {
+		delete(name)
+		delete(data)
+	}
 	delete(b.files)
-	virtual.arena_destroy(&b.arena)
 }
 
 serialize :: proc(b: Bundle, w: io.Writer) -> io.Error {

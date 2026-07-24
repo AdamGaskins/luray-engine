@@ -1,10 +1,10 @@
 #+build darwin, linux, windows
 package main
 
-import "./bundle"
-import "./engine"
-import "./vfs"
-import "commands"
+import "../bundle"
+import "../commands"
+import "../engine"
+import "../vfs"
 import "core:fmt"
 
 main :: proc() {

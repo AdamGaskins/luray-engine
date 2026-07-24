@@ -1,5 +1,5 @@
 run +ARGS:
-    odin run ./src -out:raylua -- {{ARGS}}
+    odin run ./src/main_desktop -out:raylua -- {{ARGS}}
 
 build: build-mac-arm
 
@@ -11,7 +11,7 @@ generate-bindings:
 
 build-mac-arm:
     mkdir -p build/macos-arm
-    odin build src -out:build/macos-arm/raylua -target:darwin_arm64 -extra-linker-flags:"-Wl,-force_load,./lib/liblua5.4.a -Wl,-dead_strip_dylibs"
+    odin build src/main_desktop -out:build/macos-arm/raylua -target:darwin_arm64 -extra-linker-flags:"-Wl,-force_load,./lib/liblua5.4.a -Wl,-dead_strip_dylibs"
 
 build-web:
     mkdir -p build/web

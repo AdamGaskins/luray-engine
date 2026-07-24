@@ -7,7 +7,12 @@ import "core:c"
 import "core:fmt"
 import "core:strings"
 
+// Captured by `create_state` so that the `proc "c"` Lua callbacks can inherit
+// the proper context. This is because Emscripten needs a special allocator.
+callback_context: runtime.Context
+
 create_state :: proc() -> ^lua.State {
+	callback_context = context
 	state := lua.L_newstate()
 	lua.L_openlibs(state)
 	bind_raylib(state)
@@ -81,7 +86,7 @@ install_vfs_require :: proc(L: ^lua.State, fs: vfs.Vfs) {
 
 @(private)
 vfs_searcher :: proc "c" (L: ^lua.State) -> c.int {
-	context = runtime.default_context()
+	context = callback_context
 
 	mod_cstr := lua.tostring(L, 1)
 	modname := string(mod_cstr)

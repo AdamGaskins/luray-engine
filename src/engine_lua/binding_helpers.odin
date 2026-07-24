@@ -1,7 +1,6 @@
 package engine_lua
 
 import lua "../vendor/lua"
-import "base:runtime"
 import "core:c"
 import "core:fmt"
 import rl "vendor:raylib"
@@ -58,7 +57,7 @@ fromlua_shader_value :: proc "c" (
 	idx: c.int,
 	type: rl.ShaderUniformDataType,
 ) -> any {
-	context = runtime.default_context()
+	context = callback_context
 	if type == rl.ShaderUniformDataType.FLOAT {
 		return fromlua_float(L, idx)
 	} else if type == rl.ShaderUniformDataType.INT {

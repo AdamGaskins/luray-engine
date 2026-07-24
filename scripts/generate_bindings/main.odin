@@ -61,7 +61,6 @@ function _destroy() end
 	fmt.wprintln(w, `import "core:c"`)
 	fmt.wprintln(w, `import lua "../vendor/lua"`)
 	fmt.wprintln(w, `import rl "vendor:raylib"`)
-	fmt.wprintln(w, `import "base:runtime"`)
 	fmt.wprintln(w, "")
 	fmt.wprintln(w, "bind_raylib :: proc(L: ^lua.State) {")
 	fmt.wprintln(w, "\tlua.newtable(L)")
@@ -278,7 +277,7 @@ func__write_definition :: proc(w: io.Writer, funcDef: Function) {
 			// skip, handled just above
 		} else if is_ptr_array {
 			// TODO: this branch needs to be replaced with a gencode function
-			fmt.wprintfln(w, "\tcontext = runtime.default_context()")
+			fmt.wprintfln(w, "\tcontext = callback_context")
 			t := trim_c_type(param.type)
 			fmt.wprintfln(
 				w,
@@ -473,7 +472,7 @@ write_struct_helpers :: proc(
 			structName,
 			structName,
 		)
-		fmt.wprintfln(w, "\tcontext = runtime.default_context()")
+		fmt.wprintfln(w, "\tcontext = callback_context")
 		// -99 is the default value. if IDX isn't specified, create a new table.
 		// IDX isn't specified in cases when we want to modify a table in place.
 		// thus instead of creating a new one, we write back to the one passed to the function.
@@ -504,7 +503,7 @@ write_struct_helpers :: proc(
 			structName,
 			structName,
 		)
-		fmt.wprintfln(w, "\tcontext = runtime.default_context()")
+		fmt.wprintfln(w, "\tcontext = callback_context")
 		for field in fields {
 			// source := fmt.tprintf("%v.%v", structName, field.name)
 			fmt.wprintfln(w, "\tlua.getfield(L, idx, \"%v\")", field.name)

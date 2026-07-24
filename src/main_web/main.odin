@@ -16,6 +16,8 @@ default_context: runtime.Context
 
 @(private = "file")
 e: engine.Engine
+@(private = "file")
+fs: vfs.Vfs
 
 @(export)
 engine_start :: proc "c" () -> bool {
@@ -32,11 +34,9 @@ engine_start :: proc "c" () -> bool {
 	}
 	defer bundle.destroy(&b)
 
-	fs := vfs.make_vfs_memory()
-	defer fs.destroy(fs.data)
+	fs = vfs.make_vfs_memory_from_bundle(&b)
 
 	e = engine.create(fs, false)
-	defer engine.destroy(&e)
 	return engine.game_init(&e)
 }
 
@@ -52,6 +52,8 @@ engine_end :: proc "c" () {
 	context = default_context
 
 	engine.game_teardown(&e)
+	fs.destroy(fs.data)
+	engine.destroy(&e)
 }
 
 @(export)
