@@ -1,5 +1,5 @@
 function _init()
-    ray.InitWindow(600, 400, "RayLua Window")
+    ray.InitWindow(600, 400, "Luray Window")
     ray.SetTargetFPS(60)
 
     State = {

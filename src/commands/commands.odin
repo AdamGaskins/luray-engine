@@ -43,7 +43,7 @@ execute_command_or_exit :: proc() {
 }
 
 print_usage :: proc() {
-	fmt.println("Usage: raylua [command]")
+	fmt.println("Usage: luray [command]")
 	fmt.println("Available commands:")
 	for c in Commands {
 		fmt.printfln("\t%v\t%v", c.command, c.description)
@@ -55,7 +55,7 @@ parse_flags :: proc($T: typeid, c: Command, args: []string) -> T {
 	options: T
 	err := flags.parse(&options, args, .Unix)
 	if err != nil {
-		program := fmt.tprintf("%v %v", "raylua", c.command)
+		program := fmt.tprintf("%v %v", "luray", c.command)
 		flags.write_usage(os.to_stream(os.stderr), T, program, .Unix)
 		flags.print_errors(T, err, program, .Unix)
 		os.exit(1)

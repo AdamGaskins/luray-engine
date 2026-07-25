@@ -73,7 +73,7 @@ Command_Export :: Command {
 
 			ok := bundle.fuse(
 				b,
-				"/Users/adam/lang/games/odin-test/build/macos-arm/raylua",
+				"/Users/adam/lang/games/odin-test/build/macos-arm/luray",
 				export_name,
 			)
 			if !ok {
