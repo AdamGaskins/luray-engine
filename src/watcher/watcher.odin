@@ -31,6 +31,8 @@ poll :: proc(watcher: ^Watcher) -> []string {
 	updated: [dynamic]string
 
 	files := watcher.vfs.get_files(watcher.vfs.data)
+	defer vfs.destroy_vfs_files(&files)
+
 	for file in files {
 		if file.path not_in watcher.paths {
 			path := strings.clone(file.path)

@@ -22,6 +22,6 @@ destroy_vfs_files :: proc(vfiles: ^[]VFile) {
 	for &vfile in vfiles^ {
 		destroy_vfs_file(&vfile)
 	}
-	free(vfiles)
+	delete(vfiles^)
 }
 

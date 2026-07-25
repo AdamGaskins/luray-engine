@@ -103,6 +103,7 @@ vfs_searcher :: proc "c" (L: ^lua.State) -> c.int {
 	for path in candidates {
 		data, ok := global_vfs.get_file(global_vfs.data, path)
 		if !ok do continue
+		defer delete(data)
 
 		chunkname := strings.concatenate({"@", path}, context.temp_allocator)
 		chunkname_c := strings.clone_to_cstring(chunkname, context.temp_allocator)

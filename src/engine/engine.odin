@@ -88,6 +88,8 @@ game_step :: proc(e: ^Engine) -> bool {
 		engine_lua.call(e.state, "_init")
 	}
 
+	free_all(context.temp_allocator)
+
 	when ODIN_OS == .JS {
 		return true
 	} else {
@@ -122,6 +124,7 @@ free_modules :: proc(modules: ^[]string) {
 	for module in modules {
 		delete(module)
 	}
+	delete(modules^)
 }
 
 @(private)
