@@ -3568,6 +3568,7 @@ lua_SetWindowIcon :: proc "c" (L: ^lua.State) -> c.int {
 lua_SetWindowIcons :: proc "c" (L: ^lua.State) -> c.int {
 	context = callback_context
 	p_images, p_images_count := fromlua_array(L, 1, rl.Image, fromlua_Image)
+	defer free(p_images)
 
 	rl.SetWindowIcons(p_images, p_images_count)
 
@@ -5179,6 +5180,7 @@ lua_DrawLineEx :: proc "c" (L: ^lua.State) -> c.int {
 lua_DrawLineStrip :: proc "c" (L: ^lua.State) -> c.int {
 	context = callback_context
 	p_points, p_points_count := fromlua_array(L, 1, rl.Vector2, fromlua_Vector2)
+	defer free(p_points)
 	p_color := fromlua_Color(L, 2)
 
 	rl.DrawLineStrip(p_points, p_points_count, p_color)
@@ -5569,6 +5571,7 @@ lua_DrawTriangleLines :: proc "c" (L: ^lua.State) -> c.int {
 lua_DrawTriangleFan :: proc "c" (L: ^lua.State) -> c.int {
 	context = callback_context
 	p_points, p_points_count := fromlua_array(L, 1, rl.Vector2, fromlua_Vector2)
+	defer free(p_points)
 	p_color := fromlua_Color(L, 2)
 
 	rl.DrawTriangleFan(p_points, p_points_count, p_color)
@@ -5580,6 +5583,7 @@ lua_DrawTriangleFan :: proc "c" (L: ^lua.State) -> c.int {
 lua_DrawTriangleStrip :: proc "c" (L: ^lua.State) -> c.int {
 	context = callback_context
 	p_points, p_points_count := fromlua_array(L, 1, rl.Vector2, fromlua_Vector2)
+	defer free(p_points)
 	p_color := fromlua_Color(L, 2)
 
 	rl.DrawTriangleStrip(p_points, p_points_count, p_color)
@@ -5631,6 +5635,7 @@ lua_DrawPolyLinesEx :: proc "c" (L: ^lua.State) -> c.int {
 lua_DrawSplineLinear :: proc "c" (L: ^lua.State) -> c.int {
 	context = callback_context
 	p_points, p_points_count := fromlua_array(L, 1, rl.Vector2, fromlua_Vector2)
+	defer free(p_points)
 	p_thick := c.float(lua.tonumber(L, 2))
 	p_color := fromlua_Color(L, 3)
 
@@ -5643,6 +5648,7 @@ lua_DrawSplineLinear :: proc "c" (L: ^lua.State) -> c.int {
 lua_DrawSplineBasis :: proc "c" (L: ^lua.State) -> c.int {
 	context = callback_context
 	p_points, p_points_count := fromlua_array(L, 1, rl.Vector2, fromlua_Vector2)
+	defer free(p_points)
 	p_thick := c.float(lua.tonumber(L, 2))
 	p_color := fromlua_Color(L, 3)
 
@@ -5655,6 +5661,7 @@ lua_DrawSplineBasis :: proc "c" (L: ^lua.State) -> c.int {
 lua_DrawSplineCatmullRom :: proc "c" (L: ^lua.State) -> c.int {
 	context = callback_context
 	p_points, p_points_count := fromlua_array(L, 1, rl.Vector2, fromlua_Vector2)
+	defer free(p_points)
 	p_thick := c.float(lua.tonumber(L, 2))
 	p_color := fromlua_Color(L, 3)
 
@@ -5667,6 +5674,7 @@ lua_DrawSplineCatmullRom :: proc "c" (L: ^lua.State) -> c.int {
 lua_DrawSplineBezierQuadratic :: proc "c" (L: ^lua.State) -> c.int {
 	context = callback_context
 	p_points, p_points_count := fromlua_array(L, 1, rl.Vector2, fromlua_Vector2)
+	defer free(p_points)
 	p_thick := c.float(lua.tonumber(L, 2))
 	p_color := fromlua_Color(L, 3)
 
@@ -5679,6 +5687,7 @@ lua_DrawSplineBezierQuadratic :: proc "c" (L: ^lua.State) -> c.int {
 lua_DrawSplineBezierCubic :: proc "c" (L: ^lua.State) -> c.int {
 	context = callback_context
 	p_points, p_points_count := fromlua_array(L, 1, rl.Vector2, fromlua_Vector2)
+	defer free(p_points)
 	p_thick := c.float(lua.tonumber(L, 2))
 	p_color := fromlua_Color(L, 3)
 
@@ -5924,6 +5933,7 @@ lua_CheckCollisionPointPoly :: proc "c" (L: ^lua.State) -> c.int {
 	p_point := fromlua_Vector2(L, 1)
 	context = callback_context
 	p_points, p_points_count := fromlua_array(L, 2, rl.Vector2, fromlua_Vector2)
+	defer free(p_points)
 
 	result := rl.CheckCollisionPointPoly(p_point, p_points, p_points_count)
 
@@ -6733,6 +6743,7 @@ lua_ImageDrawTriangleFan :: proc "c" (L: ^lua.State) -> c.int {
 	p_dst := fromlua_Image(L, 1)
 	context = callback_context
 	p_points, p_points_count := fromlua_array(L, 2, rl.Vector2, fromlua_Vector2)
+	defer free(p_points)
 	p_color := fromlua_Color(L, 3)
 
 	rl.ImageDrawTriangleFan(&p_dst, p_points, p_points_count, p_color)
@@ -6746,6 +6757,7 @@ lua_ImageDrawTriangleStrip :: proc "c" (L: ^lua.State) -> c.int {
 	p_dst := fromlua_Image(L, 1)
 	context = callback_context
 	p_points, p_points_count := fromlua_array(L, 2, rl.Vector2, fromlua_Vector2)
+	defer free(p_points)
 	p_color := fromlua_Color(L, 3)
 
 	rl.ImageDrawTriangleStrip(&p_dst, p_points, p_points_count, p_color)
@@ -7203,6 +7215,7 @@ lua_IsFontValid :: proc "c" (L: ^lua.State) -> c.int {
 lua_UnloadFontData :: proc "c" (L: ^lua.State) -> c.int {
 	context = callback_context
 	p_glyphs, p_glyphs_count := fromlua_array(L, 1, rl.GlyphInfo, fromlua_GlyphInfo)
+	defer free(p_glyphs)
 
 	rl.UnloadFontData(p_glyphs, p_glyphs_count)
 
@@ -7524,6 +7537,7 @@ lua_DrawTriangle3D :: proc "c" (L: ^lua.State) -> c.int {
 lua_DrawTriangleStrip3D :: proc "c" (L: ^lua.State) -> c.int {
 	context = callback_context
 	p_points, p_points_count := fromlua_array(L, 1, rl.Vector3, fromlua_Vector3)
+	defer free(p_points)
 	p_color := fromlua_Color(L, 2)
 
 	rl.DrawTriangleStrip3D(p_points, p_points_count, p_color)

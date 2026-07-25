@@ -288,6 +288,7 @@ func__write_definition :: proc(w: io.Writer, funcDef: Function) {
 				prefix_c_type(t),
 				t,
 			)
+			fmt.wprintfln(w, "\tdefer free(p_%v)", ptr_array.arrayParam)
 
 			idx_offset = idx_offset - 1
 		} else {

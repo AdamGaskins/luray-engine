@@ -4,3 +4,4 @@ src.bin
 luatest/
 build/
 docs/
+examples/test/
