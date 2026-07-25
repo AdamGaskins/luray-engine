@@ -8,7 +8,7 @@ build: build-mac-arm build-web
 
 release-gh:
     gh release create {{VERSION}} \
-      ./dist/* \
+      ./build/*.tar.gz ./build/*.sha256 \
       --title "{{v}}" \
       --notes "Release v{{VERSION}}"
 
