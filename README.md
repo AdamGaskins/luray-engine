@@ -5,9 +5,9 @@ Prealpha
 Usage
 
 ```sh
-luray init project # Scaffolds a new project
+luray init project # Scaffolds a new project, including lua type definitions
 cd project
-luray dev . # Runs with hotreloading
+luray dev # Runs with hotreloading
 luray export # Exports to all platforms (including web!) with one command
 ```
 

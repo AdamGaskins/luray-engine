@@ -7,7 +7,7 @@ import "../vfs"
 import "core:os"
 
 Run_Flags :: struct {
-	path: string `args:"pos=0,required" usage:"Path to directory containing main.lua"`,
+	path: string `args:"pos=0" usage:"Path to directory containing main.lua. Defaults to current directory."`,
 }
 
 Command_Run :: Command {

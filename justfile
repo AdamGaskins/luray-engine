@@ -1,8 +1,10 @@
 VERSION := "0.1.0-alpha.2"
 COMMIT := `git rev-parse --short HEAD`
 
-run +ARGS:
-    odin run ./src/main_desktop -out:luray -define:_VERSION="{{VERSION}}" -- {{ARGS}}
+PROJECT_DIR := justfile_directory()
+[no-cd]
+run *ARGS:
+    odin run {{PROJECT_DIR}}/src/main_desktop -out:luray -define:_VERSION="{{VERSION}}" -- {{ARGS}}
 
 build: clean build-mac-arm build-web
 
