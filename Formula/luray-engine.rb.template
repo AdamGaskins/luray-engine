@@ -1,0 +1,22 @@
+class LurayEngine < Formula
+  desc "The fastest way to prototype a raylib game!"
+  homepage "https://github.com/AdamGaskins/luray-engine"
+  version "$version"
+  license "MIT"
+
+  if OS.mac? && Hardware::CPU.arm?
+    url "$macos_arm_url"
+    sha256 "$macos_arm_hash"
+  else
+    odie "luray: no prebuilt binary for this platform yet (supported: macOS arm)"
+  end
+
+  def install
+    bin.install "luray"
+  end
+
+  test do
+    system "#{bin}/luray"
+  end
+end
+

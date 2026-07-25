@@ -65,3 +65,16 @@ _compile-lua-darwin-arm64 lua_path:
     cd {{lua_path}} && make clean macosx test
     cp {{lua_path}}/src/liblua.a ./lib/darwin_arm64/liblua5.4.a
 
+update-tap:
+    #!/usr/bin/env bash
+    json=$(gh release view --json assets)
+    # (os, arch)
+    set_platform_variables() {
+        export "${1}_${2}_url"=$( echo $json | jq -r ".assets[] | select(.name == \"luray-{{VERSION}}-$1-$2.tar.gz\") | .url" )
+        __tmp=$( echo $json | jq -r ".assets[] | select(.name == \"luray-{{VERSION}}-$1-$2.tar.gz\") | .digest" )
+        export "${1}_${2}_hash"=${__tmp:7}
+    }
+    set_platform_variables "macos" "arm"
+    export version="{{VERSION}}"
+    envsubst < ./Formula/luray-engine.rb.template > ./Formula/luray-engine.rb
+
