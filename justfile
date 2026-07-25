@@ -1,7 +1,7 @@
 run +ARGS:
     odin run ./src/main_desktop -out:raylua -- {{ARGS}}
 
-build: build-mac-arm
+build: build-mac-arm build-web
 
 clean:
     trash build
@@ -11,7 +11,9 @@ generate-bindings:
 
 build-mac-arm:
     mkdir -p build/macos-arm
-    odin build src/main_desktop -out:build/macos-arm/raylua -target:darwin_arm64 -extra-linker-flags:"-Wl,-force_load,./lib/liblua5.4.a -Wl,-dead_strip_dylibs"
+    odin build src/main_desktop -out:build/macos-arm/raylua -target:darwin_arm64 \
+        -o:speed \
+        -extra-linker-flags:"-Wl,-force_load,./lib/darwin_arm64/liblua5.4.a -Wl,-dead_strip_dylibs"
 
 build-web:
     mkdir -p build/web
@@ -27,12 +29,20 @@ build-web:
 run-web: build-web
     simple-http-server --nocache --index build/web
 
+compile-lua lua_path: (_compile-lua-web lua_path) (_compile-lua-darwin-arm64 lua_path)
+
 _compile-lua-web lua_path:
     mkdir -p lib/wasm
+    cd {{lua_path}} && make clean
     cd {{lua_path}}/src && emcc -O2 -DLUA_USE_POSIX -c lapi.c lauxlib.c lbaselib.c lcode.c lcorolib.c \
       lctype.c ldblib.c ldebug.c ldo.c ldump.c lfunc.c lgc.c linit.c liolib.c \
       llex.c lmathlib.c lmem.c loadlib.c lobject.c lopcodes.c loslib.c lparser.c \
       lstate.c lstring.c lstrlib.c ltable.c ltablib.c ltm.c lundump.c lutf8lib.c \
       lvm.c lzio.c
     emar rcs lib/wasm/liblua5.4.a {{lua_path}}/src/*.o
+
+_compile-lua-darwin-arm64 lua_path:
+    mkdir -p lib/darwin_arm64
+    cd {{lua_path}} && make clean macosx test
+    cp {{lua_path}}/src/liblua.a ./lib/darwin_arm64/liblua5.4.a
 

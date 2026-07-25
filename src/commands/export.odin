@@ -73,7 +73,7 @@ Command_Export :: Command {
 
 			ok := bundle.fuse(
 				b,
-				"/Users/adam/lang/games/odin-test/build/macos-arm64/raylua",
+				"/Users/adam/lang/games/odin-test/build/macos-arm/raylua",
 				export_name,
 			)
 			if !ok {
@@ -109,7 +109,7 @@ Command_Export :: Command {
 			fmt.printfln("\tpython3 -m http.server 8000 --directory '%v'", export_web_path)
 			fmt.printfln("\tnpx http-server '%v' -p 8000", export_web_path)
 			fmt.printfln("\tphp -S localhost:8000 -t '%v'", export_web_path)
-			fmt.printfln("\tsimple-http-server '%v' --index", export_web_path)
+			fmt.printfln("\tsimple-http-server '%v' --index --nocache", export_web_path)
 			fmt.println()
 		}
 
