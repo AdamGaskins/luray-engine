@@ -4,7 +4,7 @@ COMMIT := `git rev-parse --short HEAD`
 run +ARGS:
     odin run ./src/main_desktop -out:luray -- {{ARGS}}
 
-build: build-mac-arm build-web
+build: clean build-mac-arm build-web
 
 release-gh:
     gh release create {{VERSION}} \
