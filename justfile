@@ -9,7 +9,7 @@ build: build-mac-arm build-web
 release-gh:
     gh release create {{VERSION}} \
       ./build/*.tar.gz ./build/*.sha256 \
-      --title "{{v}}" \
+      --title "{{VERSION}}" \
       --notes "Release v{{VERSION}}"
 
 clean:
@@ -25,8 +25,8 @@ build-mac-arm:
         -define:LURAY_COMMIT="{{COMMIT}}" \
         -define:LURAY_VERSION="{{VERSION}}" \
         -extra-linker-flags:"-Wl,-force_load,./lib/darwin_arm64/liblua5.4.a -Wl,-dead_strip_dylibs"
-    tar -czvf build/luray-macos-arm-{{VERSION}}.tar.gz -C build/macos-arm/ luray
-    cd build && sha256sum luray-macos-arm-{{VERSION}}.tar.gz > luray-macos-arm-{{VERSION}}.tar.gz.sha256
+    tar -czvf build/luray-{{VERSION}}-macos-arm.tar.gz -C build/macos-arm/ luray
+    cd build && sha256sum luray-{{VERSION}}-macos-arm.tar.gz > luray-{{VERSION}}-macos-arm.tar.gz.sha256
 
 build-web:
     mkdir -p build/web
@@ -42,8 +42,8 @@ build-web:
         --shell-file src/main_web/index_template.html \
         -s USE_GLFW=3 -s WARN_ON_UNDEFINED_SYMBOLS=0 -s ALLOW_MEMORY_GROWTH=1
     trash build/web/game.obj
-    tar -czvf build/luray-web-{{VERSION}}.tar.gz -C build/web/ .
-    cd build && sha256sum luray-web-{{VERSION}}.tar.gz > luray-web-{{VERSION}}.tar.gz.sha256
+    tar -czvf build/luray-{{VERSION}}-web.tar.gz -C build/web/ .
+    cd build && sha256sum luray-{{VERSION}}-web.tar.gz > luray-{{VERSION}}-web.tar.gz.sha256
 
 run-web: build-web
     simple-http-server --nocache --index build/web
