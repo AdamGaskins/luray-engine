@@ -13,7 +13,7 @@ release-gh:
       --notes "Release v{{VERSION}}"
 
 clean:
-    trash build
+    rm -rf build
 
 generate-bindings:
     odin run scripts/generate_bindings && odinfmt src/engine_lua/bindings.odin -w
@@ -41,7 +41,7 @@ build-web:
         lib/wasm/liblua5.4.a \
         --shell-file src/main_web/index_template.html \
         -s USE_GLFW=3 -s WARN_ON_UNDEFINED_SYMBOLS=0 -s ALLOW_MEMORY_GROWTH=1
-    trash build/web/game.obj
+    rm build/web/game.obj
     tar -czvf build/luray-{{VERSION}}-web.tar.gz -C build/web/ .
     cd build && sha256sum luray-{{VERSION}}-web.tar.gz > luray-{{VERSION}}-web.tar.gz.sha256
 
