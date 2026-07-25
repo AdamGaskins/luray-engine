@@ -1,4 +1,4 @@
-VERSION := "0.1.0-alpha.2"
+VERSION := "0.1.0-alpha.3"
 COMMIT := `git rev-parse --short HEAD`
 
 PROJECT_DIR := justfile_directory()
