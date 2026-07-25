@@ -2,7 +2,7 @@ VERSION := "0.1.0-alpha.1"
 COMMIT := `git rev-parse --short HEAD`
 
 run +ARGS:
-    odin run ./src/main_desktop -out:luray -- {{ARGS}}
+    odin run ./src/main_desktop -out:luray -define:_VERSION="{{VERSION}}" -- {{ARGS}}
 
 build: clean build-mac-arm build-web
 
