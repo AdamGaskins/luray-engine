@@ -1,3 +1,6 @@
+VERSION := "0.1.0-alpha.1"
+COMMIT := `git rev-parse --short HEAD`
+
 run +ARGS:
     odin run ./src/main_desktop -out:luray -- {{ARGS}}
 
@@ -13,11 +16,17 @@ build-mac-arm:
     mkdir -p build/macos-arm
     odin build src/main_desktop -out:build/macos-arm/luray -target:darwin_arm64 \
         -o:speed \
+        -define:LURAY_COMMIT="{{COMMIT}}" \
+        -define:LURAY_VERSION="{{VERSION}}" \
         -extra-linker-flags:"-Wl,-force_load,./lib/darwin_arm64/liblua5.4.a -Wl,-dead_strip_dylibs"
 
 build-web:
     mkdir -p build/web
-    odin build src/main_web -target:js_wasm32 -build-mode:obj -o:speed -define:RAYLIB_WASM_LIB=env.o -out:build/web/game
+    odin build src/main_web -target:js_wasm32 -build-mode:obj -o:speed \
+        -define:LURAY_COMMIT="{{COMMIT}}" \
+        -define:LURAY_VERSION="{{VERSION}}" \
+        -define:RAYLIB_WASM_LIB=env.o \
+        -out:build/web/game
     cp "$(odin root)/core/sys/wasm/js/odin.js" build/web/odin.js
     emcc -o build/web/index.html build/web/game.obj \
         "$(odin root)/vendor/raylib/wasm/libraylib.web.a" \

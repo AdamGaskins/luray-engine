@@ -1,5 +1,6 @@
 package engine
 
+import "../common"
 import "../engine_lua"
 import lua "../vendor/lua"
 import "../vfs"
@@ -18,6 +19,8 @@ Engine :: struct {
 MAIN_FILE :: "main.lua"
 
 create :: proc(fs: vfs.Vfs, dev_mode: bool = false) -> Engine {
+	fmt.printfln("Starting Luray Engine v%v (%v)", common.LURAY_VERSION, common.LURAY_COMMIT)
+
 	engine := Engine {
 		dev_mode = dev_mode,
 		vfs      = fs,
@@ -25,6 +28,7 @@ create :: proc(fs: vfs.Vfs, dev_mode: bool = false) -> Engine {
 
 	if dev_mode {
 		engine.watch = watcher.create(fs)
+		fmt.printfln("Enabling hot-reload")
 	}
 
 	return engine

@@ -3,7 +3,6 @@ package commands
 
 import "../engine"
 import "../vfs"
-import "core:fmt"
 import "core:os"
 
 Dev_Flags :: struct {
@@ -20,8 +19,6 @@ Command_Dev :: Command {
 		defer delete(path)
 		fs := vfs.make_vfs_local(path)
 		defer fs.destroy(fs.data)
-
-		fmt.println("Starting engine with hot reload")
 
 		e = engine.create(fs, true)
 		defer engine.destroy(&e)

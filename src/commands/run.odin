@@ -4,7 +4,6 @@ package commands
 import "../bundle"
 import "../engine"
 import "../vfs"
-import "core:fmt"
 import "core:os"
 
 Run_Flags :: struct {
@@ -33,8 +32,6 @@ Command_Run :: Command {
 		}
 
 		defer fs.destroy(fs.data)
-
-		fmt.println("Starting engine")
 
 		e = engine.create(fs, false)
 		defer engine.destroy(&e)

@@ -1,6 +1,7 @@
 #+build darwin, linux, windows
 package commands
 
+import "../common"
 import "core:flags"
 import "core:fmt"
 import "core:os"
@@ -43,6 +44,7 @@ execute_command_or_exit :: proc() {
 }
 
 print_usage :: proc() {
+	fmt.printfln("luray v%v (%v)", common.LURAY_VERSION, common.LURAY_COMMIT)
 	fmt.println("Usage: luray [command]")
 	fmt.println("Available commands:")
 	for c in Commands {
