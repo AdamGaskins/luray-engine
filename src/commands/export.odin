@@ -7,12 +7,23 @@ import "../vfs"
 import "core:fmt"
 import "core:os"
 import "core:path/filepath"
+import "core:slice"
 
 Export_Flags :: struct {
 	dir: string `args:"pos=0" usage:"Directory containing the project to build. Defaults to current directory."`,
 }
 
 DOWNLOAD_URL_BASE :: "https://github.com/AdamGaskins/luray-engine/releases/download"
+
+// Extensions bundled into an export: Lua source plus the raster image
+// formats this project's vendored raylib build actually decodes via
+// LoadImageFromMemory (verified against the compiled libraylib archives —
+// .jpeg/.tga/.psd/.hdr are not, despite being common raylib formats
+// elsewhere, so they're deliberately left out here). LoadImage
+// (src/engine_lua/bindings_manual.odin) is currently the only asset loader
+// routed through the VFS, so image formats are the only non-.lua assets
+// worth bundling yet.
+EXPORTABLE_EXTENSIONS :: []string{".lua", ".png", ".jpg", ".bmp", ".gif", ".qoi"}
 
 Command_Export :: Command {
 	command = "export",
@@ -30,7 +41,7 @@ Command_Export :: Command {
 		b := bundle.create()
 		defer bundle.destroy(&b)
 		for file in files {
-			if filepath.ext(file.path) != ".lua" {
+			if !slice.contains(EXPORTABLE_EXTENSIONS, filepath.ext(file.path)) {
 				continue
 			}
 

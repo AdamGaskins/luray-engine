@@ -11,11 +11,14 @@ import "core:strings"
 // the proper context. This is because Emscripten needs a special allocator.
 callback_context: runtime.Context
 
+MAIN_FILE :: "main.lua"
+
 create_state :: proc() -> ^lua.State {
 	callback_context = context
 	state := lua.L_newstate()
 	lua.L_openlibs(state)
 	bind_raylib(state)
+	bind_raylib_manual(state)
 	return state
 }
 

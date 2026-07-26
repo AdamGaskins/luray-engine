@@ -16,8 +16,6 @@ Engine :: struct {
 	state:    ^lua.State,
 }
 
-MAIN_FILE :: "main.lua"
-
 create :: proc(fs: vfs.Vfs, dev_mode: bool = false) -> Engine {
 	fmt.printfln("Starting Luray Engine v%v (%v)", common.LURAY_VERSION, common.LURAY_COMMIT)
 
@@ -49,7 +47,7 @@ run :: proc(e: ^Engine) {
 }
 
 game_init :: proc(e: ^Engine) -> bool {
-	script, ok := e.vfs.get_file(e.vfs.data, MAIN_FILE)
+	script, ok := e.vfs.get_file(e.vfs.data, engine_lua.MAIN_FILE)
 	if !ok {
 		fmt.eprintln("Failed to open main.lua")
 		return false
@@ -63,7 +61,7 @@ game_init :: proc(e: ^Engine) -> bool {
 	delete(script)
 
 	// rl.SetTraceLogLevel(rl.TraceLogLevel.NONE)
-	return engine_lua.call(state, "_init")
+	return engine_lua.call_init(state, e.dev_mode)
 }
 
 game_step :: proc(e: ^Engine) -> bool {
@@ -76,20 +74,16 @@ game_step :: proc(e: ^Engine) -> bool {
 		if len(updated_files) > 0 {
 			modules := modules_from_files(updated_files)
 			defer free_modules(&modules)
-			fmt.printfln("Updated files: %v", modules)
-			engine_lua.clear_user_modules(e.state, modules)
 
-			script, ok := e.vfs.get_file(e.vfs.data, MAIN_FILE)
-			defer delete(script)
-			if ok {
-				engine_lua.load_script(e.state, script)
-			}
+			engine_lua.hot_reload_code(e.state, modules)
+			engine_lua.hot_reload_images(e.state, updated_files)
+			engine_lua.hot_reload_textures(e.state, updated_files)
 		}
 	}
 
 	if is_reload_button_pressed() {
 		engine_lua.call(e.state, "_destroy")
-		engine_lua.call(e.state, "_init")
+		engine_lua.call_init(e.state, e.dev_mode)
 	}
 
 	free_all(context.temp_allocator)

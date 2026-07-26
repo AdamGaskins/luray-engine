@@ -256,6 +256,12 @@ ignore_functions :: []string {
 	// built in (see auto_free_statements)
 	"UnloadFileText",
 
+	// hand-written (see src/engine_lua/bindings_manual.odin) — reads through
+	// the VFS instead of raw disk I/O, so it also works in exported/bundled
+	// games
+	"LoadImage",
+	"LoadTexture",
+
 	// unneeded
 	"GetWindowHandle",
 	"MemAlloc",

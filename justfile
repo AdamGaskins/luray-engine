@@ -18,7 +18,7 @@ clean:
     rm -rf build
 
 generate-bindings:
-    odin run scripts/generate_bindings && odinfmt src/engine_lua/bindings.odin -w
+    odin run scripts/generate_bindings && odinfmt src/engine_lua/bindings_generated.odin -w
 
 build-mac-arm:
     mkdir -p build/macos-arm

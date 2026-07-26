@@ -39,6 +39,15 @@ write_builder_to_file :: proc(sb: ^strings.Builder, path: string) {
 	}
 }
 
+read_manual_docs :: proc() -> string {
+	data, err := os.read_entire_file("src/engine_lua/manual_docs.lua", context.allocator)
+	if err != nil {
+		fmt.printfln("Failed to read manual docs: %v", err)
+		os.exit(1)
+	}
+	return string(data)
+}
+
 add_quotes :: proc(str: string) -> string {
 	return fmt.tprintf(`"%v"`, str)
 }

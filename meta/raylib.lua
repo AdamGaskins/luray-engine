@@ -1839,11 +1839,6 @@ function ray.CheckCollisionLines(startPos1, endPos1, startPos2, endPos2, collisi
 ---@return Raylib.Rectangle
 function ray.GetCollisionRec(rec1, rec2) end
 
----Load image from file into CPU memory (RAM)
----@param fileName string
----@return Raylib.Image
-function ray.LoadImage(fileName) end
-
 ---Load image from GPU texture data
 ---@param texture Raylib.Texture2D
 ---@return Raylib.Image
@@ -2282,11 +2277,6 @@ function ray.ImageDrawText(dst, text, posX, posY, fontSize, color) end
 ---@param spacing number
 ---@param tint Raylib.Color
 function ray.ImageDrawTextEx(dst, font, text, position, fontSize, spacing, tint) end
-
----Load texture from file into GPU memory (VRAM)
----@param fileName string
----@return Raylib.Texture2D
-function ray.LoadTexture(fileName) end
 
 ---Load texture from image data
 ---@param image Raylib.Image
@@ -3137,4 +3127,14 @@ function ray.SetAudioStreamPan(stream, pan) end
 ---Default size for new audio streams
 ---@param size integer
 function ray.SetAudioStreamBufferSizeDefault(size) end
+
+---Load image from file into CPU memory (RAM)
+---@param fileName string
+---@return Raylib.Image
+function ray.LoadImage(fileName) end
+
+---Load texture from file into GPU memory (VRAM)
+---@param fileName string
+---@return Raylib.Texture2D
+function ray.LoadTexture(fileName) end
 

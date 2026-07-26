@@ -50,6 +50,7 @@ function _destroy() end
 	write_struct_aliases(w_defs, w_binds, w_docs, api["aliases"].(json.Array))
 	write_functions(w_defs, w_binds, w_docs, api["functions"].(json.Array))
 
+	fmt.wprintln(w_docs, read_manual_docs())
 
 	sb := strings.builder_make()
 	w := strings.to_writer(&sb)
@@ -73,8 +74,8 @@ function _destroy() end
 	fmt.wprintln(w, "")
 
 	fmt.println("")
-	write_builder_to_file(&sb, "src/engine_lua/bindings.odin")
-	fmt.println("Wrote bindings to src/engine_lua/bindings.odin")
+	write_builder_to_file(&sb, "src/engine_lua/bindings_generated.odin")
+	fmt.println("Wrote bindings to src/engine_lua/bindings_generated.odin")
 
 	write_builder_to_file(&sb_docs, "meta/raylib.lua")
 	fmt.println("Wrote lua stubs to meta/raylib.lua")
