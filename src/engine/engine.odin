@@ -14,6 +14,7 @@ Engine :: struct {
 	watch:    watcher.Watcher,
 	vfs:      vfs.Vfs,
 	state:    ^lua.State,
+	lua_ctx:  engine_lua.Lua_Context,
 }
 
 create :: proc(fs: vfs.Vfs, dev_mode: bool = false) -> Engine {
@@ -53,15 +54,15 @@ game_init :: proc(e: ^Engine) -> bool {
 		return false
 	}
 
-	state := engine_lua.create_state()
+	state := engine_lua.create_state(&e.lua_ctx)
 	e.state = state
-	engine_lua.install_vfs_require(state, e.vfs)
+	engine_lua.install_vfs_require(&e.lua_ctx, state, e.vfs)
 
 	engine_lua.load_script(state, script)
 	delete(script)
 
 	// rl.SetTraceLogLevel(rl.TraceLogLevel.NONE)
-	return engine_lua.call_init(state, e.dev_mode)
+	return engine_lua.call_init(&e.lua_ctx, state, e.dev_mode)
 }
 
 game_step :: proc(e: ^Engine) -> bool {
@@ -75,15 +76,15 @@ game_step :: proc(e: ^Engine) -> bool {
 			modules := modules_from_files(updated_files)
 			defer free_modules(&modules)
 
-			engine_lua.hot_reload_code(e.state, modules)
-			engine_lua.hot_reload_images(e.state, updated_files)
-			engine_lua.hot_reload_textures(e.state, updated_files)
+			engine_lua.hot_reload_code(&e.lua_ctx, e.state, modules)
+			engine_lua.hot_reload_images(&e.lua_ctx, e.state, updated_files)
+			engine_lua.hot_reload_textures(&e.lua_ctx, e.state, updated_files)
 		}
 	}
 
 	if is_reload_button_pressed() {
 		engine_lua.call(e.state, "_destroy")
-		engine_lua.call_init(e.state, e.dev_mode)
+		engine_lua.call_init(&e.lua_ctx, e.state, e.dev_mode)
 	}
 
 	free_all(context.temp_allocator)

@@ -13,12 +13,19 @@ callback_context: runtime.Context
 
 MAIN_FILE :: "main.lua"
 
-create_state :: proc() -> ^lua.State {
+Lua_Context :: struct {
+	vfs:              vfs.Vfs,
+	tracked_images:   [dynamic]Tracked_Resource,
+	tracked_textures: [dynamic]Tracked_Resource,
+	tracking_active:  bool,
+}
+
+create_state :: proc(ctx: ^Lua_Context) -> ^lua.State {
 	callback_context = context
 	state := lua.L_newstate()
 	lua.L_openlibs(state)
 	bind_raylib(state)
-	bind_raylib_manual(state)
+	bind_raylib_manual(ctx, state)
 	return state
 }
 
@@ -62,10 +69,18 @@ call :: proc(state: ^lua.State, name: cstring) -> bool {
 	return true
 }
 
-// ugly, I know :(
-global_vfs: vfs.Vfs
-install_vfs_require :: proc(L: ^lua.State, fs: vfs.Vfs) {
-	global_vfs = fs
+@(private)
+upvalueindex :: #force_inline proc "contextless" (i: c.int) -> c.int {
+	return lua.REGISTRYINDEX - i
+}
+
+@(private)
+get_ctx :: #force_inline proc "contextless" (L: ^lua.State) -> ^Lua_Context {
+	return (^Lua_Context)(lua.touserdata(L, upvalueindex(1)))
+}
+
+install_vfs_require :: proc(ctx: ^Lua_Context, L: ^lua.State, fs: vfs.Vfs) {
+	ctx.vfs = fs
 
 	lua.getglobal(L, "package") // stack: [package]
 	lua.getfield(L, -1, "searchers") // stack: [package, searchers]
@@ -80,7 +95,8 @@ install_vfs_require :: proc(L: ^lua.State, fs: vfs.Vfs) {
 	}
 
 	// install ours at index 2, right after package.preload
-	lua.pushcfunction(L, vfs_searcher)
+	lua.pushlightuserdata(L, ctx)
+	lua.pushcclosure(L, vfs_searcher, 1)
 	lua.rawseti(L, -2, 2)
 
 	lua.pop(L, 2) // pop searchers, package
@@ -90,6 +106,7 @@ install_vfs_require :: proc(L: ^lua.State, fs: vfs.Vfs) {
 @(private)
 vfs_searcher :: proc "c" (L: ^lua.State) -> c.int {
 	context = callback_context
+	ctx := get_ctx(L)
 
 	mod_cstr := lua.tostring(L, 1)
 	modname := string(mod_cstr)
@@ -104,7 +121,7 @@ vfs_searcher :: proc "c" (L: ^lua.State) -> c.int {
 	}
 
 	for path in candidates {
-		data, ok := global_vfs.get_file(global_vfs.data, path)
+		data, ok := ctx.vfs.get_file(ctx.vfs.data, path)
 		if !ok do continue
 		defer delete(data)
 

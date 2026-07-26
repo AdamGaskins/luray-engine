@@ -6,15 +6,19 @@ import "core:c"
 import "core:fmt"
 import rl "vendor:raylib"
 
+@(private = "file")
+bind_ctx_fn :: proc(ctx: ^Lua_Context, L: ^lua.State, fn: lua.CFunction, name: cstring) {
+	lua.pushlightuserdata(L, ctx)
+	lua.pushcclosure(L, fn, 1)
+	lua.setfield(L, -2, name)
+}
+
 @(private)
-bind_raylib_manual :: proc(L: ^lua.State) {
+bind_raylib_manual :: proc(ctx: ^Lua_Context, L: ^lua.State) {
 	lua.getglobal(L, "ray")
 
-	lua.pushcfunction(L, lua_LoadImage)
-	lua.setfield(L, -2, "LoadImage")
-
-	lua.pushcfunction(L, lua_LoadTexture)
-	lua.setfield(L, -2, "LoadTexture")
+	bind_ctx_fn(ctx, L, lua_LoadImage, "LoadImage")
+	bind_ctx_fn(ctx, L, lua_LoadTexture, "LoadTexture")
 
 	lua.pop(L, 1)
 }
@@ -26,13 +30,14 @@ bind_raylib_manual :: proc(L: ^lua.State) {
 @(private)
 lua_LoadImage :: proc "c" (L: ^lua.State) -> c.int {
 	context = callback_context
+	ctx := get_ctx(L)
 	p_fileName := lua.tostring(L, 1)
 
-	result := load_image_via_vfs(global_vfs, p_fileName)
+	result := load_image_via_vfs(ctx.vfs, p_fileName)
 
 	tolua_Image(L, result)
 
-	track_pushed_resource(L, &tracked_images, p_fileName)
+	track_pushed_resource(ctx, L, &ctx.tracked_images, p_fileName)
 
 	return 1
 }
@@ -40,15 +45,16 @@ lua_LoadImage :: proc "c" (L: ^lua.State) -> c.int {
 @(private)
 lua_LoadTexture :: proc "c" (L: ^lua.State) -> c.int {
 	context = callback_context
+	ctx := get_ctx(L)
 	p_fileName := lua.tostring(L, 1)
 
-	img := load_image_via_vfs(global_vfs, p_fileName)
+	img := load_image_via_vfs(ctx.vfs, p_fileName)
 	result := rl.LoadTextureFromImage(img)
 	rl.UnloadImage(img)
 
 	tolua_Texture2D(L, result)
 
-	track_pushed_resource(L, &tracked_textures, p_fileName)
+	track_pushed_resource(ctx, L, &ctx.tracked_textures, p_fileName)
 	return 1
 }
 

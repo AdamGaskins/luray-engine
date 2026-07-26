@@ -13,18 +13,15 @@ Tracked_Resource :: struct {
 	ref:  c.int,
 }
 
-@(private)
-tracked_images: [dynamic]Tracked_Resource
-@(private)
-tracked_textures: [dynamic]Tracked_Resource
-
-@(private)
-tracking_active: bool
-
 // The resource must be pushed to the stack already
 @(private)
-track_pushed_resource :: proc(L: ^lua.State, list: ^[dynamic]Tracked_Resource, path: cstring) {
-	if tracking_active {
+track_pushed_resource :: proc(
+	ctx: ^Lua_Context,
+	L: ^lua.State,
+	list: ^[dynamic]Tracked_Resource,
+	path: cstring,
+) {
+	if ctx.tracking_active {
 		lua.pushvalue(L, -1)
 		ref := lua.L_ref(L, lua.REGISTRYINDEX)
 		append(list, Tracked_Resource{path = strings.clone(string(path)), ref = ref})
@@ -45,25 +42,25 @@ clear_tracked_resources :: proc(L: ^lua.State, arr: ^[dynamic]Tracked_Resource) 
 // module — is tracked for hot reload; tracking is disarmed the moment
 // _init() returns, so later LoadImage calls (in _update, say) are not
 // tracked.
-call_init :: proc(L: ^lua.State, dev_mode: bool) -> bool {
+call_init :: proc(ctx: ^Lua_Context, L: ^lua.State, dev_mode: bool) -> bool {
 	if dev_mode {
-		clear_tracked_resources(L, &tracked_images)
-		clear_tracked_resources(L, &tracked_textures)
-		tracking_active = true
+		clear_tracked_resources(L, &ctx.tracked_images)
+		clear_tracked_resources(L, &ctx.tracked_textures)
+		ctx.tracking_active = true
 	}
 	ok := call(L, "_init")
 	if dev_mode {
-		tracking_active = false
+		ctx.tracking_active = false
 	}
 	return ok
 }
 
-hot_reload_code :: proc(L: ^lua.State, modules: []string) {
+hot_reload_code :: proc(ctx: ^Lua_Context, L: ^lua.State, modules: []string) {
 	if len(modules) > 0 {
 		fmt.printfln("Updated files: %v", modules)
 		clear_user_modules(L, modules)
 
-		script, ok := global_vfs.get_file(global_vfs.data, MAIN_FILE)
+		script, ok := ctx.vfs.get_file(ctx.vfs.data, MAIN_FILE)
 		defer delete(script)
 		if ok {
 			load_script(L, script)
@@ -76,14 +73,14 @@ hot_reload_code :: proc(L: ^lua.State, modules: []string) {
 // reloaded from the VFS and its Lua table updated in place, so anything in
 // Lua still holding that table (a global, an upvalue, a field on some other
 // object) sees the new image automatically.
-hot_reload_images :: proc(L: ^lua.State, updated_files: []string) {
-	for img in tracked_images {
+hot_reload_images :: proc(ctx: ^Lua_Context, L: ^lua.State, updated_files: []string) {
+	for img in ctx.tracked_images {
 		if !slice.contains(updated_files, img.path) {
 			continue
 		}
 
 		fileName_c := strings.clone_to_cstring(img.path, context.temp_allocator)
-		new_image := load_image_via_vfs(global_vfs, fileName_c)
+		new_image := load_image_via_vfs(ctx.vfs, fileName_c)
 		if new_image.data == nil {
 			fmt.eprintfln("Failed to hot-reload image: %v", img.path)
 			continue
@@ -103,14 +100,14 @@ hot_reload_images :: proc(L: ^lua.State, updated_files: []string) {
 	}
 }
 
-hot_reload_textures :: proc(L: ^lua.State, updated_files: []string) {
-	for img in tracked_textures {
+hot_reload_textures :: proc(ctx: ^Lua_Context, L: ^lua.State, updated_files: []string) {
+	for img in ctx.tracked_textures {
 		if !slice.contains(updated_files, img.path) {
 			continue
 		}
 
 		fileName_c := strings.clone_to_cstring(img.path, context.temp_allocator)
-		new_image := load_image_via_vfs(global_vfs, fileName_c)
+		new_image := load_image_via_vfs(ctx.vfs, fileName_c)
 		if new_image.data == nil {
 			fmt.eprintfln("Failed to hot-reload texture: %v", img.path)
 			continue
