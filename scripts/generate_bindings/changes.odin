@@ -261,6 +261,15 @@ ignore_functions :: []string {
 	// games
 	"LoadImage",
 	"LoadTexture",
+	"LoadFont", // not yet implemented
+	"LoadWave", // not yet implemented
+	"LoadSound", // not yet implemented
+	"LoadMusicStream", // not yet implemented
+
+	// file functions that don't work
+	"ExportImage",
+	"ExportImageAsCode",
+	"ExportFontAsCode",
 
 	// unneeded
 	"GetWindowHandle",

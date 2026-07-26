@@ -1784,12 +1784,6 @@ bind_raylib :: proc(L: ^lua.State) {
 	lua.pushcfunction(L, lua_UnloadImage)
 	lua.setfield(L, -2, "UnloadImage")
 
-	lua.pushcfunction(L, lua_ExportImage)
-	lua.setfield(L, -2, "ExportImage")
-
-	lua.pushcfunction(L, lua_ExportImageAsCode)
-	lua.setfield(L, -2, "ExportImageAsCode")
-
 	lua.pushcfunction(L, lua_GenImageColor)
 	lua.setfield(L, -2, "GenImageColor")
 
@@ -2075,9 +2069,6 @@ bind_raylib :: proc(L: ^lua.State) {
 	lua.pushcfunction(L, lua_GetFontDefault)
 	lua.setfield(L, -2, "GetFontDefault")
 
-	lua.pushcfunction(L, lua_LoadFont)
-	lua.setfield(L, -2, "LoadFont")
-
 	lua.pushcfunction(L, lua_LoadFontFromImage)
 	lua.setfield(L, -2, "LoadFontFromImage")
 
@@ -2089,9 +2080,6 @@ bind_raylib :: proc(L: ^lua.State) {
 
 	lua.pushcfunction(L, lua_UnloadFont)
 	lua.setfield(L, -2, "UnloadFont")
-
-	lua.pushcfunction(L, lua_ExportFontAsCode)
-	lua.setfield(L, -2, "ExportFontAsCode")
 
 	lua.pushcfunction(L, lua_DrawFPS)
 	lua.setfield(L, -2, "DrawFPS")
@@ -2270,14 +2258,8 @@ bind_raylib :: proc(L: ^lua.State) {
 	lua.pushcfunction(L, lua_GetMasterVolume)
 	lua.setfield(L, -2, "GetMasterVolume")
 
-	lua.pushcfunction(L, lua_LoadWave)
-	lua.setfield(L, -2, "LoadWave")
-
 	lua.pushcfunction(L, lua_IsWaveValid)
 	lua.setfield(L, -2, "IsWaveValid")
-
-	lua.pushcfunction(L, lua_LoadSound)
-	lua.setfield(L, -2, "LoadSound")
 
 	lua.pushcfunction(L, lua_LoadSoundFromWave)
 	lua.setfield(L, -2, "LoadSoundFromWave")
@@ -2332,9 +2314,6 @@ bind_raylib :: proc(L: ^lua.State) {
 
 	lua.pushcfunction(L, lua_WaveCopy)
 	lua.setfield(L, -2, "WaveCopy")
-
-	lua.pushcfunction(L, lua_LoadMusicStream)
-	lua.setfield(L, -2, "LoadMusicStream")
 
 	lua.pushcfunction(L, lua_IsMusicValid)
 	lua.setfield(L, -2, "IsMusicValid")
@@ -6005,28 +5984,6 @@ lua_UnloadImage :: proc "c" (L: ^lua.State) -> c.int {
 }
 
 @(private)
-lua_ExportImage :: proc "c" (L: ^lua.State) -> c.int {
-	p_image := fromlua_Image(L, 1)
-	p_fileName := lua.tostring(L, 2)
-
-	result := rl.ExportImage(p_image, p_fileName)
-
-	lua.pushboolean(L, b32(result))
-	return 1
-}
-
-@(private)
-lua_ExportImageAsCode :: proc "c" (L: ^lua.State) -> c.int {
-	p_image := fromlua_Image(L, 1)
-	p_fileName := lua.tostring(L, 2)
-
-	result := rl.ExportImageAsCode(p_image, p_fileName)
-
-	lua.pushboolean(L, b32(result))
-	return 1
-}
-
-@(private)
 lua_GenImageColor :: proc "c" (L: ^lua.State) -> c.int {
 	p_width := c.int(lua.tonumber(L, 1))
 	p_height := c.int(lua.tonumber(L, 2))
@@ -7154,16 +7111,6 @@ lua_GetFontDefault :: proc "c" (L: ^lua.State) -> c.int {
 }
 
 @(private)
-lua_LoadFont :: proc "c" (L: ^lua.State) -> c.int {
-	p_fileName := lua.tostring(L, 1)
-
-	result := rl.LoadFont(p_fileName)
-
-	tolua_Font(L, result)
-	return 1
-}
-
-@(private)
 lua_LoadFontFromImage :: proc "c" (L: ^lua.State) -> c.int {
 	p_image := fromlua_Image(L, 1)
 	p_key := fromlua_Color(L, 2)
@@ -7203,17 +7150,6 @@ lua_UnloadFont :: proc "c" (L: ^lua.State) -> c.int {
 	rl.UnloadFont(p_font)
 
 	return 0
-}
-
-@(private)
-lua_ExportFontAsCode :: proc "c" (L: ^lua.State) -> c.int {
-	p_font := fromlua_Font(L, 1)
-	p_fileName := lua.tostring(L, 2)
-
-	result := rl.ExportFontAsCode(p_font, p_fileName)
-
-	lua.pushboolean(L, b32(result))
-	return 1
 }
 
 @(private)
@@ -7909,32 +7845,12 @@ lua_GetMasterVolume :: proc "c" (L: ^lua.State) -> c.int {
 }
 
 @(private)
-lua_LoadWave :: proc "c" (L: ^lua.State) -> c.int {
-	p_fileName := lua.tostring(L, 1)
-
-	result := rl.LoadWave(p_fileName)
-
-	tolua_Wave(L, result)
-	return 1
-}
-
-@(private)
 lua_IsWaveValid :: proc "c" (L: ^lua.State) -> c.int {
 	p_wave := fromlua_Wave(L, 1)
 
 	result := rl.IsWaveValid(p_wave)
 
 	lua.pushboolean(L, b32(result))
-	return 1
-}
-
-@(private)
-lua_LoadSound :: proc "c" (L: ^lua.State) -> c.int {
-	p_fileName := lua.tostring(L, 1)
-
-	result := rl.LoadSound(p_fileName)
-
-	tolua_Sound(L, result)
 	return 1
 }
 
@@ -8111,16 +8027,6 @@ lua_WaveCopy :: proc "c" (L: ^lua.State) -> c.int {
 	result := rl.WaveCopy(p_wave)
 
 	tolua_Wave(L, result)
-	return 1
-}
-
-@(private)
-lua_LoadMusicStream :: proc "c" (L: ^lua.State) -> c.int {
-	p_fileName := lua.tostring(L, 1)
-
-	result := rl.LoadMusicStream(p_fileName)
-
-	tolua_Music(L, result)
 	return 1
 }
 

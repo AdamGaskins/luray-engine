@@ -1857,18 +1857,6 @@ function ray.IsImageValid(image) end
 ---@param image Raylib.Image
 function ray.UnloadImage(image) end
 
----Export image data to file, returns true on success
----@param image Raylib.Image
----@param fileName string
----@return boolean
-function ray.ExportImage(image, fileName) end
-
----Export image as code file defining an array of bytes, returns true on success
----@param image Raylib.Image
----@param fileName string
----@return boolean
-function ray.ExportImageAsCode(image, fileName) end
-
 ---Generate image: plain color
 ---@param width integer
 ---@param height integer
@@ -2471,11 +2459,6 @@ function ray.GetPixelDataSize(width, height, format) end
 ---@return Raylib.Font
 function ray.GetFontDefault() end
 
----Load font from file into GPU memory (VRAM)
----@param fileName string
----@return Raylib.Font
-function ray.LoadFont(fileName) end
-
 ---Load font from Image (XNA style)
 ---@param image Raylib.Image
 ---@param key Raylib.Color
@@ -2495,12 +2478,6 @@ function ray.UnloadFontData(glyphs) end
 ---Unload font from GPU memory (VRAM)
 ---@param font Raylib.Font
 function ray.UnloadFont(font) end
-
----Export font as code file, returns true on success
----@param font Raylib.Font
----@param fileName string
----@return boolean
-function ray.ExportFontAsCode(font, fileName) end
 
 ---Draw current FPS
 ---@param posX integer
@@ -2891,20 +2868,10 @@ function ray.SetMasterVolume(volume) end
 ---@return number
 function ray.GetMasterVolume() end
 
----Load wave data from file
----@param fileName string
----@return Raylib.Wave
-function ray.LoadWave(fileName) end
-
 ---Checks if wave data is valid (data loaded and parameters)
 ---@param wave Raylib.Wave
 ---@return boolean
 function ray.IsWaveValid(wave) end
-
----Load sound from file
----@param fileName string
----@return Raylib.Sound
-function ray.LoadSound(fileName) end
 
 ---Load sound from wave data
 ---@param wave Raylib.Wave
@@ -2991,11 +2958,6 @@ function ray.SetSoundPan(sound, pan) end
 ---@param wave Raylib.Wave
 ---@return Raylib.Wave
 function ray.WaveCopy(wave) end
-
----Load music stream from file
----@param fileName string
----@return Raylib.Music
-function ray.LoadMusicStream(fileName) end
 
 ---Checks if a music stream is valid (context and buffers initialized)
 ---@param music Raylib.Music
