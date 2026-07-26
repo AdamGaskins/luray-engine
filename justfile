@@ -1,4 +1,4 @@
-VERSION := "0.1.0-alpha.3"
+VERSION := "0.1.0-alpha.4"
 COMMIT := `git rev-parse --short HEAD`
 
 PROJECT_DIR := justfile_directory()
@@ -13,6 +13,8 @@ release-gh:
       ./build/*.tar.gz ./build/*.sha256 \
       --title "{{VERSION}}" \
       --notes "Release v{{VERSION}}"
+
+full-release: build release-gh update-tap
 
 clean:
     rm -rf build
@@ -79,4 +81,5 @@ update-tap:
     set_platform_variables "macos" "arm"
     export version="{{VERSION}}"
     envsubst < ./Formula/luray-engine.rb.template > ./Formula/luray-engine.rb
+    jj commit -m "(chore) Update homebrew tap"
 
